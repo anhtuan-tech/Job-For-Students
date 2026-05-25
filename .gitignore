@@ -1,0 +1,31 @@
+# Build
+bin/
+obj/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# Rider
+.idea/
+
+# VS Code
+.vscode/
+
+# Logs
+*.log
+
+# Publish
+publish/
+
+# NuGet
+packages/
+*.nupkg
+
+# EF Core
+Migrations/
+
+# OS
+.DS_Store
+Thumbs.db
