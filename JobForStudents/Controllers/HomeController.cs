@@ -6,12 +6,13 @@ namespace JobForStudents.Controllers
 {
     public class HomeController : Controller
     {
+        // Trang chủ = Dashboard
         public IActionResult Index()
         {
-            return View();
+            return View("Dashboard");
         }
 
-        public IActionResult Privacy()
+        public IActionResult Dashboard()
         {
             return View();
         }

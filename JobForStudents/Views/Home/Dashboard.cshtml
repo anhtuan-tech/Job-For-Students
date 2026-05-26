@@ -1,0 +1,462 @@
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<!-- ============================================
+     1. THANH ĐIỀU HƯỚNG TRÊN CÙNG (TOP NAV)
+     ============================================ -->
+<nav class="top-nav" id="topNav">
+    <!-- Logo + Hamburger -->
+    <div class="nav-left">
+        <a href="#" class="logo">
+            <div class="logo-icon">
+                <i data-lucide="briefcase" style="width:18px;height:18px;"></i>
+            </div>
+            <span>J4S</span>
+        </a>
+        <button class="hamburger" id="menuToggle" aria-label="Toggle menu">
+            <i data-lucide="menu" style="width:20px;height:20px;"></i>
+        </button>
+    </div>
+
+    <!-- Thanh tìm kiếm -->
+    <div class="nav-search">
+        <i data-lucide="search" class="search-icon" style="width:16px;height:16px;"></i>
+        <input type="text" placeholder="Tìm kiếm công việc, kỹ năng..." id="searchInput" />
+    </div>
+
+    <!-- Phần bên phải -->
+    <div class="nav-right">
+        <button class="btn-find-freelancer" id="btnFindFreelancer">
+            <i data-lucide="users" style="width:14px;height:14px;"></i>
+            Tìm freelancer
+        </button>
+
+        <button class="notification-btn" id="notificationBtn" aria-label="Thông báo">
+            <i data-lucide="bell" style="width:20px;height:20px;"></i>
+            <span class="notification-badge">3</span>
+        </button>
+
+        <div class="user-profile" id="userProfile">
+            <div class="user-avatar">
+                <span>ML</span>
+            </div>
+            <div class="user-info">
+                <span class="user-name">Mai Linh</span>
+                <span class="user-role">Freelancer</span>
+            </div>
+            <i data-lucide="chevron-down" class="dropdown-arrow" style="width:14px;height:14px;"></i>
+        </div>
+    </div>
+</nav>
+
+<!-- ============================================
+     BỐ CỤC CHÍNH 3 CỘT
+     ============================================ -->
+<div class="dashboard-layout">
+
+    <!-- ============================================
+         2. CỘT TRÁI - SIDEBAR MENU
+         ============================================ -->
+    <aside class="sidebar" id="sidebar">
+        <!-- Nhóm: VIỆC LÀM -->
+        <div class="sidebar-group">
+            <div class="sidebar-label">Việc làm</div>
+            <a href="#" class="sidebar-item active" id="navHome">
+                <span class="item-icon"><i data-lucide="home" style="width:18px;height:18px;"></i></span>
+                Trang chủ
+            </a>
+            <a href="#" class="sidebar-item" id="navFindJob">
+                <span class="item-icon"><i data-lucide="search" style="width:18px;height:18px;"></i></span>
+                Tìm việc
+            </a>
+            <a href="#" class="sidebar-item" id="navSaved">
+                <span class="item-icon"><i data-lucide="bookmark" style="width:18px;height:18px;"></i></span>
+                Việc đã lưu
+            </a>
+            <a href="#" class="sidebar-item" id="navApplied">
+                <span class="item-icon"><i data-lucide="send" style="width:18px;height:18px;"></i></span>
+                Đã ứng tuyển
+            </a>
+            <a href="#" class="sidebar-item" id="navProjects">
+                <span class="item-icon"><i data-lucide="folder-open" style="width:18px;height:18px;"></i></span>
+                Dự án đang làm
+            </a>
+        </div>
+
+        <!-- Nhóm: QUẢN LÝ -->
+        <div class="sidebar-group">
+            <div class="sidebar-label">Quản lý</div>
+            <a href="#" class="sidebar-item" id="navProfile">
+                <span class="item-icon"><i data-lucide="user" style="width:18px;height:18px;"></i></span>
+                Hồ sơ của tôi
+            </a>
+            <a href="#" class="sidebar-item" id="navMessages">
+                <span class="item-icon"><i data-lucide="message-circle" style="width:18px;height:18px;"></i></span>
+                Tin nhắn
+            </a>
+            <a href="#" class="sidebar-item" id="navReviews">
+                <span class="item-icon"><i data-lucide="star" style="width:18px;height:18px;"></i></span>
+                Đánh giá
+            </a>
+            <a href="#" class="sidebar-item" id="navWallet">
+                <span class="item-icon"><i data-lucide="wallet" style="width:18px;height:18px;"></i></span>
+                Ví tiền
+            </a>
+        </div>
+
+        <!-- Nhóm: KHÁM PHÁ -->
+        <div class="sidebar-group">
+            <div class="sidebar-label">Khám phá</div>
+            <a href="#" class="sidebar-item" id="navTopFreelancer">
+                <span class="item-icon"><i data-lucide="award" style="width:18px;height:18px;"></i></span>
+                Freelancer nổi bật
+            </a>
+            <a href="#" class="sidebar-item" id="navLeaderboard">
+                <span class="item-icon"><i data-lucide="bar-chart-3" style="width:18px;height:18px;"></i></span>
+                Bảng xếp hạng
+            </a>
+            <a href="#" class="sidebar-item" id="navBlog">
+                <span class="item-icon"><i data-lucide="book-open" style="width:18px;height:18px;"></i></span>
+                Blog & Hướng dẫn
+            </a>
+        </div>
+
+        <!-- Nút Đăng việc mới -->
+        <div class="sidebar-bottom">
+            <button class="btn-post-job" id="btnPostJob">
+                <i data-lucide="plus" style="width:18px;height:18px;"></i>
+                Đăng việc mới
+            </button>
+        </div>
+    </aside>
+
+    <!-- ============================================
+         VÙNG NỘI DUNG CHÍNH + CỘT PHẢI
+         ============================================ -->
+    <div class="main-content-wrapper">
+
+        <!-- ============================================
+             3. CỘT GIỮA - NỘI DUNG CHÍNH
+             ============================================ -->
+        <main class="main-content" id="mainContent">
+
+            <!-- === Banner chào mừng === -->
+            <section class="welcome-banner" id="welcomeBanner">
+                <div class="banner-text">
+                    <h1>Kết nối kỹ năng sinh viên<br/>Với công việc bạn cần</h1>
+                    <p>Việc nhỏ hôm nay – Thu nhập mỗi ngày</p>
+                    <div class="banner-actions">
+                        <button class="btn-primary-main" id="btnFindJobNow">
+                            <i data-lucide="search" style="width:16px;height:16px;"></i>
+                            Tìm việc ngay
+                        </button>
+                        <button class="btn-outline-main" id="btnPostJobBanner">
+                            <i data-lucide="plus-circle" style="width:16px;height:16px;"></i>
+                            Đăng việc
+                        </button>
+                    </div>
+                </div>
+                <div class="banner-illustration">
+                    <img src="~/images/student_working.png" alt="Sinh viên làm việc với laptop" />
+                </div>
+            </section>
+
+            <!-- === Danh mục phổ biến === -->
+            <section id="popularCategories">
+                <div class="section-header">
+                    <h2 class="section-title">Danh mục phổ biến</h2>
+                    <a href="#" class="section-link">
+                        Xem tất cả <i data-lucide="chevron-right" style="width:14px;height:14px;"></i>
+                    </a>
+                </div>
+                <div class="categories-grid">
+                    <!-- Thiết kế -->
+                    <div class="category-card animate-in">
+                        <div class="category-icon">
+                            <i data-lucide="palette" style="width:24px;height:24px;"></i>
+                        </div>
+                        <div class="category-name">Thiết kế</div>
+                        <div class="category-count">(1200+)</div>
+                    </div>
+                    <!-- Làm slide -->
+                    <div class="category-card animate-in">
+                        <div class="category-icon">
+                            <i data-lucide="presentation" style="width:24px;height:24px;"></i>
+                        </div>
+                        <div class="category-name">Làm slide</div>
+                        <div class="category-count">(860+)</div>
+                    </div>
+                    <!-- Dịch thuật -->
+                    <div class="category-card animate-in">
+                        <div class="category-icon">
+                            <i data-lucide="languages" style="width:24px;height:24px;"></i>
+                        </div>
+                        <div class="category-name">Dịch thuật</div>
+                        <div class="category-count">(640+)</div>
+                    </div>
+                    <!-- Viết content -->
+                    <div class="category-card animate-in">
+                        <div class="category-icon">
+                            <i data-lucide="pen-tool" style="width:24px;height:24px;"></i>
+                        </div>
+                        <div class="category-name">Viết content</div>
+                        <div class="category-count">(530+)</div>
+                    </div>
+                    <!-- Code web -->
+                    <div class="category-card animate-in">
+                        <div class="category-icon">
+                            <i data-lucide="code-2" style="width:24px;height:24px;"></i>
+                        </div>
+                        <div class="category-name">Code web</div>
+                        <div class="category-count">(460+)</div>
+                    </div>
+                    <!-- Edit video -->
+                    <div class="category-card animate-in">
+                        <div class="category-icon">
+                            <i data-lucide="video" style="width:24px;height:24px;"></i>
+                        </div>
+                        <div class="category-name">Edit video</div>
+                        <div class="category-count">(380+)</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- === Danh sách việc làm mới nhất === -->
+            <section id="latestJobs">
+                <div class="jobs-header">
+                    <h2 class="section-title">Việc làm mới nhất</h2>
+                    <div class="jobs-filters">
+                        <select class="filter-select" id="filterCategory">
+                            <option>Tất cả danh mục</option>
+                            <option>Thiết kế</option>
+                            <option>Dịch thuật</option>
+                            <option>Làm slide</option>
+                            <option>Viết content</option>
+                            <option>Code web</option>
+                        </select>
+                        <select class="filter-select" id="filterSort">
+                            <option>Mới nhất</option>
+                            <option>Giá cao nhất</option>
+                            <option>Sắp hết hạn</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Job Card 1: Thiết kế poster -->
+                <div class="job-card animate-in" id="jobCard1">
+                    <div class="job-icon design">
+                        <i data-lucide="image" style="width:22px;height:22px;"></i>
+                    </div>
+                    <div class="job-info">
+                        <h3 class="job-title">Thiết kế poster workshop</h3>
+                        <p class="job-desc">Cần poster cho workshop chủ đề "AI for Students"</p>
+                        <div class="job-tags">
+                            <span class="job-tag">Thiết kế</span>
+                            <span class="job-tag">Poster</span>
+                            <span class="job-tag">Photoshop</span>
+                        </div>
+                    </div>
+                    <div class="job-meta">
+                        <span class="job-price">150.000 đ</span>
+                        <span class="job-deadline">Hạn: <span>24h nữa</span></span>
+                        <span class="job-proposals">5 đề xuất</span>
+                    </div>
+                    <button class="job-bookmark" aria-label="Lưu việc">
+                        <i data-lucide="bookmark" style="width:18px;height:18px;"></i>
+                    </button>
+                </div>
+
+                <!-- Job Card 2: Dịch tài liệu -->
+                <div class="job-card animate-in" id="jobCard2">
+                    <div class="job-icon translate">
+                        <i data-lucide="file-text" style="width:22px;height:22px;"></i>
+                    </div>
+                    <div class="job-info">
+                        <h3 class="job-title">Dịch tài liệu tiếng Anh 1500 từ</h3>
+                        <p class="job-desc">Dịch tài liệu chuyên ngành Marketing</p>
+                        <div class="job-tags">
+                            <span class="job-tag">Dịch thuật</span>
+                            <span class="job-tag">English</span>
+                            <span class="job-tag">Marketing</span>
+                        </div>
+                    </div>
+                    <div class="job-meta">
+                        <span class="job-price">200.000 đ</span>
+                        <span class="job-deadline">Hạn: <span>2 ngày nữa</span></span>
+                        <span class="job-proposals">8 đề xuất</span>
+                    </div>
+                    <button class="job-bookmark" aria-label="Lưu việc">
+                        <i data-lucide="bookmark" style="width:18px;height:18px;"></i>
+                    </button>
+                </div>
+
+                <!-- Job Card 3: Làm slide -->
+                <div class="job-card animate-in" id="jobCard3">
+                    <div class="job-icon slide">
+                        <i data-lucide="monitor" style="width:22px;height:22px;"></i>
+                    </div>
+                    <div class="job-info">
+                        <h3 class="job-title">Làm slide thuyết trình</h3>
+                        <p class="job-desc">Slide thuyết trình 15-20 trang về Digital Marketing</p>
+                        <div class="job-tags">
+                            <span class="job-tag">Làm slide</span>
+                            <span class="job-tag">PowerPoint</span>
+                            <span class="job-tag">Thuyết trình</span>
+                        </div>
+                    </div>
+                    <div class="job-meta">
+                        <span class="job-price">120.000 đ</span>
+                        <span class="job-deadline">Hạn: <span>1 ngày nữa</span></span>
+                        <span class="job-proposals">3 đề xuất</span>
+                    </div>
+                    <button class="job-bookmark" aria-label="Lưu việc">
+                        <i data-lucide="bookmark" style="width:18px;height:18px;"></i>
+                    </button>
+                </div>
+
+                <!-- Nút Xem thêm -->
+                <button class="view-more-btn" id="btnViewMore">
+                    Xem thêm việc làm
+                    <i data-lucide="chevron-down" style="width:16px;height:16px;"></i>
+                </button>
+            </section>
+        </main>
+
+        <!-- ============================================
+             4. CỘT PHẢI - THÔNG TIN TIỆN ÍCH
+             ============================================ -->
+        <aside class="right-sidebar" id="rightSidebar">
+
+            <!-- === Box 1: Gợi ý dành cho bạn bởi AI === -->
+            <div class="widget-card" id="aiSuggestions">
+                <div class="widget-header">
+                    <h3 class="widget-title">
+                        <span class="ai-icon">✨</span>
+                        Gợi ý dành cho bạn bởi AI
+                    </h3>
+                </div>
+
+                <!-- Freelancer 1 -->
+                <div class="freelancer-item">
+                    <div class="freelancer-avatar" style="background: linear-gradient(135deg, #6366F1, #8B5CF6);">
+                        TB
+                    </div>
+                    <div class="freelancer-info">
+                        <div class="freelancer-name">Trần Quốc Bảo</div>
+                        <div class="freelancer-role">Thiết kế đồ họa</div>
+                        <div class="freelancer-rating">
+                            <span class="star">★</span> 5.0 (32)
+                        </div>
+                    </div>
+                    <div class="freelancer-action">
+                        <span class="match-badge">98% Match</span>
+                        <button class="btn-view-profile">Xem hồ sơ</button>
+                    </div>
+                </div>
+
+                <!-- Freelancer 2 -->
+                <div class="freelancer-item">
+                    <div class="freelancer-avatar" style="background: linear-gradient(135deg, #EC4899, #F472B6);">
+                        TH
+                    </div>
+                    <div class="freelancer-info">
+                        <div class="freelancer-name">Nguyễn Thu Hà</div>
+                        <div class="freelancer-role">Làm slide chuyên nghiệp</div>
+                        <div class="freelancer-rating">
+                            <span class="star">★</span> 4.9 (27)
+                        </div>
+                    </div>
+                    <div class="freelancer-action">
+                        <span class="match-badge">95% Match</span>
+                        <button class="btn-view-profile">Xem hồ sơ</button>
+                    </div>
+                </div>
+
+                <!-- Freelancer 3 -->
+                <div class="freelancer-item">
+                    <div class="freelancer-avatar" style="background: linear-gradient(135deg, #14B8A6, #2DD4BF);">
+                        MA
+                    </div>
+                    <div class="freelancer-info">
+                        <div class="freelancer-name">Lê Minh Anh</div>
+                        <div class="freelancer-role">Dịch thuật EN-VI</div>
+                        <div class="freelancer-rating">
+                            <span class="star">★</span> 5.0 (18)
+                        </div>
+                    </div>
+                    <div class="freelancer-action">
+                        <span class="match-badge">93% Match</span>
+                        <button class="btn-view-profile">Xem hồ sơ</button>
+                    </div>
+                </div>
+
+                <a href="#" class="section-link" style="justify-content:flex-end; margin-top:12px;">
+                    Xem tất cả gợi ý <i data-lucide="chevron-right" style="width:14px;height:14px;"></i>
+                </a>
+            </div>
+
+            <!-- === Box 2: Tổng quan thu nhập === -->
+            <div class="income-widget" id="incomeOverview">
+                <div class="income-header">
+                    <h3>Tổng quan thu nhập</h3>
+                    <a href="#" class="widget-link">Xem chi tiết →</a>
+                </div>
+
+                <div class="income-stats">
+                    <div class="income-stat-item">
+                        <div class="label">Thu nhập tháng này</div>
+                        <div class="value">2.450.000 đ</div>
+                        <div class="change">+12% so với tháng trước</div>
+                    </div>
+                    <div class="income-stat-item" style="text-align:right;">
+                        <div class="label">Đã hoàn thành</div>
+                        <div class="value compact">12 dự án</div>
+                        <div class="change-note">+2 dự án</div>
+                    </div>
+                </div>
+
+                <div class="income-actions">
+                    <button class="income-action-btn" id="btnDeposit">
+                        <span class="action-icon"><i data-lucide="download" style="width:20px;height:20px;"></i></span>
+                        <span class="action-label">Nạp tiền</span>
+                    </button>
+                    <button class="income-action-btn" id="btnWithdraw">
+                        <span class="action-icon"><i data-lucide="upload" style="width:20px;height:20px;"></i></span>
+                        <span class="action-label">Rút tiền</span>
+                    </button>
+                    <button class="income-action-btn" id="btnHistory">
+                        <span class="action-icon"><i data-lucide="clock" style="width:20px;height:20px;"></i></span>
+                        <span class="action-label">Lịch sử GD</span>
+                    </button>
+                    <button class="income-action-btn" id="btnPromo">
+                        <span class="action-icon"><i data-lucide="gift" style="width:20px;height:20px;"></i></span>
+                        <span class="action-label">Ưu đãi</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- === Box 3: Banner bảng xếp hạng === -->
+            <div class="leaderboard-banner" id="leaderboardBanner">
+                <div class="leaderboard-content">
+                    <div class="trophy">🏆</div>
+                    <h3>Tham gia bảng xếp hạng</h3>
+                    <p>Nhận thưởng hấp dẫn mỗi tháng!</p>
+                    <button class="btn-leaderboard" id="btnLeaderboard">
+                        Xem ngay
+                        <i data-lucide="arrow-right" style="width:14px;height:14px;"></i>
+                    </button>
+                </div>
+            </div>
+
+        </aside>
+    </div>
+</div>
+
+<!-- Script toggle sidebar trên mobile -->
+<script>
+    document.getElementById('menuToggle').addEventListener('click', function () {
+        document.getElementById('sidebar').classList.toggle('open');
+    });
+</script>
