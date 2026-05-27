@@ -1,20 +1,127 @@
-@model JobForStudents.Models.DashboardViewModel
-@{
-    ViewData["Title"] = "Dashboard";
-    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard - J4S | Job For Students</title>
+    <meta name="description" content="J4S - Nền tảng kết nối micro-job cho sinh viên. Tìm việc làm thêm, freelance dễ dàng." />
+    <link rel="icon" type="image/png" href="images/j4s_favicon.png" />
+    <meta property="og:image" content="images/j4s_logo.png" />
 
-    // Gradient colors for freelancer avatars without images
-    var avatarGradients = new[] {
-        "linear-gradient(135deg, #6366F1, #8B5CF6)",
-        "linear-gradient(135deg, #EC4899, #F472B6)",
-        "linear-gradient(135deg, #14B8A6, #2DD4BF)",
-        "linear-gradient(135deg, #F59E0B, #FBBF24)",
-        "linear-gradient(135deg, #EF4444, #F87171)"
-    };
-}
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+    <!-- Lucide Icons (CDN) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Dashboard CSS -->
+    <link rel="stylesheet" href="css/dashboard.css" />
+</head>
+<body>
 
 <!-- Hidden JSON data for JavaScript -->
-<script type="application/json" id="initialJobsData">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Jobs, new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }))</script>
+<script type="application/json" id="initialJobsData">
+[
+  {
+    "id": "job-001",
+    "title": "Thiết kế poster workshop",
+    "description": "Cần poster cho workshop chủ đề \"AI for Students\" – Kích thước A3, phong cách hiện đại, sáng tạo.",
+    "category": "Design",
+    "tags": ["Thiết kế", "Poster", "Photoshop"],
+    "budget": 150000,
+    "deadline": "Hạn: 24h nữa",
+    "applicantsCount": 5,
+    "isSaved": true,
+    "isApplied": false
+  },
+  {
+    "id": "job-002",
+    "title": "Dịch tài liệu tiếng Anh 1500 từ",
+    "description": "Dịch tài liệu chuyên ngành Marketing từ tiếng Anh sang tiếng Việt, đảm bảo chính xác thuật ngữ.",
+    "category": "Translation",
+    "tags": ["Dịch thuật", "English", "Marketing"],
+    "budget": 200000,
+    "deadline": "Hạn: 2 ngày nữa",
+    "applicantsCount": 8,
+    "isSaved": true,
+    "isApplied": true
+  },
+  {
+    "id": "job-003",
+    "title": "Làm slide thuyết trình",
+    "description": "Slide thuyết trình 15-20 trang về Digital Marketing, yêu cầu thiết kế đẹp, chuyên nghiệp.",
+    "category": "Slides",
+    "tags": ["Làm slide", "PowerPoint", "Thuyết trình"],
+    "budget": 120000,
+    "deadline": "Hạn: 1 ngày nữa",
+    "applicantsCount": 3,
+    "isSaved": true,
+    "isApplied": false
+  },
+  {
+    "id": "job-004",
+    "title": "Viết bài SEO cho blog công nghệ",
+    "description": "Viết 3 bài blog về AI và Machine Learning, mỗi bài 800-1000 từ, chuẩn SEO.",
+    "category": "Content",
+    "tags": ["Viết content", "SEO", "Blog"],
+    "budget": 300000,
+    "deadline": "Hạn: 3 ngày nữa",
+    "applicantsCount": 12,
+    "isSaved": false,
+    "isApplied": true
+  },
+  {
+    "id": "job-005",
+    "title": "Code landing page giới thiệu sản phẩm",
+    "description": "Tạo landing page responsive bằng HTML/CSS/JS cho sản phẩm ứng dụng di động mới.",
+    "category": "Code",
+    "tags": ["Code web", "HTML/CSS", "Responsive"],
+    "budget": 500000,
+    "deadline": "Hạn: 5 ngày nữa",
+    "applicantsCount": 7,
+    "isSaved": false,
+    "isApplied": false
+  },
+  {
+    "id": "job-006",
+    "title": "Edit video giới thiệu câu lạc bộ",
+    "description": "Chỉnh sửa video 3-5 phút giới thiệu CLB Sách của trường, thêm hiệu ứng và nhạc nền.",
+    "category": "Video",
+    "tags": ["Edit video", "Premiere", "After Effects"],
+    "budget": 350000,
+    "deadline": "Hạn: 4 ngày nữa",
+    "applicantsCount": 4,
+    "isSaved": false,
+    "isApplied": false
+  },
+  {
+    "id": "job-007",
+    "title": "Thiết kế logo cho startup sinh viên",
+    "description": "Cần logo hiện đại cho startup về ứng dụng chia sẻ đồ dùng học tập giữa sinh viên.",
+    "category": "Design",
+    "tags": ["Thiết kế", "Logo", "Illustrator"],
+    "budget": 250000,
+    "deadline": "Hạn: 3 ngày nữa",
+    "applicantsCount": 15,
+    "isSaved": false,
+    "isApplied": false
+  },
+  {
+    "id": "job-008",
+    "title": "Dịch hồ sơ năng lực công ty",
+    "description": "Dịch company profile 10 trang từ tiếng Việt sang tiếng Anh, lĩnh vực F&B.",
+    "category": "Translation",
+    "tags": ["Dịch thuật", "English", "F&B"],
+    "budget": 400000,
+    "deadline": "Hạn: 4 ngày nữa",
+    "applicantsCount": 6,
+    "isSaved": false,
+    "isApplied": false
+  }
+]
+</script>
 
 <!-- ============================================
      1. THANH ĐIỀU HƯỚNG TRÊN CÙNG (TOP NAV)
@@ -22,8 +129,8 @@
 <nav class="top-nav" id="topNav">
     <!-- Logo + Hamburger -->
     <div class="nav-left">
-        <a href="/" class="logo">
-            <img src="~/images/j4s_logo.png" alt="J4S Logo" class="logo-img" />
+        <a href="#" class="logo">
+            <img src="images/j4s_logo.png" alt="J4S Logo" class="logo-img" />
         </a>
         <button class="hamburger" id="menuToggle" aria-label="Toggle menu">
             <i data-lucide="menu" style="width:20px;height:20px;"></i>
@@ -50,10 +157,10 @@
 
         <div class="user-profile" id="userProfile">
             <div class="user-avatar">
-                <span>@(Model.CurrentUserName.Length >= 2 ? Model.CurrentUserName[..2].ToUpper() : "ML")</span>
+                <span>ML</span>
             </div>
             <div class="user-info">
-                <span class="user-name">@Model.CurrentUserName</span>
+                <span class="user-name">Mai Linh</span>
                 <span class="user-role">Freelancer</span>
             </div>
             <i data-lucide="chevron-down" class="dropdown-arrow" style="width:14px;height:14px;"></i>
@@ -170,7 +277,7 @@
                     </div>
                 </div>
                 <div class="banner-illustration">
-                    <img src="~/images/student_working.png" alt="Sinh viên làm việc với laptop" />
+                    <img src="images/student_working.png" alt="Sinh viên làm việc với laptop" />
                 </div>
             </section>
 
@@ -258,46 +365,77 @@
 
                 <!-- Dynamic Job Feed Container -->
                 <div id="jobFeedContainer">
-                    @{
-                        var iconMap = new Dictionary<string, (string cls, string icon)> {
-                            ["Design"] = ("design", "image"),
-                            ["Translation"] = ("translate", "file-text"),
-                            ["Slides"] = ("slide", "monitor"),
-                            ["Content"] = ("content", "pen-tool"),
-                            ["Code"] = ("code", "code-2"),
-                            ["Video"] = ("video", "video")
-                        };
-                    }
-                    @foreach (var job in Model.Jobs)
-                    {
-                        var info = iconMap.GetValueOrDefault(job.Category, ("design", "briefcase"));
-                        var budgetFormatted = string.Format("{0:N0} đ", job.Budget);
-                        var savedClass = job.IsSaved ? "saved" : "";
-                        var bookmarkIcon = job.IsSaved ? "bookmark-check" : "bookmark";
-                        <div class="job-card animate-in" data-job-id="@job.Id">
-                            <div class="job-icon @info.Item1">
-                                <i data-lucide="@info.Item2" style="width:22px;height:22px;"></i>
-                            </div>
-                            <div class="job-info">
-                                <h3 class="job-title" data-job-id="@job.Id">@job.Title</h3>
-                                <p class="job-desc">@job.Description</p>
-                                <div class="job-tags">
-                                    @foreach (var tag in job.Tags)
-                                    {
-                                        <span class="job-tag">@tag</span>
-                                    }
-                                </div>
-                            </div>
-                            <div class="job-meta">
-                                <span class="job-price">@budgetFormatted</span>
-                                <span class="job-deadline">@job.Deadline</span>
-                                <span class="job-proposals">@job.ApplicantsCount đề xuất@(job.IsApplied ? " " : "")@if (job.IsApplied) {<span class="applied-badge">Đã ứng tuyển</span>}</span>
-                            </div>
-                            <button class="job-bookmark @savedClass" data-job-id="@job.Id" aria-label="Lưu việc">
-                                <i data-lucide="@bookmarkIcon" style="width:18px;height:18px;"></i>
-                            </button>
+                    <!-- Job Card 1 -->
+                    <div class="job-card animate-in" data-job-id="job-001">
+                        <div class="job-icon design">
+                            <i data-lucide="image" style="width:22px;height:22px;"></i>
                         </div>
-                    }
+                        <div class="job-info">
+                            <h3 class="job-title" data-job-id="job-001">Thiết kế poster workshop</h3>
+                            <p class="job-desc">Cần poster cho workshop chủ đề "AI for Students" – Kích thước A3, phong cách hiện đại, sáng tạo.</p>
+                            <div class="job-tags">
+                                <span class="job-tag">Thiết kế</span>
+                                <span class="job-tag">Poster</span>
+                                <span class="job-tag">Photoshop</span>
+                            </div>
+                        </div>
+                        <div class="job-meta">
+                            <span class="job-price">150,000 đ</span>
+                            <span class="job-deadline">Hạn: 24h nữa</span>
+                            <span class="job-proposals">5 đề xuất</span>
+                        </div>
+                        <button class="job-bookmark saved" data-job-id="job-001" aria-label="Lưu việc">
+                            <i data-lucide="bookmark-check" style="width:18px;height:18px;"></i>
+                        </button>
+                    </div>
+
+                    <!-- Job Card 2 -->
+                    <div class="job-card animate-in" data-job-id="job-002">
+                        <div class="job-icon translate">
+                            <i data-lucide="file-text" style="width:22px;height:22px;"></i>
+                        </div>
+                        <div class="job-info">
+                            <h3 class="job-title" data-job-id="job-002">Dịch tài liệu tiếng Anh 1500 từ</h3>
+                            <p class="job-desc">Dịch tài liệu chuyên ngành Marketing từ tiếng Anh sang tiếng Việt, đảm bảo chính xác thuật ngữ.</p>
+                            <div class="job-tags">
+                                <span class="job-tag">Dịch thuật</span>
+                                <span class="job-tag">English</span>
+                                <span class="job-tag">Marketing</span>
+                            </div>
+                        </div>
+                        <div class="job-meta">
+                            <span class="job-price">200,000 đ</span>
+                            <span class="job-deadline">Hạn: 2 ngày nữa</span>
+                            <span class="job-proposals">8 đề xuất <span class="applied-badge">Đã ứng tuyển</span></span>
+                        </div>
+                        <button class="job-bookmark saved" data-job-id="job-002" aria-label="Lưu việc">
+                            <i data-lucide="bookmark-check" style="width:18px;height:18px;"></i>
+                        </button>
+                    </div>
+
+                    <!-- Job Card 3 -->
+                    <div class="job-card animate-in" data-job-id="job-003">
+                        <div class="job-icon slide">
+                            <i data-lucide="monitor" style="width:22px;height:22px;"></i>
+                        </div>
+                        <div class="job-info">
+                            <h3 class="job-title" data-job-id="job-003">Làm slide thuyết trình</h3>
+                            <p class="job-desc">Slide thuyết trình 15-20 trang về Digital Marketing, yêu cầu thiết kế đẹp, chuyên nghiệp.</p>
+                            <div class="job-tags">
+                                <span class="job-tag">Làm slide</span>
+                                <span class="job-tag">PowerPoint</span>
+                                <span class="job-tag">Thuyết trình</span>
+                            </div>
+                        </div>
+                        <div class="job-meta">
+                            <span class="job-price">120,000 đ</span>
+                            <span class="job-deadline">Hạn: 1 ngày nữa</span>
+                            <span class="job-proposals">3 đề xuất</span>
+                        </div>
+                        <button class="job-bookmark saved" data-job-id="job-003" aria-label="Lưu việc">
+                            <i data-lucide="bookmark-check" style="width:18px;height:18px;"></i>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Nút Xem thêm -->
@@ -322,38 +460,59 @@
                     </h3>
                 </div>
 
-                @for (int i = 0; i < Model.TopFreelancers.Count; i++)
-                {
-                    var freelancer = Model.TopFreelancers[i];
-                    var isStar = i == 0;
-                    var gradient = avatarGradients[i % avatarGradients.Length];
-                    var initials = string.Join("", freelancer.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(w => w[0]));
-                    if (initials.Length > 2) initials = initials[..2];
-
-                    <div class="freelancer-item @(isStar ? "star" : "")">
-                        <div class="freelancer-avatar" style="background: @gradient;">
-                            @if (!string.IsNullOrEmpty(freelancer.Avatar))
-                            {
-                                <img src="@freelancer.Avatar" alt="@freelancer.Name" />
-                            }
-                            else
-                            {
-                                @initials
-                            }
-                        </div>
-                        <div class="freelancer-info">
-                            <div class="freelancer-name">@freelancer.Name</div>
-                            <div class="freelancer-role">@freelancer.Skill</div>
-                            <div class="freelancer-rating">
-                                <span class="star">★</span> @freelancer.Rating.ToString("F1") (@freelancer.ReviewsCount)
-                            </div>
-                        </div>
-                        <div class="freelancer-action">
-                            <span class="match-badge">@freelancer.MatchPercentage</span>
-                            <button class="btn-view-profile">Xem hồ sơ</button>
+                <!-- Freelancer 1 -->
+                <div class="freelancer-item star">
+                    <div class="freelancer-avatar">
+                        <img src="images/tuan_avatar.jpg" alt="Lê Anh Tuấn" />
+                    </div>
+                    <div class="freelancer-info">
+                        <div class="freelancer-name">Lê Anh Tuấn</div>
+                        <div class="freelancer-role">Thiết kế đồ họa / UX-UI</div>
+                        <div class="freelancer-rating">
+                            <span class="star">★</span> 5.0 (32)
                         </div>
                     </div>
-                }
+                    <div class="freelancer-action">
+                        <span class="match-badge">98% Match</span>
+                        <button class="btn-view-profile">Xem hồ sơ</button>
+                    </div>
+                </div>
+
+                <!-- Freelancer 2 -->
+                <div class="freelancer-item">
+                    <div class="freelancer-avatar" style="background: linear-gradient(135deg, #EC4899, #F472B6);">
+                        TH
+                    </div>
+                    <div class="freelancer-info">
+                        <div class="freelancer-name">Nguyễn Thu Hà</div>
+                        <div class="freelancer-role">Làm slide chuyên nghiệp</div>
+                        <div class="freelancer-rating">
+                            <span class="star">★</span> 4.9 (27)
+                        </div>
+                    </div>
+                    <div class="freelancer-action">
+                        <span class="match-badge">95% Match</span>
+                        <button class="btn-view-profile">Xem hồ sơ</button>
+                    </div>
+                </div>
+
+                <!-- Freelancer 3 -->
+                <div class="freelancer-item">
+                    <div class="freelancer-avatar" style="background: linear-gradient(135deg, #14B8A6, #2DD4BF);">
+                        MA
+                    </div>
+                    <div class="freelancer-info">
+                        <div class="freelancer-name">Lê Minh Anh</div>
+                        <div class="freelancer-role">Dịch thuật EN-VI</div>
+                        <div class="freelancer-rating">
+                            <span class="star">★</span> 5.0 (18)
+                        </div>
+                    </div>
+                    <div class="freelancer-action">
+                        <span class="match-badge">93% Match</span>
+                        <button class="btn-view-profile">Xem hồ sơ</button>
+                    </div>
+                </div>
 
                 <a href="#" class="section-link" style="justify-content:flex-end; margin-top:12px;">
                     Xem tất cả gợi ý <i data-lucide="chevron-right" style="width:14px;height:14px;"></i>
@@ -370,12 +529,12 @@
                 <div class="income-stats">
                     <div class="income-stat-item">
                         <div class="label">Thu nhập tháng này</div>
-                        <div class="value">@string.Format("{0:N0} đ", Model.TotalEarnings)</div>
+                        <div class="value">2.450.000 đ</div>
                         <div class="change">+12% so với tháng trước</div>
                     </div>
                     <div class="income-stat-item" style="text-align:right;">
                         <div class="label">Đã hoàn thành</div>
-                        <div class="value compact">@Model.CompletedJobsCount dự án</div>
+                        <div class="value compact">12 dự án</div>
                         <div class="change-note">+2 dự án</div>
                     </div>
                 </div>
@@ -410,19 +569,23 @@
                         <i data-lucide="arrow-right" style="width:14px;height:14px;"></i>
                     </button>
                 </div>
-                <img src="~/images/golden_trophy.png" alt="Cúp vàng bảng xếp hạng" class="leaderboard-trophy-img" />
+                <img src="images/golden_trophy.png" alt="Cúp vàng bảng xếp hạng" class="leaderboard-trophy-img" />
             </div>
 
         </aside>
     </div>
 </div>
 
-@section Scripts {
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    <script>
-        // Hamburger menu toggle
-        document.getElementById('menuToggle').addEventListener('click', function () {
-            document.getElementById('sidebar').classList.toggle('open');
-        });
-    </script>
-}
+<!-- Scripts -->
+<script src="js/site.js"></script>
+<script>
+    // Initialize Lucide Icons
+    lucide.createIcons();
+
+    // Hamburger menu toggle
+    document.getElementById('menuToggle').addEventListener('click', function () {
+        document.getElementById('sidebar').classList.toggle('open');
+    });
+</script>
+</body>
+</html>
