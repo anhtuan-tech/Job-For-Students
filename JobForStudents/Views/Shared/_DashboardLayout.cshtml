@@ -13,18 +13,122 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
     <!-- Lucide Icons (CDN) -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <!-- Dashboard CSS -->
     <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
+
+    <!-- Custom CSS Overrides for Light Blue & White Theme (NO PURPLE) -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f9ff; /* Light Sky Blue background */
+            color: #1e293b;
+        }
+        /* Custom styled toast notification styling */
+        .toast-container {
+            z-index: 1050;
+        }
+        .j4s-toast {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+            background: #ffffff;
+            overflow: hidden;
+            display: flex;
+            align-items: stretch;
+            margin-bottom: 0.75rem;
+        }
+
+        .j4s-toast-body {
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+        }
+        .j4s-toast-icon {
+            margin-right: 0.75rem;
+            display: flex;
+            align-items: center;
+        }
+        .j4s-toast-icon.success { color: #2563eb; }
+        .j4s-toast-icon.error { color: #ef4444; }
+        .j4s-toast-content {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+    </style>
 </head>
 <body>
     @RenderBody()
 
-    <!-- Initialize Lucide Icons -->
+    <!-- Reusable Toast Container (Top Right, shifted below navbar) -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="margin-top: 70px; z-index: 9999;" id="toastContainer"></div>
+
+    <!-- Bootstrap 5 Bundle JS with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Initialize Lucide Icons & Toast Helper -->
     <script>
         lucide.createIcons();
+
+        // Premium Toast Notification Helper
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toastId = 'toast_' + Date.now();
+            
+            let iconName = 'check-circle';
+            if (type === 'error') iconName = 'alert-circle';
+            if (type === 'warning') iconName = 'alert-triangle';
+
+            const toastHTML = `
+                <div id="${toastId}" class="j4s-toast toast hide" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4000">
+                    <div class="j4s-toast-body">
+                        <div class="j4s-toast-icon ${type}">
+                            <i data-lucide="${iconName}" style="width:20px;height:20px;"></i>
+                        </div>
+                        <div class="j4s-toast-content">
+                            ${message}
+                        </div>
+                        <button type="button" class="btn-close ms-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                </div>
+            `;
+            
+            container.insertAdjacentHTML('beforeend', toastHTML);
+            const toastEl = document.getElementById(toastId);
+            
+            // Re-run lucide for newly added icon
+            lucide.createIcons({
+                attrs: {
+                    class: 'lucide'
+                },
+                nameAttr: 'data-lucide'
+            });
+
+            const toast = new bootstrap.Toast(toastEl);
+            toast.show();
+
+            toastEl.addEventListener('hidden.bs.toast', () => {
+                toastEl.remove();
+            });
+        }
+
+        // Auto trigger toast messages from TempData if available
+        document.addEventListener('DOMContentLoaded', () => {
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <text>showToast("@Html.Raw(System.Web.HttpUtility.JavaScriptStringEncode(TempData["SuccessMessage"]?.ToString() ?? ""))", "success");</text>
+            }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <text>showToast("@Html.Raw(System.Web.HttpUtility.JavaScriptStringEncode(TempData["ErrorMessage"]?.ToString() ?? ""))", "error");</text>
+            }
+        });
     </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

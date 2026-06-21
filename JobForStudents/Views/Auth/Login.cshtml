@@ -1,0 +1,131 @@
+@model JobForStudents.Models.LoginViewModel
+@{
+    ViewData["Title"] = "Đăng nhập";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="auth-page-container">
+    <!-- Left Showcase Side -->
+    <div class="auth-showcase-panel">
+        <div class="auth-bg-shapes">
+            <div class="auth-shape auth-shape-1"></div>
+            <div class="auth-shape auth-shape-2"></div>
+            <div class="auth-shape auth-shape-3"></div>
+        </div>
+
+        <!-- Branding Logo -->
+        <a href="/" class="auth-brand" style="color: #ffffff;">
+            <div class="auth-logo-icon" style="background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.25); box-shadow: none;">
+                <i data-lucide="graduation-cap" style="width: 24px; height: 24px;"></i>
+            </div>
+            <span class="auth-logo-text" style="color: #ffffff;">J4S</span>
+        </a>
+
+        <!-- Showcase Message -->
+        <div class="auth-showcase-content">
+            <h1>Tìm Kiếm Việc Làm & Bắt Đầu Hành Trình</h1>
+            <p>Tìm kiếm công việc micro-job nhanh chóng và an toàn. Hàng ngàn cơ hội đang chờ đón bạn để thể hiện và phát triển kỹ năng của mình.</p>
+            
+            <!-- Dynamic Glassmorphic Stats -->
+            <div class="auth-stats-grid">
+                <div class="auth-stat-card">
+                    <span class="auth-stat-number">10K+</span>
+                    <span class="auth-stat-label">Sinh viên hoạt động</span>
+                </div>
+                <div class="auth-stat-card">
+                    <span class="auth-stat-number">98%</span>
+                    <span class="auth-stat-label">Tỷ lệ hoàn thành</span>
+                </div>
+                <div class="auth-stat-card">
+                    <span class="auth-stat-number">500+</span>
+                    <span class="auth-stat-label">Doanh nghiệp tin cậy</span>
+                </div>
+                <div class="auth-stat-card">
+                    <span class="auth-stat-number">Escrow</span>
+                    <span class="auth-stat-label">Thanh toán bảo mật</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Note -->
+        <div style="font-size: 0.85rem; opacity: 0.75; font-weight: 500; position: relative; z-index: 2;">
+            &copy; 2026 J4S Platform. Kết nối tương lai.
+        </div>
+    </div>
+
+    <!-- Right Form Side -->
+    <div class="auth-form-panel">
+        <div class="auth-form-wrapper">
+            
+            <!-- Branding for Mobile -->
+            <div class="d-flex d-md-none justify-content-center mb-4">
+                <a href="/" class="auth-brand">
+                    <div class="auth-logo-icon">
+                        <i data-lucide="graduation-cap" style="width: 24px; height: 24px;"></i>
+                    </div>
+                    <span class="auth-logo-text">J4S</span>
+                </a>
+            </div>
+
+            <div class="mb-4 text-center text-md-start">
+                <h2 style="font-size: 1.85rem; font-weight: 800; color: #0f172a; margin-bottom: 8px;">Chào mừng quay trở lại!</h2>
+                <p style="color: #64748b; font-size: 0.95rem; margin: 0;">Đăng nhập vào tài khoản J4S của bạn</p>
+            </div>
+
+            <form asp-action="Login" method="post" asp-route-returnUrl="@ViewData["ReturnUrl"]">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger small py-2 rounded-3 border-0 mb-4 animate-in"></div>
+
+                <!-- Email Input -->
+                <div class="input-group-modern">
+                    <label asp-for="Email">Email đăng nhập</label>
+                    <div class="input-field-container">
+                        <span class="input-field-icon">
+                            <i data-lucide="mail" style="width: 18px; height: 18px;"></i>
+                        </span>
+                        <input asp-for="Email" type="email" class="input-field-modern" placeholder="name@example.com" required autocomplete="email" />
+                    </div>
+                    <span asp-validation-for="Email" class="text-danger small mt-1 d-block"></span>
+                </div>
+
+                <!-- Password Input -->
+                <div class="input-group-modern">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label asp-for="Password" class="mb-0">Mật khẩu</label>
+                        <a href="#" style="color: #2563eb; font-size: 0.8rem; font-weight: 600; text-decoration: none;">Quên mật khẩu?</a>
+                    </div>
+                    <div class="input-field-container">
+                        <span class="input-field-icon">
+                            <i data-lucide="lock" style="width: 18px; height: 18px;"></i>
+                        </span>
+                        <input asp-for="Password" type="password" class="input-field-modern" placeholder="••••••" required autocomplete="current-password" />
+                    </div>
+                    <span asp-validation-for="Password" class="text-danger small mt-1 d-block"></span>
+                </div>
+
+                <!-- Remember Me -->
+                <div class="mb-4">
+                    <label class="checkbox-modern">
+                        <input asp-for="RememberMe" type="checkbox" />
+                        <span class="checkbox-trigger">
+                            <i data-lucide="check"></i>
+                        </span>
+                        <span>Lưu đăng nhập của tôi</span>
+                    </label>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn-auth-submit">
+                    Đăng nhập
+                </button>
+
+                <div class="text-center mt-4" style="font-size: 0.9rem; color: #64748b;">
+                    Chưa có tài khoản? <a asp-action="Register" style="color: #2563eb; font-weight: 700; text-decoration: none;">Đăng ký thành viên</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

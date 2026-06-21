@@ -1,0 +1,198 @@
+@model JobForStudents.Models.RegisterViewModel
+@{
+    ViewData["Title"] = "Đăng ký tài khoản";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="auth-page-container">
+    <!-- Left Showcase Side -->
+    <div class="auth-showcase-panel">
+        <div class="auth-bg-shapes">
+            <div class="auth-shape auth-shape-1"></div>
+            <div class="auth-shape auth-shape-2"></div>
+            <div class="auth-shape auth-shape-3"></div>
+        </div>
+
+        <!-- Branding Logo -->
+        <a href="/" class="auth-brand" style="color: #ffffff;">
+            <div class="auth-logo-icon" style="background: rgba(255, 255, 255, 0.2); border: 1.5px solid rgba(255, 255, 255, 0.4); box-shadow: 0 4px 15px rgba(0,0,0,0.2); backdrop-filter: blur(8px);">
+                <i data-lucide="graduation-cap" style="width: 24px; height: 24px;"></i>
+            </div>
+            <span class="auth-logo-text" style="color: #ffffff; text-shadow: 0 2px 8px rgba(0,0,0,0.4);">J4S</span>
+        </a>
+
+        <!-- Showcase Message -->
+        <div class="auth-showcase-content">
+            <h1>Tham Gia Cộng Đồng Freelance Sinh Viên</h1>
+            <p>Tìm kiếm các dự án phù hợp, khẳng định bản thân và tích lũy thu nhập một cách chủ động. Đăng ký tài khoản ngay hôm nay!</p>
+            
+            <!-- Dynamic Glassmorphic Stats -->
+            <div class="auth-stats-grid">
+                <div class="auth-stat-card">
+                    <span class="auth-stat-number">10K+</span>
+                    <span class="auth-stat-label">Sinh viên hoạt động</span>
+                </div>
+                <div class="auth-stat-card">
+                    <span class="auth-stat-number">98%</span>
+                    <span class="auth-stat-label">Tỷ lệ hoàn thành</span>
+                </div>
+                <div class="auth-stat-card">
+                    <span class="auth-stat-number">500+</span>
+                    <span class="auth-stat-label">Doanh nghiệp tin cậy</span>
+                </div>
+                <div class="auth-stat-card">
+                    <span class="auth-stat-number">Escrow</span>
+                    <span class="auth-stat-label">Thanh toán bảo mật</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Note -->
+        <div style="font-size: 0.85rem; opacity: 0.9; font-weight: 500; position: relative; z-index: 2; text-shadow: 0 1px 4px rgba(0,0,0,0.5);">
+            &copy; 2026 J4S Platform. Kết nối tương lai.
+        </div>
+    </div>
+
+    <!-- Right Form Side -->
+    <div class="auth-form-panel">
+        <div class="auth-form-wrapper register-mode">
+            
+            <!-- Branding for Mobile -->
+            <div class="d-flex d-md-none justify-content-center mb-4">
+                <a href="/" class="auth-brand">
+                    <div class="auth-logo-icon">
+                        <i data-lucide="graduation-cap" style="width: 24px; height: 24px;"></i>
+                    </div>
+                    <span class="auth-logo-text">J4S</span>
+                </a>
+            </div>
+
+            <div class="mb-4 text-center text-md-start">
+                <h2 style="font-size: 1.85rem; font-weight: 800; color: #0f172a; margin-bottom: 8px;">Tham gia cùng J4S</h2>
+                <p style="color: #64748b; font-size: 0.95rem; margin: 0;">Kết nối tài năng sinh viên & nhu cầu doanh nghiệp</p>
+            </div>
+
+            <form asp-action="Register" method="post">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger small py-2 rounded-3 border-0 mb-4 animate-in"></div>
+
+                <!-- Role Selector -->
+                <div class="mb-4">
+                    <label class="form-label fw-semibold small text-muted" style="letter-spacing: 0.5px;">BẠN LÀ AI?</label>
+                    <div class="role-cards-row">
+                        <div class="role-card-selector">
+                            <input type="radio" name="Role" id="roleStudent" value="Student" checked autocomplete="off" />
+                            <label class="role-card-label" for="roleStudent">
+                                <i data-lucide="graduation-cap"></i>
+                                <span>Sinh viên</span>
+                            </label>
+                        </div>
+                        <div class="role-card-selector">
+                            <input type="radio" name="Role" id="roleBusiness" value="Business" autocomplete="off" />
+                            <label class="role-card-label" for="roleBusiness">
+                                <i data-lucide="briefcase"></i>
+                                <span>Doanh nghiệp</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Name Input -->
+                <div class="input-group-modern">
+                    <label asp-for="Name" id="nameLabel">Họ và tên của bạn</label>
+                    <div class="input-field-container">
+                        <span class="input-field-icon">
+                            <i data-lucide="user" style="width: 18px; height: 18px;"></i>
+                        </span>
+                        <input asp-for="Name" class="input-field-modern" id="Name" placeholder="Nguyễn Văn A" required />
+                    </div>
+                    <span asp-validation-for="Name" class="text-danger small mt-1 d-block"></span>
+                </div>
+
+                <!-- Email Input -->
+                <div class="input-group-modern">
+                    <label asp-for="Email">Email đăng nhập</label>
+                    <div class="input-field-container">
+                        <span class="input-field-icon">
+                            <i data-lucide="mail" style="width: 18px; height: 18px;"></i>
+                        </span>
+                        <input asp-for="Email" type="email" class="input-field-modern" placeholder="student@example.com" required autocomplete="email" />
+                    </div>
+                    <span asp-validation-for="Email" class="text-danger small mt-1 d-block"></span>
+                </div>
+
+                <!-- Phone Input -->
+                <div class="input-group-modern">
+                    <label asp-for="Phone">Số điện thoại liên hệ</label>
+                    <div class="input-field-container">
+                        <span class="input-field-icon">
+                            <i data-lucide="phone" style="width: 18px; height: 18px;"></i>
+                        </span>
+                        <input asp-for="Phone" class="input-field-modern" placeholder="0912345678" required autocomplete="tel" />
+                    </div>
+                    <span asp-validation-for="Phone" class="text-danger small mt-1 d-block"></span>
+                </div>
+
+                <!-- Password Input -->
+                <div class="input-group-modern">
+                    <label asp-for="Password">Mật khẩu</label>
+                    <div class="input-field-container">
+                        <span class="input-field-icon">
+                            <i data-lucide="lock" style="width: 18px; height: 18px;"></i>
+                        </span>
+                        <input asp-for="Password" type="password" class="input-field-modern" placeholder="••••••" required autocomplete="new-password" />
+                    </div>
+                    <span asp-validation-for="Password" class="text-danger small mt-1 d-block"></span>
+                </div>
+
+                <!-- Confirm Password Input -->
+                <div class="input-group-modern">
+                    <label asp-for="ConfirmPassword">Xác nhận mật khẩu</label>
+                    <div class="input-field-container">
+                        <span class="input-field-icon">
+                            <i data-lucide="shield-check" style="width: 18px; height: 18px;"></i>
+                        </span>
+                        <input asp-for="ConfirmPassword" type="password" class="input-field-modern" placeholder="••••••" required autocomplete="new-password" />
+                    </div>
+                    <span asp-validation-for="ConfirmPassword" class="text-danger small mt-1 d-block"></span>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn-auth-submit mt-2">
+                    Đăng ký ngay
+                </button>
+
+                <div class="text-center mt-4" style="font-size: 0.9rem; color: #64748b;">
+                    Đã có tài khoản? <a asp-action="Login" style="color: #2563eb; font-weight: 700; text-decoration: none;">Đăng nhập</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const roleStudent = document.getElementById('roleStudent');
+            const roleBusiness = document.getElementById('roleBusiness');
+            const nameLabel = document.getElementById('nameLabel');
+            const nameInput = document.getElementById('Name');
+
+            function updateLabels() {
+                if (roleStudent.checked) {
+                    nameLabel.textContent = "Họ và tên của bạn";
+                    nameInput.placeholder = "Nguyễn Văn A";
+                } else if (roleBusiness.checked) {
+                    nameLabel.textContent = "Tên công ty / Doanh nghiệp";
+                    nameInput.placeholder = "Công ty TNHH Giải pháp Công nghệ J4S";
+                }
+            }
+
+            roleStudent.addEventListener('change', updateLabels);
+            roleBusiness.addEventListener('change', updateLabels);
+            
+            // Initial call
+            updateLabels();
+        });
+    </script>
+}

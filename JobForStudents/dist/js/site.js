@@ -1204,18 +1204,37 @@
             e.stopPropagation();
             document.querySelector('.dropdown-panel')?.remove();
 
+            // Read dynamic info from the DOM elements
+            const nameEl = btn.querySelector('.user-name');
+            const roleEl = btn.querySelector('.user-role');
+            const initialsEl = btn.querySelector('.user-avatar span');
+            const avatarImg = btn.querySelector('.user-avatar img');
+
+            const name = nameEl ? nameEl.textContent.trim() : 'Người dùng';
+            const role = roleEl ? roleEl.textContent.trim() : 'Thành viên';
+            const initials = initialsEl ? initialsEl.textContent.trim() : 'US';
+            const avatarSrc = avatarImg ? avatarImg.src : null;
+            const email = btn.getAttribute('data-email') || (role === 'Freelancer' ? 'sinhvien@j4s.vn' : 'doanhnghiep@j4s.vn');
+
             const dropdown = document.createElement('div');
             dropdown.className = 'dropdown-panel user-dropdown';
             dropdown.innerHTML = `
                 <div class="dropdown-user-header">
-                    <div class="user-avatar"><span>ML</span></div>
-                    <div><div class="dropdown-user-name">Mai Linh</div><div class="dropdown-user-email">mailinh@fpt.edu.vn</div></div>
+                    <div class="user-avatar" style="background: ${avatarSrc ? 'none' : 'linear-gradient(135deg, #2563eb, #3b82f6)'}; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; color: white; font-weight: 700; overflow: hidden; flex-shrink: 0;">
+                        ${avatarSrc 
+                            ? `<img src="${avatarSrc}" style="width: 100%; height: 100%; object-fit: cover;" />` 
+                            : `<span>${escapeHtml(initials)}</span>`
+                        }
+                    </div>
+                    <div>
+                        <div class="dropdown-user-name">${escapeHtml(name)}</div>
+                        <div class="dropdown-user-email">${escapeHtml(email)}</div>
+                    </div>
                 </div>
                 <div class="dropdown-divider"></div>
                 <div class="dropdown-menu-list">
                     <div class="dropdown-menu-item" data-action="profile"><i data-lucide="user" style="width:16px;height:16px;"></i> Hồ sơ của tôi</div>
-                    <div class="dropdown-menu-item" data-action="settings"><i data-lucide="settings" style="width:16px;height:16px;"></i> Cài đặt</div>
-                    <div class="dropdown-menu-item" data-action="help"><i data-lucide="help-circle" style="width:16px;height:16px;"></i> Trợ giúp</div>
+                    <div class="dropdown-menu-item" data-action="policies"><i data-lucide="shield-check" style="width:16px;height:16px;"></i> Điều khoản & Chính sách</div>
                     <div class="dropdown-divider"></div>
                     <div class="dropdown-menu-item danger" data-action="logout"><i data-lucide="log-out" style="width:16px;height:16px;"></i> Đăng xuất</div>
                 </div>`;
@@ -1235,8 +1254,7 @@
                     setTimeout(() => dropdown.remove(), 200);
                     switch (action) {
                         case 'profile': setActiveSidebar('profile'); currentSidebarMode = 'profile'; renderProfileView(); break;
-                        case 'settings': showToast('⚙️ Cài đặt đang được phát triển', 'info'); break;
-                        case 'help': showToast('❓ Trung tâm trợ giúp sẽ ra mắt sớm!', 'info'); break;
+                        case 'policies': setActiveSidebar(''); currentSidebarMode = 'policies'; renderPoliciesView(); break;
                         case 'logout': showToast('👋 Đã đăng xuất thành công!', 'success'); break;
                     }
                 });
@@ -1252,6 +1270,64 @@
                 });
             }, 10);
         });
+    }
+
+    function renderPoliciesView() {
+        mainContent.innerHTML = `
+            <div class="page-header animate-in">
+                <h1 class="page-title"><i data-lucide="shield-check" style="width:24px;height:24px;"></i> Điều khoản & Chính sách</h1>
+                <p class="page-subtitle">Các quy định sử dụng và chính sách bảo mật thông tin trên J4S</p>
+            </div>
+            
+            <div class="profile-content-grid animate-in" style="grid-template-columns: 1fr; gap: 24px; max-width: 900px; margin: 0 auto;">
+                <div class="profile-card-modern" style="padding: 30px;">
+                    <h2 style="font-size: 20px; font-weight: 800; color: #0ea5e9; margin: 0 0 16px 0; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; display: flex; align-items: center; gap: 8px;"><i data-lucide="file-text" style="width:20px;height:20px;"></i> Điều khoản sử dụng</h2>
+                    <div style="font-size: 14px; line-height: 1.8; color: var(--text-secondary);">
+                        <p>Chào mừng bạn đến với <strong>J4S (Job For Students)</strong>. Bằng việc truy cập và sử dụng nền tảng của chúng tôi, bạn đồng ý tuân thủ các điều khoản sau đây:</p>
+                        <h4 style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-top: 16px; margin-bottom: 8px;">1. Tài khoản người dùng</h4>
+                        <ul style="padding-left: 20px;">
+                            <li>Sinh viên phải cung cấp thông tin học vấn chính xác (Trường học, Chuyên ngành, Điểm GPA nếu có).</li>
+                            <li>Doanh nghiệp/Nhà tuyển dụng chịu trách nhiệm về tính pháp lý và thông tin tuyển dụng của dự án/công việc đăng tải.</li>
+                            <li>Nghiêm cấm chia sẻ tài khoản hoặc sử dụng thông tin giả mạo.</li>
+                        </ul>
+                        <h4 style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-top: 16px; margin-bottom: 8px;">2. Quy trình làm việc và Thanh toán (Escrow)</h4>
+                        <ul style="padding-left: 20px;">
+                            <li>Tất cả các giao dịch thanh toán dự án phải được thực hiện thông qua hệ thống giữ tiền trung gian (Escrow) của J4S để đảm bảo quyền lợi cho cả hai bên.</li>
+                            <li>Doanh nghiệp cần nạp đủ ngân sách công việc trước khi freelancer bắt đầu thực hiện dự án.</li>
+                            <li>Freelancer nhận thanh toán sau khi doanh nghiệp xác nhận nghiệm thu sản phẩm đạt yêu cầu.</li>
+                        </ul>
+                        <h4 style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-top: 16px; margin-bottom: 8px;">3. Quyền và nghĩa vụ</h4>
+                        <ul style="padding-left: 20px;">
+                            <li>Freelancer cam kết hoàn thành công việc đúng thời hạn (deadline) và chất lượng đã thỏa thuận.</li>
+                            <li>Mọi tranh chấp phát sinh sẽ được ban quản trị J4S hỗ trợ giải quyết dựa trên lịch sử giao dịch và thỏa thuận ban đầu của hợp đồng.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="profile-card-modern animate-in" style="padding: 30px;">
+                    <h2 style="font-size: 20px; font-weight: 800; color: #0ea5e9; margin: 0 0 16px 0; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; display: flex; align-items: center; gap: 8px;"><i data-lucide="lock" style="width:20px;height:20px;"></i> Chính sách bảo mật</h2>
+                    <div style="font-size: 14px; line-height: 1.8; color: var(--text-secondary);">
+                        <p>J4S cam kết bảo vệ thông tin riêng tư của các thành viên tham gia nền tảng:</p>
+                        <h4 style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-top: 16px; margin-bottom: 8px;">1. Thu thập thông tin</h4>
+                        <ul style="padding-left: 20px;">
+                            <li>Chúng tôi thu thập các thông tin cá nhân cần thiết bao gồm: Họ tên, Email, Số điện thoại, Thông tin học vấn (đối với sinh viên) và Thông tin công ty (đối với doanh nghiệp).</li>
+                            <li>Hình ảnh chân dung, ảnh bìa và tệp CV tải lên được sử dụng cho mục đích hiển thị hồ sơ cá nhân của bạn.</li>
+                        </ul>
+                        <h4 style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-top: 16px; margin-bottom: 8px;">2. Sử dụng thông tin</h4>
+                        <ul style="padding-left: 20px;">
+                            <li>Thông tin liên hệ (Email, Số điện thoại) được sử dụng để thông báo trạng thái dự án, giao dịch ví, hoặc các cập nhật quan trọng từ nền tảng.</li>
+                            <li>Hồ sơ năng lực, kỹ năng và CV của sinh viên sẽ được hiển thị công khai cho các nhà tuyển dụng tìm kiếm nhân sự phù hợp.</li>
+                        </ul>
+                        <h4 style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-top: 16px; margin-bottom: 8px;">3. Bảo mật dữ liệu</h4>
+                        <ul style="padding-left: 20px;">
+                            <li>Mật khẩu của bạn được mã hóa một chiều bằng thuật toán băm bảo mật cao trước khi lưu trữ trong cơ sở dữ liệu.</li>
+                            <li>Chúng tôi không chia sẻ, bán hay tiết lộ dữ liệu cá nhân của thành viên cho bên thứ ba vì bất kỳ mục đích thương mại nào.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>`;
+        
+        if (window.lucide) lucide.createIcons();
     }
 
     // ============================================
