@@ -60,7 +60,10 @@ public enum NotificationType
 {
     System,
     JobStatus,
-    Message
+    Message,
+    Payment,
+    Review,
+    Deadline
 }
 
 public enum TransactionType

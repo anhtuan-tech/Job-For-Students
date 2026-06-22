@@ -733,6 +733,93 @@ public class HomeController : Controller
         return Json(new { success = true, message = "Đổi mật khẩu thành công!" });
     }
 
+    [Authorize]
+    [HttpGet]
+    public async Task<IActionResult> GetNotifications()
+    {
+        var currentUserId = GetCurrentUserId();
+        if (!currentUserId.HasValue)
+        {
+            return Json(new { success = false, message = "Chưa đăng nhập." });
+        }
+
+
+
+        var notifications = await _context.Notifications
+            .Where(n => n.UserId == currentUserId.Value)
+            .OrderByDescending(n => n.CreatedAt)
+            .Select(n => new
+            {
+                id = n.Id,
+                title = n.Title,
+                desc = n.Message,
+                type = n.Type.ToString(),
+                time = GetTimeAgo(n.CreatedAt),
+                unread = !n.IsRead,
+                icon = GetIconForType(n.Type),
+                color = GetColorForType(n.Type)
+            })
+            .ToListAsync();
+
+        return Json(notifications);
+    }
+
+    [Authorize]
+    [HttpPost]
+    public async Task<IActionResult> MarkNotificationsAsRead()
+    {
+        var currentUserId = GetCurrentUserId();
+        if (!currentUserId.HasValue)
+        {
+            return Json(new { success = false, message = "Chưa đăng nhập." });
+        }
+
+        var unreadNotifications = await _context.Notifications
+            .Where(n => n.UserId == currentUserId.Value && !n.IsRead)
+            .ToListAsync();
+
+        foreach (var noti in unreadNotifications)
+        {
+            noti.IsRead = true;
+        }
+
+        await _context.SaveChangesAsync();
+        return Json(new { success = true });
+    }
+
+    private static string GetIconForType(NotificationType type)
+    {
+        return type switch
+        {
+            NotificationType.Payment => "💰",
+            NotificationType.Review => "⭐",
+            NotificationType.Message => "💬",
+            NotificationType.Deadline => "⏰",
+            _ => "🔔"
+        };
+    }
+
+    private static string GetColorForType(NotificationType type)
+    {
+        return type switch
+        {
+            NotificationType.Payment => "#3b82f6", // Blue
+            NotificationType.Review => "#10b981",  // Green
+            NotificationType.Message => "#8b5cf6", // Purple
+            NotificationType.Deadline => "#f59e0b", // Orange
+            _ => "inherit"
+        };
+    }
+
+    private static string GetTimeAgo(DateTime dateTime)
+    {
+        var span = DateTime.UtcNow - dateTime;
+        if (span.TotalMinutes < 1) return "vừa xong";
+        if (span.TotalMinutes < 60) return $"{(int)span.TotalMinutes} phút trước";
+        if (span.TotalHours < 24) return $"{(int)span.TotalHours} giờ trước";
+        return $"{(int)span.TotalDays} ngày trước";
+    }
+
     private int? GetCurrentUserId()
     {
         var nameIdentifier = User.FindFirstValue(ClaimTypes.NameIdentifier);

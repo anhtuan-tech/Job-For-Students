@@ -104,6 +104,7 @@
         bindViewProfileButtons();
         bindPostJobButtons();
         bindFindFreelancerBtn();
+        updateNotificationBadge();
     }
 
     // ============================================
@@ -2143,8 +2144,30 @@
     }
 
     // ============================================
-    // NOTIFICATION DROPDOWN
+    // NOTIFICATION DROPDOWN & BADGE
     // ============================================
+    function updateNotificationBadge() {
+        const btn = document.getElementById('notificationBtn');
+        if (!btn) return;
+        fetch('/Home/GetNotifications')
+            .then(r => r.json())
+            .then(notifications => {
+                if (Array.isArray(notifications)) {
+                    const unreadCount = notifications.filter(n => n.unread).length;
+                    const badge = btn.querySelector('.notification-badge');
+                    if (badge) {
+                        if (unreadCount > 0) {
+                            badge.textContent = unreadCount;
+                            badge.style.display = 'flex';
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    }
+                }
+            })
+            .catch(err => console.error('Error fetching notifications:', err));
+    }
+
     function bindNotificationBtn() {
         const btn = document.getElementById('notificationBtn');
         if (!btn) return;
@@ -2153,53 +2176,72 @@
             // Close any existing dropdown
             document.querySelector('.dropdown-panel')?.remove();
 
-            const dropdown = document.createElement('div');
-            dropdown.className = 'dropdown-panel notification-dropdown';
-            dropdown.innerHTML = `
-                <div class="dropdown-header">
-                    <h4>Thông báo</h4>
-                    <button class="dropdown-mark-read">Đánh dấu đã đọc</button>
-                </div>
-                <div class="dropdown-list">
-                    ${mockNotifications.map(n => `
-                        <div class="dropdown-item ${n.unread ? 'unread' : ''}">
-                            <div class="dropdown-item-icon">${n.icon}</div>
-                            <div class="dropdown-item-content">
-                                <div class="dropdown-item-title">${n.title}</div>
-                                <div class="dropdown-item-desc">${n.desc}</div>
-                                <div class="dropdown-item-time">${n.time}</div>
+            fetch('/Home/GetNotifications')
+                .then(r => r.json())
+                .then(notifications => {
+                    const listHTML = (notifications && notifications.length > 0)
+                        ? notifications.map(n => `
+                            <div class="dropdown-item ${n.unread ? 'unread' : ''}" data-id="${n.id}">
+                                <div class="dropdown-item-icon">${n.icon}</div>
+                                <div class="dropdown-item-content">
+                                    <div class="dropdown-item-title" style="color: ${n.color || 'inherit'}; font-weight: 600;">${n.title}</div>
+                                    <div class="dropdown-item-desc">${n.desc}</div>
+                                    <div class="dropdown-item-time">${n.time}</div>
+                                </div>
+                                ${n.unread ? '<div class="dropdown-dot"></div>' : ''}
                             </div>
-                            ${n.unread ? '<div class="dropdown-dot"></div>' : ''}
+                        `).join('')
+                        : `<div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px;">Không có thông báo nào</div>`;
+
+                    const dropdown = document.createElement('div');
+                    dropdown.className = 'dropdown-panel notification-dropdown';
+                    dropdown.innerHTML = `
+                        <div class="dropdown-header">
+                            <h4>Thông báo</h4>
+                            <button class="dropdown-mark-read">Đánh dấu đã đọc</button>
                         </div>
-                    `).join('')}
-                </div>`;
+                        <div class="dropdown-list">
+                            ${listHTML}
+                        </div>`;
 
-            document.body.appendChild(dropdown);
-            // Position near the bell
-            const rect = btn.getBoundingClientRect();
-            dropdown.style.top = (rect.bottom + 8) + 'px';
-            dropdown.style.right = (window.innerWidth - rect.right) + 'px';
+                    document.body.appendChild(dropdown);
+                    // Position near the bell
+                    const rect = btn.getBoundingClientRect();
+                    dropdown.style.top = (rect.bottom + 8) + 'px';
+                    dropdown.style.right = (window.innerWidth - rect.right) + 'px';
 
-            requestAnimationFrame(() => dropdown.classList.add('show'));
+                    requestAnimationFrame(() => dropdown.classList.add('show'));
 
-            dropdown.querySelector('.dropdown-mark-read').addEventListener('click', () => {
-                dropdown.querySelectorAll('.unread').forEach(item => item.classList.remove('unread'));
-                dropdown.querySelectorAll('.dropdown-dot').forEach(dot => dot.remove());
-                const badge = btn.querySelector('.notification-badge');
-                if (badge) badge.style.display = 'none';
-                showToast('✅ Đã đánh dấu tất cả đã đọc', 'success');
-            });
+                    dropdown.querySelector('.dropdown-mark-read').addEventListener('click', () => {
+                        fetch('/Home/MarkNotificationsAsRead', { method: 'POST' })
+                            .then(r => r.json())
+                            .then(res => {
+                                if (res.success) {
+                                    dropdown.querySelectorAll('.unread').forEach(item => item.classList.remove('unread'));
+                                    dropdown.querySelectorAll('.dropdown-dot').forEach(dot => dot.remove());
+                                    const badge = btn.querySelector('.notification-badge');
+                                    if (badge) badge.style.display = 'none';
+                                    showToast('✅ Đã đánh dấu tất cả đã đọc', 'success');
+                                }
+                            })
+                            .catch(err => console.error('Error marking notifications as read:', err));
+                    });
 
-            // Close on outside click
-            setTimeout(() => {
-                document.addEventListener('click', function closeDropdown(ev) {
-                    if (!dropdown.contains(ev.target)) {
-                        dropdown.classList.remove('show');
-                        setTimeout(() => dropdown.remove(), 200);
-                        document.removeEventListener('click', closeDropdown);
-                    }
+                    // Close on outside click
+                    setTimeout(() => {
+                        document.addEventListener('click', function closeDropdown(ev) {
+                            if (!dropdown.contains(ev.target)) {
+                                dropdown.classList.remove('show');
+                                setTimeout(() => dropdown.remove(), 200);
+                                document.removeEventListener('click', closeDropdown);
+                            }
+                        });
+                    }, 10);
+                })
+                .catch(err => {
+                    console.error('Error loading notifications:', err);
+                    showToast('Không thể tải thông báo.', 'error');
                 });
-            }, 10);
         });
     }
 
