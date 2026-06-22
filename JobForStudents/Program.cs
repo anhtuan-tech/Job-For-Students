@@ -1,4 +1,6 @@
 using JobForStudents.Data;
+using JobForStudents.Models;
+using JobForStudents.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 
@@ -6,6 +8,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddMemoryCache();
+
+// Configure EmailSettings and register EmailService
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddTransient<IEmailService, EmailService>();
 
 // Register AppDbContext with Npgsql PostgreSQL provider
 builder.Services.AddDbContext<AppDbContext>(options =>

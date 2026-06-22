@@ -721,7 +721,13 @@ public class HomeController : Controller
             return Json(new { success = false, message = "Mật khẩu cũ không chính xác." });
         }
 
-        user.PasswordHash = JobForStudents.Helpers.PasswordHasher.HashPassword(request.NewPassword);
+        var newPasswordHash = JobForStudents.Helpers.PasswordHasher.HashPassword(request.NewPassword);
+        if (user.PasswordHash == newPasswordHash)
+        {
+            return Json(new { success = false, message = "Mật khẩu mới không được trùng với mật khẩu cũ." });
+        }
+
+        user.PasswordHash = newPasswordHash;
         await _context.SaveChangesAsync();
 
         return Json(new { success = true, message = "Đổi mật khẩu thành công!" });

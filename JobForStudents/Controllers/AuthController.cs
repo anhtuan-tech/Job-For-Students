@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -5,19 +6,25 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using JobForStudents.Data;
 using JobForStudents.Helpers;
 using JobForStudents.Models;
+using JobForStudents.Services;
 
 namespace JobForStudents.Controllers;
 
 public class AuthController : Controller
 {
     private readonly AppDbContext _context;
+    private readonly IMemoryCache _cache;
+    private readonly IEmailService _emailService;
 
-    public AuthController(AppDbContext context)
+    public AuthController(AppDbContext context, IMemoryCache cache, IEmailService emailService)
     {
         _context = context;
+        _cache = cache;
+        _emailService = emailService;
     }
 
     [HttpGet]
@@ -210,5 +217,119 @@ public class AuthController : Controller
     public IActionResult AccessDenied()
     {
         return View();
+    }
+
+    [HttpGet]
+    public IActionResult ForgotPassword()
+    {
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            return RedirectToAction("Index", "Home");
+        }
+        return View();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> SendOtp([FromBody] SendOtpRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return Json(new { success = false, message = "Email không hợp lệ." });
+        }
+
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email && !u.IsDeleted);
+        if (user == null)
+        {
+            return Json(new { success = false, message = "Email không tồn tại trên hệ thống." });
+        }
+
+        if (user.Status == UserStatus.Banned)
+        {
+            return Json(new { success = false, message = "Tài khoản này đã bị khóa." });
+        }
+
+        var otp = new Random().Next(100000, 999999).ToString();
+        var cacheKey = $"OTP_Reset_{request.Email}";
+        _cache.Set(cacheKey, otp, TimeSpan.FromMinutes(5));
+
+        // For development purpose, print to output console and return OTP
+        System.Diagnostics.Debug.WriteLine($"[FORGOT PASSWORD] OTP for {request.Email}: {otp}");
+        Console.WriteLine($"[FORGOT PASSWORD] OTP for {request.Email}: {otp}");
+
+        // Send OTP email
+        var subject = "Mã xác thực khôi phục mật khẩu J4S";
+        var body = $@"
+            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;'>
+                <h2 style='color: #2563eb; text-align: center;'>Khôi phục mật khẩu tài khoản J4S</h2>
+                <p>Chào bạn,</p>
+                <p>Bạn đã yêu cầu đặt lại mật khẩu cho tài khoản J4S của mình. Dưới đây là mã OTP xác thực của bạn:</p>
+                <div style='background-color: #f1f5f9; padding: 15px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 4px; color: #1e293b; border-radius: 6px; margin: 20px 0;'>
+                    {otp}
+                </div>
+                <p style='color: #ef4444; font-weight: 500;'>Mã OTP này có hiệu lực trong vòng 5 phút.</p>
+                <p>Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email này để bảo vệ tài khoản.</p>
+                <hr style='border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;' />
+                <p style='font-size: 12px; color: #64748b; text-align: center;'>Đây là email tự động từ hệ thống J4S Platform. Vui lòng không phản hồi email này.</p>
+            </div>";
+        await _emailService.SendEmailAsync(request.Email, subject, body);
+
+        return Json(new { success = true, message = "Mã OTP đã được gửi đến email của bạn." });
+    }
+
+    [HttpPost]
+    public IActionResult VerifyOtp([FromBody] VerifyOtpRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            var errors = string.Join(" ", System.Linq.Enumerable.Select(
+                System.Linq.Enumerable.SelectMany(ModelState.Values, v => v.Errors), 
+                e => e.ErrorMessage));
+            return Json(new { success = false, message = errors });
+        }
+
+        var cacheKey = $"OTP_Reset_{request.Email}";
+        if (!_cache.TryGetValue(cacheKey, out string? cachedOtp) || cachedOtp != request.Otp)
+        {
+            return Json(new { success = false, message = "Mã OTP không chính xác hoặc đã hết hạn." });
+        }
+
+        return Json(new { success = true, message = "Mã OTP xác thực thành công!" });
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> VerifyOtpAndResetPassword([FromBody] ResetPasswordRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            var errors = string.Join(" ", System.Linq.Enumerable.Select(
+                System.Linq.Enumerable.SelectMany(ModelState.Values, v => v.Errors), 
+                e => e.ErrorMessage));
+            return Json(new { success = false, message = errors });
+        }
+
+        var cacheKey = $"OTP_Reset_{request.Email}";
+        if (!_cache.TryGetValue(cacheKey, out string? cachedOtp) || cachedOtp != request.Otp)
+        {
+            return Json(new { success = false, message = "Mã OTP không chính xác hoặc đã hết hạn." });
+        }
+
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email && !u.IsDeleted);
+        if (user == null)
+        {
+            return Json(new { success = false, message = "Không tìm thấy người dùng." });
+        }
+
+        var newPasswordHash = PasswordHasher.HashPassword(request.NewPassword);
+        if (user.PasswordHash == newPasswordHash)
+        {
+            return Json(new { success = false, message = "Mật khẩu mới không được trùng với mật khẩu cũ." });
+        }
+
+        user.PasswordHash = newPasswordHash;
+        await _context.SaveChangesAsync();
+
+        _cache.Remove(cacheKey);
+
+        return Json(new { success = true, message = "Đặt lại mật khẩu thành công!" });
     }
 }
