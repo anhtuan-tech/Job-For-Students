@@ -35,6 +35,7 @@ public enum ExperienceLevel
 
 public enum JobStatus
 {
+    Draft,
     Open,
     In_Progress,
     Closed,
@@ -45,7 +46,8 @@ public enum BidStatus
 {
     Pending,
     Accepted,
-    Rejected
+    Rejected,
+    Hired
 }
 
 public enum ContractStatus
@@ -79,4 +81,32 @@ public enum TransactionStatus
     Pending,
     Success,
     Failed
+}
+
+public enum SupportCategory
+{
+    JobPosting,
+    PaymentWallet,
+    Account,
+    Other
+}
+
+public enum SupportRequestStatus
+{
+    Pending,
+    InProgress,
+    Resolved
+}
+
+public enum FeedbackType
+{
+    Suggestion,
+    BugReport
+}
+
+public enum FeedbackStatus
+{
+    Received,
+    InProgress,
+    Resolved
 }

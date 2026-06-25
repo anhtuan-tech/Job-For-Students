@@ -293,11 +293,13 @@ public class HomeController : Controller
                     .Take(10)
                     .ToListAsync();
 
-                dashboard.BusinessRecentJobs = rawRecentJobs.Select(j => 
+                dashboard.BusinessRecentJobs = rawRecentJobs.Select(j =>
                 {
                     var isSoonExpiring = j.Status == JobStatus.Open && j.Deadline > today && j.Deadline <= threeDaysSoon;
-                    var statusStr = !j.IsApproved ? "Pending" : (j.Status == JobStatus.Closed ? "Paused" : (isSoonExpiring ? "Warning" : "Active"));
-                    
+                    var statusStr = j.Status == JobStatus.Draft ? "Draft"
+                        : !j.IsApproved ? "Pending"
+                        : (j.Status == JobStatus.Closed ? "Paused" : (isSoonExpiring ? "Warning" : "Active"));
+
                     return new BusinessRecentJobViewModel
                     {
                         Id = j.Id,
@@ -305,7 +307,7 @@ public class HomeController : Controller
                         NewApplicantsCount = j.JobBids.Count(b => b.CreatedAt >= sevenDaysAgo),
                         TotalApplicantsCount = j.JobBids.Count,
                         ViewCount = j.ViewCount,
-                        Category = j.JobPostSkills.FirstOrDefault()?.Skill.Category ?? "Khác",
+                        Category = j.Category ?? (j.JobPostSkills.FirstOrDefault()?.Skill.Category ?? "Khác"),
                         Status = statusStr
                     };
                 }).ToList();
@@ -321,10 +323,10 @@ public class HomeController : Controller
                     .Take(10)
                     .ToListAsync();
 
-                dashboard.BusinessRecentApplicants = rawRecentBids.Select(b => 
+                dashboard.BusinessRecentApplicants = rawRecentBids.Select(b =>
                 {
                     var sp = b.StudentProfile;
-                    
+
                     // Time Ago helper
                     var diff = today - b.CreatedAt;
                     string timeAgoStr;
@@ -436,8 +438,8 @@ public class HomeController : Controller
         if (!string.IsNullOrEmpty(searchTerm))
         {
             var term = searchTerm.ToLower();
-            jobQuery = jobQuery.Where(j => 
-                j.Title.ToLower().Contains(term) || 
+            jobQuery = jobQuery.Where(j =>
+                j.Title.ToLower().Contains(term) ||
                 j.Description.ToLower().Contains(term) ||
                 j.JobPostSkills.Any(jps => jps.Skill.Name.ToLower().Contains(term))
             );
@@ -612,7 +614,7 @@ public class HomeController : Controller
                 budget = j.Budget,
                 deadline = j.Deadline.ToString("dd/MM/yyyy"),
                 createdAt = j.CreatedAt.ToString("dd/MM/yyyy HH:mm"),
-                category = j.JobPostSkills.Select(s => s.Skill.Category).FirstOrDefault() ?? "Khac",
+                category = j.Category ?? (j.JobPostSkills.Select(s => s.Skill.Category).FirstOrDefault() ?? "Khac"),
                 tags = j.JobPostSkills.Select(s => s.Skill.Name).ToList(),
                 applicantsCount = j.JobBids.Count,
                 pendingApplicantsCount = j.JobBids.Count(b => b.Status == BidStatus.Pending),
@@ -627,7 +629,7 @@ public class HomeController : Controller
 
     [Authorize(Roles = "Business")]
     [HttpGet]
-    public async Task<IActionResult> GetBusinessApplicants(int? jobId)
+    public async Task<IActionResult> GetBusinessApplicants(int? jobId, string? searchTerm, string? status, bool? savedOnly)
     {
         var currentUserId = GetCurrentUserId();
         if (!currentUserId.HasValue)
@@ -645,6 +647,32 @@ public class HomeController : Controller
         if (jobId.HasValue)
         {
             query = query.Where(b => b.JobPostId == jobId.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var term = searchTerm.Trim().ToLower();
+            query = query.Where(b =>
+                b.StudentProfile.FullName.ToLower().Contains(term) ||
+                (b.StudentProfile.University != null && b.StudentProfile.University.ToLower().Contains(term)) ||
+                (b.StudentProfile.Major != null && b.StudentProfile.Major.ToLower().Contains(term)) ||
+                b.StudentProfile.StudentSkills.Any(ss => ss.Skill.Name.ToLower().Contains(term)));
+        }
+
+        if (!string.IsNullOrWhiteSpace(status) && Enum.TryParse<BidStatus>(status, true, out var parsedStatus))
+        {
+            query = query.Where(b => b.Status == parsedStatus);
+        }
+
+        var savedStudentIds = new HashSet<int>(
+            await _context.SavedCandidates
+                .Where(sc => sc.BusinessId == currentUserId.Value)
+                .Select(sc => sc.StudentId)
+                .ToListAsync());
+
+        if (savedOnly == true)
+        {
+            query = query.Where(b => savedStudentIds.Contains(b.StudentId));
         }
 
         var applicants = await query
@@ -669,7 +697,27 @@ public class HomeController : Controller
             })
             .ToListAsync();
 
-        return Json(new { success = true, applicants });
+        var result = applicants.Select(a => new
+        {
+            a.bidId,
+            a.jobId,
+            a.jobTitle,
+            a.studentId,
+            a.fullName,
+            a.avatarUrl,
+            a.university,
+            a.major,
+            a.proposal,
+            a.bidAmount,
+            a.estimatedDays,
+            a.status,
+            a.appliedAt,
+            a.role,
+            a.skills,
+            isSaved = savedStudentIds.Contains(a.studentId)
+        });
+
+        return Json(new { success = true, applicants = result });
     }
 
     [Authorize(Roles = "Business")]
@@ -695,6 +743,10 @@ public class HomeController : Controller
         if (action == "accept")
         {
             bid.Status = BidStatus.Accepted;
+        }
+        else if (action == "hire")
+        {
+            bid.Status = BidStatus.Hired;
             bid.JobPost.Status = JobStatus.In_Progress;
 
             var existingContract = await _context.JobContracts
@@ -712,6 +764,16 @@ public class HomeController : Controller
                     CreatedAt = DateTime.UtcNow
                 });
             }
+
+            // Tự động từ chối các ứng viên khác (chưa bị từ chối) của cùng job này
+            var otherBids = await _context.JobBids
+                .Where(b => b.JobPostId == bid.JobPostId && b.Id != bid.Id && b.Status != BidStatus.Rejected)
+                .ToListAsync();
+
+            foreach (var other in otherBids)
+            {
+                other.Status = BidStatus.Rejected;
+            }
         }
         else if (action == "reject")
         {
@@ -724,6 +786,40 @@ public class HomeController : Controller
 
         await _context.SaveChangesAsync();
         return Json(new { success = true, status = bid.Status.ToString() });
+    }
+
+    [Authorize(Roles = "Business")]
+    [HttpPost]
+    public async Task<IActionResult> ToggleSaveCandidate([FromBody] ToggleSaveCandidateRequest request)
+    {
+        var currentUserId = GetCurrentUserId();
+        if (!currentUserId.HasValue)
+        {
+            return Json(new { success = false, message = "Chua dang nhap." });
+        }
+
+        var existing = await _context.SavedCandidates
+            .FirstOrDefaultAsync(sc => sc.BusinessId == currentUserId.Value && sc.StudentId == request.StudentId);
+
+        bool isSavedNow;
+        if (existing != null)
+        {
+            _context.SavedCandidates.Remove(existing);
+            isSavedNow = false;
+        }
+        else
+        {
+            _context.SavedCandidates.Add(new SavedCandidate
+            {
+                BusinessId = currentUserId.Value,
+                StudentId = request.StudentId,
+                SavedAt = DateTime.UtcNow
+            });
+            isSavedNow = true;
+        }
+
+        await _context.SaveChangesAsync();
+        return Json(new { success = true, isSaved = isSavedNow });
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
@@ -879,6 +975,47 @@ public class HomeController : Controller
                 completionRate = completionRate,
                 completedJobsCount = completedContracts,
                 reviews = reviews,
+                balance = user.Wallet?.Balance ?? 0m
+            });
+        }
+        else if (user.Role == UserRole.Admin)
+        {
+            var totalUsers = await _context.Users.CountAsync(u => !u.IsDeleted);
+            var totalJobs = await _context.JobPosts.CountAsync(j => !j.IsDeleted);
+            var totalContracts = await _context.JobContracts.CountAsync();
+            var systemVolume = await _context.Wallets.SumAsync(w => w.Balance);
+
+            var reviews = await _context.Reviews
+                .Include(r => r.Reviewer)
+                    .ThenInclude(u => u.StudentProfile)
+                .Include(r => r.Reviewer)
+                    .ThenInclude(u => u.BusinessProfile)
+                .OrderByDescending(r => r.CreatedAt)
+                .Take(10)
+                .Select(r => new
+                {
+                    reviewerName = r.Reviewer.StudentProfile != null ? r.Reviewer.StudentProfile.FullName : (r.Reviewer.BusinessProfile != null ? r.Reviewer.BusinessProfile.CompanyName : r.Reviewer.Email),
+                    reviewerAvatar = r.Reviewer.StudentProfile != null ? r.Reviewer.StudentProfile.AvatarUrl : (r.Reviewer.BusinessProfile != null ? r.Reviewer.BusinessProfile.LogoUrl : ""),
+                    rating = r.Rating,
+                    comment = r.Comment,
+                    createdAt = r.CreatedAt.ToString("dd/MM/yyyy")
+                })
+                .ToListAsync();
+
+            return Json(new
+            {
+                success = true,
+                role = "Admin",
+                displayName = user.Email,
+                email = user.Email,
+                phone = user.Phone,
+                avatarUrl = string.Empty,
+                joinedAt = user.CreatedAt.ToString("dd/MM/yyyy"),
+                totalUsers,
+                totalJobs,
+                totalContracts,
+                systemVolume,
+                reviews,
                 balance = user.Wallet?.Balance ?? 0m
             });
         }
@@ -1212,7 +1349,8 @@ public class HomeController : Controller
         var totalContracts = await _context.JobContracts.CountAsync();
         var systemVolume = await _context.Wallets.SumAsync(w => w.Balance);
 
-        return Json(new {
+        return Json(new
+        {
             totalUsers,
             totalJobs,
             totalContracts,
@@ -1235,8 +1373,8 @@ public class HomeController : Controller
                 role = u.Role.ToString(),
                 status = u.Status.ToString(),
                 createdAt = u.CreatedAt.ToString("dd/MM/yyyy HH:mm"),
-                displayName = u.Role == UserRole.Student 
-                    ? u.StudentProfile.FullName 
+                displayName = u.Role == UserRole.Student
+                    ? u.StudentProfile.FullName
                     : u.BusinessProfile.CompanyName
             })
             .ToListAsync();
@@ -1781,7 +1919,7 @@ public class HomeController : Controller
 
     [HttpPost]
     [Authorize(Roles = "Business")]
-    public async Task<IActionResult> PostJob([FromForm] string title, [FromForm] string description, [FromForm] decimal budget, [FromForm] DateTime deadline)
+    public async Task<IActionResult> PostJob([FromForm] string title, [FromForm] string description, [FromForm] decimal budget, [FromForm] DateTime deadline, [FromForm] string? category, [FromForm] string? saveMode)
     {
         var currentUserId = GetCurrentUserId();
         if (currentUserId == null) return Unauthorized();
@@ -1795,30 +1933,214 @@ public class HomeController : Controller
         var businessProfile = await _context.BusinessProfiles.FirstOrDefaultAsync(b => b.UserId == currentUserId.Value);
         if (businessProfile == null) return Ok(new { success = false, message = "Lỗi hồ sơ doanh nghiệp." });
 
+        bool isDraft = (saveMode ?? string.Empty).Trim().ToLowerInvariant() == "draft";
+
         try
         {
             var newJob = new JobPost
-        {
-            BusinessId = businessProfile.UserId,
-            Title = title,
-            Description = description,
-            Budget = budget,
-            Deadline = DateTime.SpecifyKind(deadline, DateTimeKind.Utc),
-            IsApproved = false,
-            Status = JobStatus.Open,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
+            {
+                BusinessId = businessProfile.UserId,
+                Title = title,
+                Description = description,
+                Category = category,
+                Budget = budget,
+                Deadline = DateTime.SpecifyKind(deadline, DateTimeKind.Utc),
+                IsApproved = false,
+                Status = isDraft ? JobStatus.Draft : JobStatus.Open,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
 
             _context.JobPosts.Add(newJob);
             await _context.SaveChangesAsync();
 
-            return Ok(new { success = true, message = "Đã gửi yêu cầu đăng bài. Vui lòng chờ Admin duyệt!" });
+            var message = isDraft
+                ? "Đã lưu tin tuyển dụng vào mục Nháp."
+                : "Đã gửi yêu cầu đăng bài. Vui lòng chờ Admin duyệt!";
+
+            return Ok(new { success = true, message });
         }
         catch (Exception ex)
         {
             return Ok(new { success = false, message = "Lỗi hệ thống khi lưu bài: " + ex.InnerException?.Message ?? ex.Message });
         }
+    }
+
+    [HttpPost]
+    [Authorize(Roles = "Business")]
+    public async Task<IActionResult> UpdateJobPost([FromForm] int jobId, [FromForm] string title, [FromForm] string description, [FromForm] decimal budget, [FromForm] DateTime deadline, [FromForm] string? category, [FromForm] string? saveMode)
+    {
+        var currentUserId = GetCurrentUserId();
+        if (currentUserId == null) return Unauthorized();
+
+        var job = await _context.JobPosts.FirstOrDefaultAsync(j => j.Id == jobId && j.BusinessId == currentUserId.Value && !j.IsDeleted);
+        if (job == null) return Ok(new { success = false, message = "Không tìm thấy tin đăng." });
+
+        bool isDraft = (saveMode ?? string.Empty).Trim().ToLowerInvariant() == "draft";
+
+        job.Title = title;
+        job.Description = description;
+        job.Category = category;
+        job.Budget = budget;
+        job.Deadline = DateTime.SpecifyKind(deadline, DateTimeKind.Utc);
+        job.IsApproved = false;
+        job.Status = isDraft ? JobStatus.Draft : JobStatus.Open;
+        job.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        var message = isDraft ? "Đã lưu nháp." : "Đã cập nhật và gửi tin tuyển dụng để duyệt.";
+        return Ok(new { success = true, message });
+    }
+
+    [HttpPost]
+    [Authorize(Roles = "Business")]
+    public async Task<IActionResult> PublishDraftJob([FromForm] int jobId)
+    {
+        var currentUserId = GetCurrentUserId();
+        if (currentUserId == null) return Unauthorized();
+
+        var job = await _context.JobPosts.FirstOrDefaultAsync(j => j.Id == jobId && j.BusinessId == currentUserId.Value && !j.IsDeleted);
+        if (job == null) return Ok(new { success = false, message = "Không tìm thấy tin đăng." });
+
+        if (job.Status != JobStatus.Draft)
+        {
+            return Ok(new { success = false, message = "Tin này không ở trạng thái nháp." });
+        }
+
+        job.Status = JobStatus.Open;
+        job.IsApproved = false;
+        job.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+        return Ok(new { success = true, message = "Đã gửi yêu cầu đăng bài. Vui lòng chờ Admin duyệt!" });
+    }
+
+    // ===== Job Templates (mẫu tin tuyển dụng) =====
+
+    [HttpGet]
+    [Authorize(Roles = "Business")]
+    public async Task<IActionResult> GetJobTemplates()
+    {
+        var currentUserId = GetCurrentUserId();
+        if (currentUserId == null) return Unauthorized();
+
+        var templates = await _context.JobTemplates
+            .Where(t => t.BusinessId == currentUserId.Value)
+            .OrderByDescending(t => t.CreatedAt)
+            .Select(t => new
+            {
+                t.Id,
+                t.Name,
+                t.Title,
+                t.Description,
+                t.Category,
+                t.Budget
+            })
+            .ToListAsync();
+
+        return Json(new { success = true, templates });
+    }
+
+    [HttpPost]
+    [Authorize(Roles = "Business")]
+    public async Task<IActionResult> SaveJobTemplate([FromBody] SaveJobTemplateRequest request)
+    {
+        var currentUserId = GetCurrentUserId();
+        if (currentUserId == null) return Unauthorized();
+
+        if (string.IsNullOrWhiteSpace(request?.Name) || string.IsNullOrWhiteSpace(request?.Title) || string.IsNullOrWhiteSpace(request?.Description))
+        {
+            return Json(new { success = false, message = "Vui lòng nhập đầy đủ tên mẫu, tiêu đề và mô tả." });
+        }
+
+        var template = new JobTemplate
+        {
+            BusinessId = currentUserId.Value,
+            Name = request.Name.Trim(),
+            Title = request.Title.Trim(),
+            Description = request.Description.Trim(),
+            Category = request.Category,
+            Budget = request.Budget,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _context.JobTemplates.Add(template);
+        await _context.SaveChangesAsync();
+
+        return Json(new { success = true, message = "Đã lưu mẫu tin.", templateId = template.Id });
+    }
+
+    [HttpPost]
+    [Authorize(Roles = "Business")]
+    public async Task<IActionResult> DeleteJobTemplate([FromForm] int templateId)
+    {
+        var currentUserId = GetCurrentUserId();
+        if (currentUserId == null) return Unauthorized();
+
+        var template = await _context.JobTemplates.FirstOrDefaultAsync(t => t.Id == templateId && t.BusinessId == currentUserId.Value);
+        if (template == null) return Json(new { success = false, message = "Không tìm thấy mẫu tin." });
+
+        _context.JobTemplates.Remove(template);
+        await _context.SaveChangesAsync();
+
+        return Json(new { success = true, message = "Đã xóa mẫu tin." });
+    }
+
+    [HttpPost]
+    [Authorize(Roles = "Business")]
+    public async Task<IActionResult> ExtendJobPost([FromForm] int jobId, [FromForm] int extraDays = 30)
+    {
+        var currentUserId = GetCurrentUserId();
+        if (currentUserId == null) return Unauthorized();
+
+        var job = await _context.JobPosts.FirstOrDefaultAsync(j => j.Id == jobId && j.BusinessId == currentUserId.Value && !j.IsDeleted);
+        if (job == null) return Ok(new { success = false, message = "Không tìm thấy tin đăng." });
+
+        if (job.Status == JobStatus.Closed)
+        {
+            return Ok(new { success = false, message = "Tin đã đóng, không thể gia hạn." });
+        }
+
+        job.Deadline = job.Deadline.AddDays(extraDays);
+        job.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        return Ok(new { success = true, message = $"Đã gia hạn tin thêm {extraDays} ngày." });
+    }
+
+    [HttpPost]
+    [Authorize(Roles = "Business")]
+    public async Task<IActionResult> CloseJobPost([FromForm] int jobId)
+    {
+        var currentUserId = GetCurrentUserId();
+        if (currentUserId == null) return Unauthorized();
+
+        var job = await _context.JobPosts.FirstOrDefaultAsync(j => j.Id == jobId && j.BusinessId == currentUserId.Value && !j.IsDeleted);
+        if (job == null) return Ok(new { success = false, message = "Không tìm thấy tin đăng." });
+
+        job.Status = JobStatus.Closed;
+        job.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        return Ok(new { success = true, message = "Đã đóng tin tuyển dụng." });
+    }
+
+    [HttpPost]
+    [Authorize(Roles = "Business")]
+    public async Task<IActionResult> DeleteBusinessJobPost([FromForm] int jobId)
+    {
+        var currentUserId = GetCurrentUserId();
+        if (currentUserId == null) return Unauthorized();
+
+        var job = await _context.JobPosts.FirstOrDefaultAsync(j => j.Id == jobId && j.BusinessId == currentUserId.Value && !j.IsDeleted);
+        if (job == null) return Ok(new { success = false, message = "Không tìm thấy tin đăng." });
+
+        job.IsDeleted = true;
+        job.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        return Ok(new { success = true, message = "Đã xóa tin tuyển dụng." });
     }
 
     [HttpPost]
@@ -1861,6 +2183,20 @@ public class UpdateBidStatusRequest
 {
     public int BidId { get; set; }
     public string Action { get; set; } = string.Empty;
+}
+
+public class ToggleSaveCandidateRequest
+{
+    public int StudentId { get; set; }
+}
+
+public class SaveJobTemplateRequest
+{
+    public string Name { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string? Category { get; set; }
+    public decimal Budget { get; set; }
 }
 
 public class SaveProfileRequest
@@ -1929,4 +2265,3 @@ public class PurchasePackageRequest
 {
     public string PackageName { get; set; } = string.Empty;
 }
-

@@ -27,6 +27,10 @@ public class AppDbContext : DbContext
     public DbSet<Review> Reviews { get; set; } = null!;
     public DbSet<Wallet> Wallets { get; set; } = null!;
     public DbSet<Transaction> Transactions { get; set; } = null!;
+    public DbSet<SupportRequest> SupportRequests { get; set; } = null!;
+    public DbSet<Feedback> Feedbacks { get; set; } = null!;
+    public DbSet<SavedCandidate> SavedCandidates { get; set; } = null!;
+    public DbSet<JobTemplate> JobTemplates { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -65,7 +69,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<StudentSkill>(entity =>
         {
             entity.HasKey(ss => new { ss.StudentId, ss.SkillId });
-            
+
             entity.Property(ss => ss.SkillLevel).HasConversion<string>();
 
             entity.HasOne(ss => ss.StudentProfile)
@@ -240,7 +244,54 @@ public class AppDbContext : DbContext
                   .HasForeignKey(t => t.WalletId)
                   .OnDelete(DeleteBehavior.Cascade);
         });
+
+        // SupportRequest FK & Conversions
+        modelBuilder.Entity<SupportRequest>(entity =>
+        {
+            entity.Property(sr => sr.Category).HasConversion<string>();
+            entity.Property(sr => sr.Status).HasConversion<string>();
+
+            entity.HasOne(sr => sr.User)
+                  .WithMany()
+                  .HasForeignKey(sr => sr.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Feedback FK & Conversions
+        modelBuilder.Entity<Feedback>(entity =>
+        {
+            entity.Property(f => f.Type).HasConversion<string>();
+            entity.Property(f => f.Status).HasConversion<string>();
+
+            entity.HasOne(f => f.User)
+                  .WithMany()
+                  .HasForeignKey(f => f.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // SavedCandidate Composite-like unique constraint & FKs
+        modelBuilder.Entity<SavedCandidate>(entity =>
+        {
+            entity.HasIndex(sc => new { sc.BusinessId, sc.StudentId }).IsUnique();
+
+            entity.HasOne(sc => sc.BusinessProfile)
+                  .WithMany()
+                  .HasForeignKey(sc => sc.BusinessId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(sc => sc.StudentProfile)
+                  .WithMany()
+                  .HasForeignKey(sc => sc.StudentId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // JobTemplate FK
+        modelBuilder.Entity<JobTemplate>(entity =>
+        {
+            entity.HasOne(jt => jt.BusinessProfile)
+                  .WithMany()
+                  .HasForeignKey(jt => jt.BusinessId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
     }
 }
-
-
