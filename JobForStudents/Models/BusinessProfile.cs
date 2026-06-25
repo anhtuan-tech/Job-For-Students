@@ -12,6 +12,8 @@ public class BusinessProfile
     public string? CompanySize { get; set; }
     public string? Address { get; set; }
     public string? LogoUrl { get; set; }
+    public string? CoverImageUrl { get; set; }
+    public string? Description { get; set; }
     public string? Industry { get; set; }
     public bool IsVerified { get; set; }
 
@@ -19,4 +21,6 @@ public class BusinessProfile
     public virtual User User { get; set; } = null!;
     public virtual ICollection<JobPost> JobPosts { get; set; } = new List<JobPost>();
     public virtual ICollection<JobContract> JobContracts { get; set; } = new List<JobContract>();
+    public virtual ICollection<BusinessSubscription> BusinessSubscriptions { get; set; } = new List<BusinessSubscription>();
+    public virtual ICollection<SavedCandidate> SavedCandidates { get; set; } = new List<SavedCandidate>();
 }

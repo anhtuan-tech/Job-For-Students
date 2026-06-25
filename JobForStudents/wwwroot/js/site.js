@@ -14,6 +14,7 @@
     let originalMainHTML = '';
     let originalBannerHTML = '';
     let originalCategoriesHTML = '';
+    let pendingChatUserId = null;
 
     let profileState = {
         avatar: '',
@@ -87,6 +88,11 @@
         }
         syncTopNavAvatar();
 
+        const isBusiness = isBusinessAccount();
+        if (isBusiness) {
+            setupBusinessDashboardShell();
+        }
+
         // Save original main content for restoration
         if (mainContent) {
             originalMainHTML = mainContent.innerHTML;
@@ -106,6 +112,126 @@
         bindPostJobButtons();
         bindFindFreelancerBtn();
         updateNotificationBadge();
+
+        if (isBusiness) {
+            bindBusinessSidebarNav();
+            renderBusinessEmployerHome();
+        }
+    }
+
+    function setupBusinessDashboardShell() {
+        document.body.classList.add('business-dashboard-shell');
+
+        const brandIcon = document.querySelector('.j4s-logo-box i');
+        if (brandIcon) brandIcon.setAttribute('data-lucide', 'briefcase-business');
+
+        if (searchInput) {
+            searchInput.placeholder = 'Tìm hồ sơ ứng viên, bài đăng, kỹ năng...';
+        }
+
+        document.getElementById('btnFindFreelancer')?.remove();
+
+        const navRight = document.querySelector('.nav-right');
+        const userProfile = document.getElementById('userProfile');
+        const userId = userProfile?.dataset.userId;
+        if (navRight && userProfile && !document.getElementById('btnBusinessPublicJobs')) {
+            const publicJobsBtn = document.createElement('a');
+            publicJobsBtn.id = 'btnBusinessPublicJobs';
+            publicJobsBtn.className = 'business-public-jobs-btn';
+            publicJobsBtn.href = userId ? `/business/${userId}/jobs` : '#';
+            publicJobsBtn.innerHTML = '<i data-lucide="external-link" style="width:16px;height:16px;"></i><span>Xem trang việc làm</span>';
+            navRight.insertBefore(publicJobsBtn, userProfile.closest('.dropdown'));
+        }
+
+        const roleLabel = document.querySelector('#userProfile .user-role');
+        if (roleLabel) roleLabel.textContent = 'Nhà tuyển dụng';
+
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar) {
+            sidebar.innerHTML = `
+                <div class="sidebar-group">
+                    <div class="sidebar-label">NHÀ TUYỂN DỤNG</div>
+                    <a href="#" class="sidebar-item active" data-nav="home" id="navHome">
+                        <span class="item-icon"><i data-lucide="home" style="width:18px;height:18px;"></i></span>
+                        Trang chủ
+                    </a>
+                    <a href="#" class="sidebar-item" data-nav="businessJobs" id="navBusinessJobs">
+                        <span class="item-icon"><i data-lucide="file-text" style="width:18px;height:18px;"></i></span>
+                        Quản lý tin đăng
+                    </a>
+                    <a href="#" class="sidebar-item" data-nav="candidateSearch" id="navCandidateSearch">
+                        <span class="item-icon"><i data-lucide="users" style="width:18px;height:18px;"></i></span>
+                        Ứng viên
+                    </a>
+                    <a href="#" class="sidebar-item has-chevron" data-nav="servicePackages" id="navServicePackages">
+                        <span class="item-icon"><i data-lucide="credit-card" style="width:18px;height:18px;"></i></span>
+                        Gói dịch vụ & Thanh toán
+                        <i data-lucide="chevron-right" class="sidebar-chevron" style="width:15px;height:15px;"></i>
+                    </a>
+                    <a href="#" class="sidebar-item" data-nav="notifications" id="navNotifications">
+                        <span class="item-icon"><i data-lucide="bell" style="width:18px;height:18px;"></i></span>
+                        Thông báo
+                    </a>
+                </div>
+                <div class="sidebar-group">
+                    <div class="sidebar-label">HỖ TRỢ</div>
+                    <a href="#" class="sidebar-item" data-nav="support" id="navSupport">
+                        <span class="item-icon"><i data-lucide="circle-help" style="width:18px;height:18px;"></i></span>
+                        Trung tâm hỗ trợ
+                    </a>
+                    <a href="#" class="sidebar-item" data-nav="feedback" id="navFeedback">
+                        <span class="item-icon"><i data-lucide="bug" style="width:18px;height:18px;"></i></span>
+                        Phản hồi & Báo lỗi
+                    </a>
+                </div>
+                <div class="sidebar-bottom">
+                    <button class="btn-post-job" id="btnPostJob">
+                        <i data-lucide="plus" style="width:18px;height:18px;"></i>
+                        Đăng tin tuyển dụng
+                    </button>
+                </div>`;
+        }
+
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function bindBusinessSidebarNav() {
+        document.querySelectorAll('.business-dashboard-shell .sidebar-item[data-nav]').forEach(item => {
+            item.addEventListener('click', e => {
+                e.preventDefault();
+                const nav = item.dataset.nav;
+                setActiveSidebar(nav);
+                currentSidebarMode = nav;
+                if (searchInput) searchInput.value = '';
+
+                switch (nav) {
+                    case 'home':
+                        renderBusinessEmployerHome();
+                        break;
+                    case 'businessJobs':
+                        renderBusinessJobsManagement();
+                        break;
+                    case 'candidateSearch':
+                        renderCandidateSearchView();
+                        break;
+                    case 'servicePackages':
+                        renderServicePackagesView();
+                        break;
+                    case 'notifications':
+                        renderBusinessNotificationsView();
+                        break;
+                    case 'support':
+                        renderBusinessSupportView();
+                        break;
+                    case 'feedback':
+                        renderBusinessFeedbackView();
+                        break;
+                    default:
+                        renderBusinessEmployerHome();
+                        break;
+                }
+            });
+        });
     }
 
     // ============================================
@@ -117,6 +243,20 @@
         searchInput.addEventListener('input', function () {
             clearTimeout(searchTimeout);
             const term = this.value.trim();
+
+            if (isBusinessAccount()) {
+                searchTimeout = setTimeout(() => {
+                    setActiveSidebar('candidateSearch');
+                    currentSidebarMode = 'candidateSearch';
+                    renderCandidateSearchView();
+                    const candidateKeyword = document.getElementById('candidateKeyword');
+                    if (candidateKeyword) {
+                        candidateKeyword.value = term;
+                        loadCandidateProfiles();
+                    }
+                }, 300);
+                return;
+            }
 
             // Make sure we're on home view
             if (currentSidebarMode !== 'home' && currentSidebarMode !== 'find') {
@@ -272,6 +412,15 @@
                             renderJobs(allJobs);
                         }
                         break;
+                    case 'businessJobs':
+                        renderBusinessJobsManagement();
+                        break;
+                    case 'servicePackages':
+                        renderServicePackagesView();
+                        break;
+                    case 'candidateSearch':
+                        renderCandidateSearchView();
+                        break;
                     case 'topFreelancer':
                         if (document.querySelector('.dashboard-layout')?.classList.contains('layout-business')) {
                             renderBusinessApplicantsView();
@@ -295,9 +444,19 @@
     }
 
     function setActiveSidebar(nav) {
-        sidebarItems.forEach(i => i.classList.remove('active'));
+        const currentSidebarItems = document.querySelectorAll('.sidebar-item[data-nav]');
+        currentSidebarItems.forEach(i => {
+            i.classList.remove('active');
+            i.removeAttribute('aria-current');
+        });
+
+        if (!nav) return;
+
         const target = document.querySelector(`.sidebar-item[data-nav="${nav}"]`);
-        if (target) target.classList.add('active');
+        if (target) {
+            target.classList.add('active');
+            target.setAttribute('aria-current', 'page');
+        }
     }
 
     function updateSectionTitle(title) {
@@ -353,9 +512,1109 @@
         }
     }
 
+    function renderBusinessJobsManagement() {
+        mainContent.innerHTML = `
+            <div class="page-header animate-in">
+                <h1 class="page-title"><i data-lucide="briefcase-business" style="width:24px;height:24px;"></i> Quản lý tin đăng</h1>
+                <p class="page-subtitle">Theo dõi trạng thái duyệt, chỉnh sửa, gia hạn, tạm dừng, đóng tin và xem ứng viên từng tin.</p>
+                <button class="btn-modern-primary" id="btnCreateManagedJob" style="margin-top:14px;">
+                    <i data-lucide="plus-circle" style="width:16px;height:16px;"></i> Đăng tin mới
+                </button>
+            </div>
+            <div id="businessJobStatsPanel" class="business-job-stats-panel"></div>
+            <div id="newApplicantsPanel" class="new-applicants-panel"></div>
+            <div id="businessJobsPanel" class="business-jobs-panel">
+                <div style="display:flex;align-items:center;justify-content:center;min-height:220px;color:var(--text-secondary);font-weight:600;">
+                    <span class="spinner-border spinner-border-sm" style="margin-right:8px;"></span> Đang tải tin tuyển dụng...
+                </div>
+            </div>`;
+        if (window.lucide) lucide.createIcons();
+        document.getElementById('btnCreateManagedJob')?.addEventListener('click', () => openPostJobModal());
+        loadBusinessJobs();
+        loadNewBusinessApplicants();
+    }
+
+    function loadBusinessJobs() {
+        fetch('/Home/GetBusinessJobPosts')
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    showToast(data.message || 'Không thể tải tin đăng.', 'error');
+                    return;
+                }
+                renderBusinessJobsList(data.jobs || [], data.summary || {});
+            })
+            .catch(err => {
+                console.error(err);
+                showToast('Không thể kết nối đến máy chủ.', 'error');
+            });
+    }
+
+    function renderBusinessJobsList(jobs, summary = {}) {
+        const panel = document.getElementById('businessJobsPanel');
+        if (!panel) return;
+        renderBusinessJobStats(jobs, summary);
+
+        if (!jobs.length) {
+            panel.innerHTML = `
+                <div class="profile-card-modern animate-in" style="padding:34px;text-align:center;">
+                    <i data-lucide="briefcase" style="width:34px;height:34px;color:var(--primary);"></i>
+                    <h3 style="margin:12px 0 6px;">Chưa có tin tuyển dụng</h3>
+                    <p style="color:var(--text-muted);margin:0 0 16px;">Tạo tin đầu tiên để bắt đầu nhận ứng viên.</p>
+                    <button class="btn-modern-primary" id="btnEmptyCreateJob">Đăng tin mới</button>
+                </div>`;
+            if (window.lucide) lucide.createIcons();
+            document.getElementById('btnEmptyCreateJob')?.addEventListener('click', () => openPostJobModal());
+            return;
+        }
+
+        panel.innerHTML = `
+            <div class="managed-job-list">
+                ${jobs.map(job => `
+                    <article class="managed-job-card animate-in" data-job-id="${job.id}">
+                        <div class="managed-job-main">
+                            <div class="managed-job-topline">
+                                <span class="managed-status status-${escapeHtml(job.status.toLowerCase())}">${escapeHtml(job.statusText)}</span>
+                                <span><i data-lucide="calendar" style="width:13px;height:13px;"></i> Hạn: ${escapeHtml(job.deadlineText)}</span>
+                                <span><i data-lucide="users" style="width:13px;height:13px;"></i> ${job.applicantsCount} ứng viên</span>
+                            </div>
+                            <h3>${escapeHtml(job.title)}</h3>
+                            <p>${escapeHtml(job.description)}</p>
+                            <div class="job-tags">
+                                ${(job.skills || []).map(skill => `<span class="job-tag">${escapeHtml(skill)}</span>`).join('')}
+                            </div>
+                        </div>
+                        <div class="managed-job-side">
+                            <strong>${formatVND(job.budget)}</strong>
+                            <span>${escapeHtml(job.location || 'Linh hoạt')}</span>
+                            <span>${job.quantity} vị trí</span>
+                        </div>
+                        <div class="managed-job-actions">
+                            <button class="btn-sm btn-primary" data-action="edit">Chỉnh sửa</button>
+                            <button class="btn-sm btn-outline" data-action="extend">Gia hạn</button>
+                            <button class="btn-sm btn-outline" data-action="${job.status === 'Paused' || job.status === 'Draft' ? 'open' : 'pause'}">${job.status === 'Draft' ? 'Đăng ngay' : (job.status === 'Paused' ? 'Mở lại' : 'Tạm dừng')}</button>
+                            <button class="btn-sm btn-outline" data-action="close">Đóng tin</button>
+                            <button class="btn-sm btn-outline" data-action="applicants">Xem ứng viên</button>
+                            <button class="btn-sm btn-ghost" data-action="delete" style="color:var(--danger);">Xóa</button>
+                        </div>
+                    </article>
+                `).join('')}
+            </div>`;
+        if (window.lucide) lucide.createIcons();
+        bindManagedJobActions(jobs);
+    }
+
+    function renderBusinessJobStats(jobs, summary = {}) {
+        const panel = document.getElementById('businessJobStatsPanel');
+        if (!panel) return;
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const activeJobs = jobs.filter(job => job.status === 'Open');
+        const expiringJobs = activeJobs.filter(job => {
+            if (!job.deadline) return false;
+            const deadline = new Date(`${job.deadline}T00:00:00`);
+            const daysLeft = Math.ceil((deadline - today) / 86400000);
+            return daysLeft >= 0 && daysLeft <= 3;
+        });
+
+        panel.innerHTML = `
+            <section class="business-job-overview animate-in">
+                <div class="overview-stat">
+                    <span>Tổng số tin đang hoạt động</span>
+                    <strong>${activeJobs.length}</strong>
+                </div>
+                <div class="overview-stat warning">
+                    <span>Số tin sắp hết hạn</span>
+                    <strong>${expiringJobs.length}</strong>
+                </div>
+                <div class="overview-stat">
+                    <span>Tổng số ứng viên đã ứng tuyển</span>
+                    <strong>${summary.totalApplicants ?? 0}</strong>
+                </div>
+                <div class="overview-stat">
+                    <span>Tổng hồ sơ nhận được</span>
+                    <strong>${summary.totalReceivedProfiles ?? 0}</strong>
+                </div>
+                <div class="overview-details">
+                    <h3>Tin đăng hiển thị</h3>
+                    ${activeJobs.length ? activeJobs.slice(0, 4).map(job => `
+                        <button class="overview-job-row" data-job-id="${job.id}">
+                            <span>${escapeHtml(job.title)}</span>
+                            <small>${escapeHtml(job.deadlineText)} · ${job.applicantsCount} ứng viên</small>
+                        </button>
+                    `).join('') : '<p>Chưa có tin đang hoạt động.</p>'}
+                </div>
+            </section>`;
+
+        panel.querySelectorAll('.overview-job-row').forEach(btn => {
+            btn.addEventListener('click', () => openJobApplicantsModal(Number(btn.dataset.jobId)));
+        });
+    }
+
+    function renderBusinessEmployerHome() {
+        if (!mainContent) return;
+
+        const userProfile = document.getElementById('userProfile');
+        const userName = document.querySelector('#userProfile .user-name')?.textContent?.trim() || 'Huỳnh Khang';
+
+        mainContent.innerHTML = `
+            <section class="business-welcome-card animate-in">
+                <div class="business-welcome-copy">
+                    <span>CHÀO MỪNG TRỞ LẠI,</span>
+                    <h1>${escapeHtml(userName)} <span aria-hidden="true">👋</span></h1>
+                    <p>Quản lý tuyển dụng hiệu quả – Tìm đúng người, đúng vị trí</p>
+                    <div class="business-welcome-actions">
+                        <button class="btn-business-primary" id="btnBusinessPostJob">
+                            <i data-lucide="plus" style="width:16px;height:16px;"></i>
+                            Đăng tin tuyển dụng
+                        </button>
+                        <button class="btn-business-outline" id="btnBusinessFindCandidates">
+                            <i data-lucide="search" style="width:16px;height:16px;"></i>
+                            Tìm hồ sơ ứng viên
+                        </button>
+                    </div>
+                </div>
+                <div class="business-welcome-illustration" aria-hidden="true">
+                    <div class="illustration-card main">
+                        <div class="illustration-person">
+                            <div class="person-head"></div>
+                            <div class="person-body"></div>
+                            <div class="person-laptop"></div>
+                        </div>
+                    </div>
+                    <div class="floating-candidate candidate-a"><span>HK</span><i data-lucide="star"></i></div>
+                    <div class="floating-candidate candidate-b"><span>AN</span><i data-lucide="star"></i></div>
+                    <div class="floating-candidate candidate-c"><span>QA</span><i data-lucide="star"></i></div>
+                </div>
+            </section>
+
+            <section class="business-stat-grid" id="businessHomeStats">
+                <article class="business-stat-card">
+                    <div class="stat-icon danger"><i data-lucide="file-text"></i></div>
+                    <div><strong>--</strong><span>Tin đang hiển thị</span><small class="danger">Đang tải...</small></div>
+                </article>
+                <article class="business-stat-card">
+                    <div class="stat-icon success"><i data-lucide="user-plus"></i></div>
+                    <div><strong>--</strong><span>Ứng viên mới</span><small class="success">Trong 7 ngày qua</small></div>
+                </article>
+                <article class="business-stat-card">
+                    <div class="stat-icon neutral"><i data-lucide="users"></i></div>
+                    <div><strong>--</strong><span>Tổng số ứng viên</span><small>Tất cả tin đăng</small></div>
+                </article>
+            </section>
+
+            <section class="latest-candidates-card animate-in">
+                <div class="business-section-heading">
+                    <h2>Ứng viên mới nhất</h2>
+                    <button class="text-link-button" id="btnViewAllCandidates">Xem tất cả <i data-lucide="chevron-right" style="width:15px;height:15px;"></i></button>
+                </div>
+                <div id="businessLatestCandidates" class="latest-candidate-list">
+                    <div class="business-loading-row"><span class="spinner-border spinner-border-sm"></span> Đang tải ứng viên...</div>
+                </div>
+            </section>`;
+
+        renderBusinessRightSidebarLoading();
+        bindBusinessHomeActions();
+        loadBusinessHomeData();
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function bindBusinessHomeActions() {
+        document.getElementById('btnBusinessPostJob')?.addEventListener('click', () => openPostJobModal());
+        document.getElementById('btnBusinessFindCandidates')?.addEventListener('click', () => {
+            setActiveSidebar('candidateSearch');
+            currentSidebarMode = 'candidateSearch';
+            renderCandidateSearchView();
+        });
+        document.getElementById('btnViewAllCandidates')?.addEventListener('click', () => {
+            setActiveSidebar('candidateSearch');
+            currentSidebarMode = 'candidateSearch';
+            renderCandidateSearchView();
+        });
+    }
+
+    function loadBusinessHomeData() {
+        Promise.all([
+            fetch('/Home/GetBusinessJobPosts').then(r => r.json()),
+            fetch('/Home/GetNewBusinessApplicants').then(r => r.json()),
+            fetch('/Home/GetBusinessServicePackage').then(r => r.json())
+        ])
+            .then(([jobsData, applicantsData, packageData]) => {
+                if (!jobsData.success) {
+                    showToast(jobsData.message || 'Không thể tải dữ liệu tin đăng.', 'error');
+                    return;
+                }
+
+                const jobs = jobsData.jobs || [];
+                const applicants = applicantsData.success ? (applicantsData.applicants || []) : [];
+                const pkg = packageData.success ? packageData : null;
+                renderBusinessHomeStats(jobs, jobsData.summary || {}, applicantsData.success ? applicantsData.totalNewApplicants || 0 : 0);
+                renderBusinessLatestCandidates(applicants);
+                renderBusinessRightSidebar(jobs, applicants, pkg);
+            })
+            .catch(err => {
+                console.error(err);
+                showToast('Không thể kết nối đến máy chủ.', 'error');
+            });
+    }
+
+    function renderBusinessHomeStats(jobs, summary, newApplicantsCount) {
+        const panel = document.getElementById('businessHomeStats');
+        if (!panel) return;
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const activeJobs = jobs.filter(job => job.status === 'Open');
+        const expiringJobs = activeJobs.filter(job => {
+            if (!job.deadline) return false;
+            const deadline = new Date(`${job.deadline}T00:00:00`);
+            const daysLeft = Math.ceil((deadline - today) / 86400000);
+            return daysLeft >= 0 && daysLeft <= 3;
+        });
+
+        panel.innerHTML = `
+            <article class="business-stat-card">
+                <div class="stat-icon danger"><i data-lucide="file-text"></i></div>
+                <div><strong>${activeJobs.length}</strong><span>Tin đang hiển thị</span><small class="danger">${expiringJobs.length} tin sắp hết hạn</small></div>
+            </article>
+            <article class="business-stat-card">
+                <div class="stat-icon success"><i data-lucide="user-plus"></i></div>
+                <div><strong>${newApplicantsCount}</strong><span>Ứng viên mới</span><small class="success">Trong 7 ngày qua</small></div>
+            </article>
+            <article class="business-stat-card">
+                <div class="stat-icon neutral"><i data-lucide="users"></i></div>
+                <div><strong>${summary.totalApplicants ?? 0}</strong><span>Tổng số ứng viên</span><small>Tất cả tin đăng</small></div>
+            </article>`;
+
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function renderBusinessLatestCandidates(applicants) {
+        const panel = document.getElementById('businessLatestCandidates');
+        if (!panel) return;
+
+        if (!applicants.length) {
+            panel.innerHTML = '<div class="business-empty-row">Chưa có ứng viên mới trong 7 ngày.</div>';
+            return;
+        }
+
+        panel.innerHTML = applicants.slice(0, 4).map((app, index) => `
+            <article class="latest-candidate-row">
+                <div class="latest-candidate-avatar">
+                    ${app.avatarUrl ? `<img src="${escapeHtml(app.avatarUrl)}" alt="${escapeHtml(app.name)}" />` : `<span>${getInitials(app.name)}</span>`}
+                </div>
+                <div class="latest-candidate-main">
+                    <div class="latest-candidate-title">
+                        <strong>${escapeHtml(app.name)}</strong>
+                        <span class="match-pill medium">Phù hợp trung bình</span>
+                    </div>
+                    <p>Ứng tuyển ${escapeHtml(app.jobTitle)} · ${escapeHtml(app.proposal || 'Đã gửi hồ sơ ứng tuyển')}</p>
+                    <small>${escapeHtml(app.appliedAgo || app.appliedAt || `${index + 5} phút trước`)}</small>
+                </div>
+                <button class="btn-business-outline sm" data-student-id="${app.studentId}">Xem hồ sơ</button>
+            </article>
+        `).join('');
+
+        panel.querySelectorAll('button[data-student-id]').forEach(btn => {
+            btn.addEventListener('click', () => openCandidateProfileModal(Number(btn.dataset.studentId)));
+        });
+    }
+
+    function renderBusinessRightSidebarLoading() {
+        const rightSidebar = document.getElementById('rightSidebar');
+        if (!rightSidebar) return;
+        rightSidebar.innerHTML = `
+            <div class="business-side-card">
+                <div class="business-loading-row"><span class="spinner-border spinner-border-sm"></span> Đang tải dữ liệu...</div>
+            </div>`;
+    }
+
+    function renderBusinessRightSidebar(jobs, applicants, packageData) {
+        const rightSidebar = document.getElementById('rightSidebar');
+        if (!rightSidebar) return;
+
+        const activeJobs = jobs.filter(job => job.status === 'Open');
+        const recentJobs = activeJobs.slice(0, 3);
+        const newApplicantsByJob = applicants.reduce((acc, app) => {
+            acc[app.jobId] = (acc[app.jobId] || 0) + 1;
+            return acc;
+        }, {});
+        const current = packageData?.currentPackage;
+        const planLimit = current?.jobPostLimit || ((current?.remainingJobPosts || 0) + activeJobs.length) || 1;
+        const usedPosts = Math.max(0, planLimit - (current?.remainingJobPosts ?? 0));
+        const progress = Math.max(0, Math.min(100, Math.round((usedPosts / Math.max(1, planLimit)) * 100)));
+
+        rightSidebar.innerHTML = `
+            <section class="business-side-card">
+                <div class="business-side-heading">
+                    <h3>Tin đăng gần đây</h3>
+                    <button class="text-link-button" id="btnAllRecentJobs">Xem tất cả</button>
+                </div>
+                <div class="recent-job-list">
+                    ${recentJobs.length ? recentJobs.map(job => `
+                        <article class="recent-job-item">
+                            <div class="recent-job-icon"><i data-lucide="file-text"></i></div>
+                            <div>
+                                <strong>${escapeHtml(job.title)}</strong>
+                                <p><span><i data-lucide="eye"></i> 0</span><span><i data-lucide="user"></i> ${job.applicantsCount}</span><span>${newApplicantsByJob[job.id] || 0} mới</span></p>
+                                <span class="job-warning-badge">Sắp hết hạn</span>
+                            </div>
+                        </article>
+                    `).join('') : '<div class="business-empty-row">Chưa có tin đang hiển thị.</div>'}
+                </div>
+                <button class="btn-business-outline full" id="btnManageRecentJobs">Quản lý tin đăng</button>
+            </section>
+
+            <section class="business-side-card">
+                <span class="side-eyebrow">GÓI DỊCH VỤ HIỆN TẠI</span>
+                <div class="current-plan-head">
+                    <div class="plan-star"><i data-lucide="star"></i></div>
+                    <div>
+                        <h3>${escapeHtml(current?.planName || 'Chưa có gói')}</h3>
+                        <span class="active-plan-badge">Đang hoạt động</span>
+                    </div>
+                </div>
+                <p class="plan-expiry">Hiệu lực đến: <strong>${escapeHtml(current?.endDate || '--')}</strong></p>
+                <div class="plan-checklist">
+                    ${(current?.benefits || ['Trang tuyển dụng công khai', 'Quản lý ứng viên', 'Thông báo tuyển dụng', 'Lịch sử thanh toán']).slice(0, 4).map(item => `
+                        <span><i data-lucide="check"></i>${escapeHtml(item)}</span>
+                    `).join('')}
+                </div>
+                <div class="plan-progress-row">
+                    <span>Đã sử dụng ${usedPosts}/${planLimit} tin</span>
+                    <div class="plan-progress"><div style="width:${progress}%"></div></div>
+                </div>
+            </section>`;
+
+        document.getElementById('btnAllRecentJobs')?.addEventListener('click', () => {
+            setActiveSidebar('businessJobs');
+            currentSidebarMode = 'businessJobs';
+            renderBusinessJobsManagement();
+        });
+        document.getElementById('btnManageRecentJobs')?.addEventListener('click', () => {
+            setActiveSidebar('businessJobs');
+            currentSidebarMode = 'businessJobs';
+            renderBusinessJobsManagement();
+        });
+
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function renderBusinessNotificationsView() {
+        mainContent.innerHTML = `
+            <div class="page-header animate-in">
+                <h1 class="page-title"><i data-lucide="bell" style="width:24px;height:24px;"></i> Thông báo</h1>
+                <p class="page-subtitle">Theo dõi ứng viên mới, thanh toán, tin sắp hết hạn và thông báo hệ thống.</p>
+            </div>
+            <div class="profile-card-modern" id="businessNotificationsPanel" style="padding:18px;">
+                <div class="business-loading-row"><span class="spinner-border spinner-border-sm"></span> Đang tải thông báo...</div>
+            </div>`;
+
+        fetch('/Home/GetNotifications')
+            .then(res => res.json())
+            .then(notifications => {
+                const panel = document.getElementById('businessNotificationsPanel');
+                if (!panel) return;
+                const items = Array.isArray(notifications) ? notifications : [];
+                panel.innerHTML = items.length ? items.map(n => `
+                    <div class="notification-list-item ${n.unread ? 'unread' : ''}">
+                        <div class="notification-icon">${escapeHtml(n.icon || '•')}</div>
+                        <div>
+                            <strong>${escapeHtml(n.title || '')}</strong>
+                            <p>${escapeHtml(n.desc || '')}</p>
+                            <small>${escapeHtml(n.time || '')}</small>
+                        </div>
+                    </div>
+                `).join('') : '<div class="business-empty-row">Chưa có thông báo.</div>';
+            })
+            .catch(err => {
+                console.error(err);
+                showToast('Không thể tải thông báo.', 'error');
+            });
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function renderBusinessSupportView() {
+        mainContent.innerHTML = `
+            <div class="page-header animate-in">
+                <h1 class="page-title"><i data-lucide="circle-help" style="width:24px;height:24px;"></i> Trung tâm hỗ trợ</h1>
+                <p class="page-subtitle">Các kênh hỗ trợ dành cho nhà tuyển dụng.</p>
+            </div>
+            <div class="support-card-grid">
+                <article class="business-side-card"><h3>Hướng dẫn đăng tin</h3><p>Tạo tin rõ tiêu đề, kỹ năng, mức lương và deadline để ứng viên dễ ứng tuyển.</p></article>
+                <article class="business-side-card"><h3>Quản lý ứng viên</h3><p>Dùng danh sách ứng viên mới, xem hồ sơ và liên hệ qua box chat.</p></article>
+                <article class="business-side-card"><h3>Thanh toán</h3><p>Kiểm tra gói dịch vụ, lượt đăng còn lại và lịch sử thanh toán.</p></article>
+            </div>`;
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function renderBusinessFeedbackView() {
+        mainContent.innerHTML = `
+            <div class="page-header animate-in">
+                <h1 class="page-title"><i data-lucide="bug" style="width:24px;height:24px;"></i> Phản hồi & Báo lỗi</h1>
+                <p class="page-subtitle">Gửi ghi chú để team xử lý trong các bản cập nhật tiếp theo.</p>
+            </div>
+            <div class="profile-card-modern" style="padding:20px;">
+                <div class="form-group">
+                    <label class="form-label">Nội dung phản hồi</label>
+                    <textarea class="form-textarea" rows="5" id="businessFeedbackText" placeholder="Mô tả lỗi hoặc góp ý của bạn..."></textarea>
+                </div>
+                <button class="btn-business-primary" id="btnSubmitBusinessFeedback">Gửi phản hồi</button>
+            </div>`;
+        document.getElementById('btnSubmitBusinessFeedback')?.addEventListener('click', () => {
+            const text = document.getElementById('businessFeedbackText')?.value.trim();
+            if (!text) {
+                showToast('Vui lòng nhập nội dung phản hồi.', 'warning');
+                return;
+            }
+            showToast('Đã ghi nhận phản hồi của bạn.', 'success');
+            document.getElementById('businessFeedbackText').value = '';
+        });
+        if (window.lucide) lucide.createIcons();
+    }
+
+
+    function bindManagedJobActions(jobs) {
+        document.querySelectorAll('.managed-job-card').forEach(card => {
+            const jobId = Number(card.dataset.jobId);
+            const job = jobs.find(j => j.id === jobId);
+            card.querySelectorAll('button[data-action]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const action = btn.dataset.action;
+                    if (action === 'edit') openPostJobModal(job);
+                    if (action === 'extend') extendBusinessJob(jobId);
+                    if (action === 'pause') changeBusinessJobStatus(jobId, 'Paused');
+                    if (action === 'open') changeBusinessJobStatus(jobId, 'Open');
+                    if (action === 'close') changeBusinessJobStatus(jobId, 'Closed');
+                    if (action === 'delete') deleteBusinessJob(jobId);
+                    if (action === 'applicants') openJobApplicantsModal(jobId);
+                });
+            });
+        });
+    }
+
+    function postJson(url, body) {
+        return fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        }).then(res => res.json());
+    }
+
+    function changeBusinessJobStatus(jobId, status) {
+        postJson('/Home/ChangeBusinessJobStatus', { jobId, status })
+            .then(data => {
+                showToast(data.message || 'Đã cập nhật trạng thái tin.', data.success ? 'success' : 'error');
+                if (data.success) loadBusinessJobs();
+            })
+            .catch(err => {
+                console.error(err);
+                showToast('Không thể cập nhật trạng thái tin.', 'error');
+            });
+    }
+
+    function extendBusinessJob(jobId) {
+        const days = Number(window.prompt('Gia hạn thêm bao nhiêu ngày?', '7'));
+        if (!Number.isFinite(days) || days <= 0) return;
+        postJson('/Home/ExtendBusinessJobPost', { jobId, days })
+            .then(data => {
+                showToast(data.message || 'Đã gia hạn tin.', data.success ? 'success' : 'error');
+                if (data.success) loadBusinessJobs();
+            })
+            .catch(err => {
+                console.error(err);
+                showToast('Không thể gia hạn tin.', 'error');
+            });
+    }
+
+    function deleteBusinessJob(jobId) {
+        if (!window.confirm('Bạn chắc chắn muốn xóa tin tuyển dụng này?')) return;
+        postJson('/Home/DeleteBusinessJobPost', { jobId })
+            .then(data => {
+                showToast(data.message || 'Đã xóa tin.', data.success ? 'success' : 'error');
+                if (data.success) loadBusinessJobs();
+            })
+            .catch(err => {
+                console.error(err);
+                showToast('Không thể xóa tin.', 'error');
+            });
+    }
+
+    function openJobApplicantsModal(jobId) {
+        fetch(`/Home/GetJobApplicants?jobId=${jobId}`)
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    showToast(data.message || 'Không thể tải danh sách ứng viên.', 'error');
+                    return;
+                }
+
+                const modal = document.createElement('div');
+                modal.className = 'modal-overlay';
+                modal.innerHTML = `
+                    <div class="modal-content" style="max-width:760px;max-height:85vh;overflow-y:auto;">
+                        <button class="modal-close"><i data-lucide="x" style="width:20px;height:20px;"></i></button>
+                        <div class="modal-header"><h2>Ứng viên: ${escapeHtml(data.jobTitle)}</h2></div>
+                        <div class="modal-body">
+                            ${data.applicants.length ? data.applicants.map(app => `
+                                <div class="applicant-card">
+                                    <div class="applicant-avatar">
+                                        ${app.avatarUrl ? `<img src="${escapeHtml(app.avatarUrl)}" alt="${escapeHtml(app.name)}" />` : `<span>${escapeHtml(app.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase())}</span>`}
+                                    </div>
+                                    <div class="applicant-info">
+                                        <h3>${escapeHtml(app.name)}</h3>
+                                        <p>${escapeHtml(app.proposal || 'Chưa có lời nhắn ứng tuyển.')}</p>
+                                        <div class="applicant-meta">
+                                            <span>${escapeHtml(app.email)}</span>
+                                            <span>${escapeHtml(app.phone)}</span>
+                                            <span>${formatVND(app.bidAmount)}</span>
+                                            <span>${app.estimatedDays} ngày</span>
+                                        </div>
+                                        <div class="job-tags">${(app.skills || []).map(skill => `<span class="job-tag">${escapeHtml(skill)}</span>`).join('')}</div>
+                                    </div>
+                                </div>
+                            `).join('') : `<div style="padding:28px;text-align:center;color:var(--text-muted);font-weight:600;">Chưa có ứng viên nào cho tin này.</div>`}
+                        </div>
+                        <div class="modal-footer"><button class="btn-modal-cancel">Đóng</button></div>
+                    </div>`;
+                document.body.appendChild(modal);
+                if (window.lucide) lucide.createIcons();
+                requestAnimationFrame(() => modal.classList.add('active'));
+                modal.querySelector('.modal-close').addEventListener('click', () => closeModal(modal));
+                modal.querySelector('.btn-modal-cancel').addEventListener('click', () => closeModal(modal));
+                modal.addEventListener('click', e => { if (e.target === modal) closeModal(modal); });
+            })
+            .catch(err => {
+                console.error(err);
+                showToast('Không thể kết nối đến máy chủ.', 'error');
+            });
+    }
+
+    function loadNewBusinessApplicants() {
+        const panel = document.getElementById('newApplicantsPanel');
+        if (panel) {
+            panel.innerHTML = `<div class="new-applicants-loading"><span class="spinner-border spinner-border-sm" style="margin-right:8px;"></span> Đang tải ứng viên mới...</div>`;
+        }
+
+        fetch('/Home/GetNewBusinessApplicants')
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    showToast(data.message || 'Không thể tải ứng viên mới.', 'error');
+                    return;
+                }
+                renderNewBusinessApplicants(data.applicants || [], data.totalNewApplicants || 0);
+            })
+            .catch(err => {
+                console.error(err);
+                showToast('Không thể kết nối đến máy chủ.', 'error');
+            });
+    }
+
+    function renderNewBusinessApplicants(applicants, totalNewApplicants) {
+        const panel = document.getElementById('newApplicantsPanel');
+        if (!panel) return;
+
+        panel.innerHTML = `
+            <section class="new-applicants-section animate-in">
+                <div class="section-header">
+                    <div>
+                        <h2 class="section-title">Ứng viên mới</h2>
+                        <p class="section-subtitle">${totalNewApplicants} ứng viên mới trong 7 ngày</p>
+                    </div>
+                </div>
+                <div class="new-applicant-list">
+                    ${applicants.length ? applicants.map(app => `
+                        <article class="new-applicant-card" data-student-id="${app.studentId}">
+                            <div class="applicant-avatar">
+                                ${app.avatarUrl ? `<img src="${escapeHtml(app.avatarUrl)}" alt="${escapeHtml(app.name)}" />` : `<span>${getInitials(app.name)}</span>`}
+                            </div>
+                            <div class="new-applicant-main">
+                                <h3>${escapeHtml(app.name)}</h3>
+                                <p>${escapeHtml(app.jobTitle)} · ${escapeHtml(app.appliedAt)}</p>
+                                <p>${escapeHtml(app.proposal || 'Ứng viên chưa gửi lời nhắn ứng tuyển.')}</p>
+                                <div class="job-tags">${(app.skills || []).map(skill => `<span class="job-tag">${escapeHtml(skill)}</span>`).join('')}</div>
+                            </div>
+                            <div class="new-applicant-side">
+                                <strong>${formatVND(app.bidAmount)}</strong>
+                                <span>${app.estimatedDays} ngày</span>
+                                <button class="btn-sm btn-primary" data-action="profile">Xem hồ sơ</button>
+                                <button class="btn-sm btn-outline" data-action="contact">Liên hệ ứng viên</button>
+                            </div>
+                        </article>
+                    `).join('') : '<div class="service-payment-empty">Chưa có ứng viên mới trong 7 ngày.</div>'}
+                </div>
+            </section>`;
+
+        if (window.lucide) lucide.createIcons();
+        panel.querySelectorAll('.new-applicant-card').forEach(card => {
+            const studentId = Number(card.dataset.studentId);
+            card.querySelector('[data-action="profile"]')?.addEventListener('click', () => openCandidateProfileModal(studentId));
+            card.querySelector('[data-action="contact"]')?.addEventListener('click', () => contactCandidate(studentId));
+        });
+    }
+
+    function contactCandidate(studentId) {
+        postJson('/Home/StartCandidateChat', { studentId })
+            .then(data => {
+                if (!data.success) {
+                    showToast(data.message || 'Không thể mở box chat.', 'error');
+                    return;
+                }
+                pendingChatUserId = data.conversationUserId;
+                setActiveSidebar('messages');
+                currentSidebarMode = 'messages';
+                renderMessagesView();
+                showToast(data.message || 'Đã mở box chat với ứng viên.', 'success');
+            })
+            .catch(err => {
+                console.error(err);
+                showToast('Không thể kết nối đến máy chủ.', 'error');
+            });
+    }
+
+    function renderServicePackagesView() {
+        mainContent.innerHTML = `
+            <div class="page-header animate-in">
+                <h1 class="page-title"><i data-lucide="package-check" style="width:24px;height:24px;"></i> Gói dịch vụ</h1>
+                <p class="page-subtitle">Xem gói đang sử dụng, nâng cấp, gia hạn và theo dõi lịch sử thanh toán.</p>
+            </div>
+            <div id="servicePackagesPanel">
+                <div style="display:flex;align-items:center;justify-content:center;min-height:240px;color:var(--text-secondary);font-weight:600;">
+                    <span class="spinner-border spinner-border-sm" style="margin-right:8px;"></span> Đang tải gói dịch vụ...
+                </div>
+            </div>`;
+        if (window.lucide) lucide.createIcons();
+        loadServicePackages();
+    }
+
+    function loadServicePackages() {
+        Promise.all([
+            fetch('/Home/GetBusinessServicePackage').then(r => r.json()),
+            fetch('/Home/GetServicePlanPaymentHistory').then(r => r.json())
+        ])
+            .then(([pkg, history]) => {
+                if (!pkg.success) {
+                    showToast(pkg.message || 'Không thể tải gói dịch vụ.', 'error');
+                    return;
+                }
+                renderServicePackagesData(pkg, history.success ? history.payments : []);
+            })
+            .catch(err => {
+                console.error(err);
+                showToast('Không thể kết nối đến máy chủ.', 'error');
+            });
+    }
+
+    function renderServicePackagesData(data, payments) {
+        const panel = document.getElementById('servicePackagesPanel');
+        if (!panel) return;
+
+        const current = data.currentPackage;
+        const getPlanAction = (plan) => {
+            const isCurrent = current?.planId === plan.id;
+            const isLowerOrEqual = current && !isCurrent && (
+                Number(plan.price) < Number(current.price ?? 0)
+                || (Number(plan.price) === Number(current.price ?? 0) && Number(plan.jobPostLimit) <= Number(current.jobPostLimit ?? 0))
+            );
+
+            return {
+                disabled: isCurrent || isLowerOrEqual,
+                label: isCurrent
+                    ? 'Đang dùng'
+                    : isLowerOrEqual
+                        ? 'Gói thấp hơn'
+                        : (plan.price === 0 ? 'Kích hoạt' : 'Thanh toán / Nâng cấp')
+            };
+        };
+        panel.innerHTML = `
+            <section class="service-package-current animate-in">
+                <div class="service-current-main">
+                    <span class="service-eyebrow">Gói đang sử dụng</span>
+                    <h2>${escapeHtml(current?.planName || 'Chưa có gói')}</h2>
+                    <p>${escapeHtml(current?.description || 'Doanh nghiệp chưa có gói dịch vụ đang hoạt động.')}</p>
+                    <div class="service-benefits">
+                        ${(current?.benefits || []).map(b => `<span><i data-lucide="check" style="width:14px;height:14px;"></i>${escapeHtml(b)}</span>`).join('')}
+                    </div>
+                </div>
+                <div class="service-current-stats">
+                    <div><strong>${escapeHtml(current?.endDate || '--')}</strong><span>Ngày hết hạn</span></div>
+                    <div><strong>${current?.remainingJobPosts ?? 0}</strong><span>Số lượng tin còn lại</span></div>
+                    <div><strong>${current?.daysLeft ?? 0}</strong><span>Ngày còn lại</span></div>
+                    <button class="btn-modern-primary" id="btnRenewCurrentPlan">Gia hạn gói</button>
+                </div>
+            </section>
+
+            <section class="service-plan-section animate-in">
+                <div class="section-header">
+                    <h2 class="section-title">Danh sách các gói</h2>
+                    <span style="color:var(--text-muted);font-weight:700;">Số dư ví: ${formatVND(data.balance)}</span>
+                </div>
+                <div class="service-plan-grid">
+                    ${(data.plans || []).map(plan => `
+                        <article class="service-plan-card ${current?.planId === plan.id ? 'active' : ''}">
+                            <div>
+                                <div class="service-plan-head">
+                                    <h3>${escapeHtml(plan.name)}</h3>
+                                    ${current?.planId === plan.id ? '<span>Đang dùng</span>' : ''}
+                                </div>
+                                <p>${escapeHtml(plan.description)}</p>
+                                <strong>${formatVND(plan.price)}</strong>
+                                <small>${plan.durationDays} ngày · ${plan.jobPostLimit} tin đăng</small>
+                                <div class="service-benefits">
+                                    ${(plan.benefits || []).map(b => `<span><i data-lucide="check" style="width:14px;height:14px;"></i>${escapeHtml(b)}</span>`).join('')}
+                                </div>
+                            </div>
+                            <button class="btn-modern-primary" data-plan-id="${plan.id}" ${getPlanAction(plan).disabled ? 'disabled' : ''}>
+                                ${getPlanAction(plan).label}
+                            </button>
+                        </article>
+                    `).join('')}
+                </div>
+            </section>
+
+            <section class="service-history-section animate-in">
+                <div class="section-header">
+                    <h2 class="section-title">Lịch sử thanh toán</h2>
+                </div>
+                <div class="service-payment-list">
+                    ${payments.length ? payments.map(p => `
+                        <div class="service-payment-item">
+                            <div>
+                                <strong>${escapeHtml(p.description)}</strong>
+                                <span>${escapeHtml(p.code)} · ${escapeHtml(p.createdAt)}</span>
+                            </div>
+                            <div>
+                                <strong>${formatVND(p.amount)}</strong>
+                                <span>${escapeHtml(p.status)}</span>
+                            </div>
+                        </div>
+                    `).join('') : '<div class="service-payment-empty">Chưa có lịch sử thanh toán gói dịch vụ.</div>'}
+                </div>
+            </section>`;
+
+        if (window.lucide) lucide.createIcons();
+
+        document.getElementById('btnRenewCurrentPlan')?.addEventListener('click', renewCurrentServicePlan);
+        panel.querySelectorAll('button[data-plan-id]').forEach(btn => {
+            btn.addEventListener('click', () => purchaseServicePlan(Number(btn.dataset.planId)));
+        });
+    }
+
+    function purchaseServicePlan(planId) {
+        if (!window.confirm('Xác nhận thanh toán/nâng cấp gói dịch vụ này bằng số dư ví?')) return;
+        postJson('/Home/PurchaseServicePlan', { planId })
+            .then(data => {
+                showToast(data.message || 'Đã xử lý thanh toán gói dịch vụ.', data.success ? 'success' : 'error');
+                if (data.success) loadServicePackages();
+            })
+            .catch(err => {
+                console.error(err);
+                showToast('Không thể thanh toán gói dịch vụ.', 'error');
+            });
+    }
+
+    function renewCurrentServicePlan() {
+        if (!window.confirm('Xác nhận gia hạn gói hiện tại bằng số dư ví?')) return;
+        postJson('/Home/RenewServicePlan', { isAutoRenew: false })
+            .then(data => {
+                showToast(data.message || 'Đã gia hạn gói dịch vụ.', data.success ? 'success' : 'error');
+                if (data.success) loadServicePackages();
+            })
+            .catch(err => {
+                console.error(err);
+                showToast('Không thể gia hạn gói dịch vụ.', 'error');
+            });
+    }
+
     // ============================================
     // RENDER: Dự án đang làm
     // ============================================
+    function renderCandidateSearchView() {
+        mainContent.innerHTML = `
+            <div class="page-header animate-in">
+                <h1 class="page-title"><i data-lucide="user-search" style="width:24px;height:24px;"></i> Tìm hồ sơ ứng viên</h1>
+                <p class="page-subtitle">Tìm ứng viên theo từ khóa, kỹ năng, ngành nghề, mức lương mong muốn, kinh nghiệm và đánh giá.</p>
+            </div>
+
+            <section class="candidate-search-panel animate-in">
+                <div class="candidate-filter-grid">
+                    <div class="form-group">
+                        <label class="form-label">Từ khóa</label>
+                        <input type="text" class="form-input" id="candidateKeyword" placeholder="Tên, trường, mô tả, kỹ năng..." />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Kỹ năng</label>
+                        <input type="text" class="form-input" id="candidateSkill" placeholder="Figma, C#, Content..." />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Ngành nghề</label>
+                        <input type="text" class="form-input" id="candidateMajor" placeholder="CNTT, Thiết kế, Marketing..." />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Mức lương tối đa</label>
+                        <input type="number" min="0" class="form-input" id="candidateMaxSalary" placeholder="300000" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Kinh nghiệm</label>
+                        <input type="text" class="form-input" id="candidateExperience" placeholder="Beginner, Expert, thực tập..." />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Đánh giá tối thiểu</label>
+                        <select class="form-select" id="candidateMinRating">
+                            <option value="">Tất cả</option>
+                            <option value="3">Từ 3 sao</option>
+                            <option value="4">Từ 4 sao</option>
+                            <option value="4.5">Từ 4.5 sao</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="candidate-filter-actions">
+                    <button class="btn-modern-primary" id="btnSearchCandidates">
+                        <i data-lucide="search" style="width:16px;height:16px;"></i> Tìm kiếm
+                    </button>
+                    <button class="btn-sm btn-outline" id="btnResetCandidateFilters">Xóa lọc</button>
+                </div>
+            </section>
+
+            <div id="candidateResultsPanel" class="candidate-results-panel">
+                <div style="display:flex;align-items:center;justify-content:center;min-height:220px;color:var(--text-secondary);font-weight:600;">
+                    <span class="spinner-border spinner-border-sm" style="margin-right:8px;"></span> Đang tải hồ sơ ứng viên...
+                </div>
+            </div>`;
+
+        if (window.lucide) lucide.createIcons();
+        document.getElementById('btnSearchCandidates')?.addEventListener('click', loadCandidateProfiles);
+        document.getElementById('btnResetCandidateFilters')?.addEventListener('click', () => {
+            ['candidateKeyword', 'candidateSkill', 'candidateMajor', 'candidateMaxSalary', 'candidateExperience'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+            const rating = document.getElementById('candidateMinRating');
+            if (rating) rating.value = '';
+            loadCandidateProfiles();
+        });
+        document.querySelectorAll('#candidateKeyword,#candidateSkill,#candidateMajor,#candidateExperience').forEach(input => {
+            input.addEventListener('keydown', e => {
+                if (e.key === 'Enter') loadCandidateProfiles();
+            });
+        });
+        loadCandidateProfiles();
+    }
+
+    function loadCandidateProfiles() {
+        const panel = document.getElementById('candidateResultsPanel');
+        if (panel) {
+            panel.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;min-height:180px;color:var(--text-secondary);font-weight:600;"><span class="spinner-border spinner-border-sm" style="margin-right:8px;"></span> Đang tìm ứng viên...</div>`;
+        }
+
+        const params = new URLSearchParams();
+        [
+            ['keyword', 'candidateKeyword'],
+            ['skill', 'candidateSkill'],
+            ['major', 'candidateMajor'],
+            ['maxSalary', 'candidateMaxSalary'],
+            ['experience', 'candidateExperience'],
+            ['minRating', 'candidateMinRating']
+        ].forEach(([key, id]) => {
+            const value = document.getElementById(id)?.value?.trim();
+            if (value) params.set(key, value);
+        });
+
+        fetch(`/Home/SearchCandidateProfiles?${params.toString()}`)
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    showToast(data.message || 'Không thể tải hồ sơ ứng viên.', 'error');
+                    return;
+                }
+                renderCandidateProfiles(data.candidates || []);
+            })
+            .catch(err => {
+                console.error(err);
+                showToast('Không thể kết nối đến máy chủ.', 'error');
+            });
+    }
+
+    function renderCandidateProfiles(candidates) {
+        const panel = document.getElementById('candidateResultsPanel');
+        if (!panel) return;
+
+        if (!candidates.length) {
+            panel.innerHTML = `
+                <div class="profile-card-modern animate-in" style="padding:34px;text-align:center;">
+                    <i data-lucide="search-x" style="width:34px;height:34px;color:var(--primary);"></i>
+                    <h3 style="margin:12px 0 6px;">Chưa tìm thấy ứng viên phù hợp</h3>
+                    <p style="color:var(--text-muted);margin:0;">Thử nới bộ lọc hoặc tìm bằng kỹ năng/ngành nghề khác.</p>
+                </div>`;
+            if (window.lucide) lucide.createIcons();
+            return;
+        }
+
+        panel.innerHTML = `
+            <div class="candidate-result-list">
+                ${candidates.map(candidate => `
+                    <article class="candidate-card animate-in" data-candidate-id="${candidate.id}">
+                        <div class="candidate-avatar">
+                            ${candidate.avatarUrl ? `<img src="${escapeHtml(candidate.avatarUrl)}" alt="${escapeHtml(candidate.name)}" />` : `<span>${getInitials(candidate.name)}</span>`}
+                        </div>
+                        <div class="candidate-main">
+                            <div class="candidate-title-row">
+                                <div>
+                                    <h3>${escapeHtml(candidate.name)}</h3>
+                                    <p>${escapeHtml([candidate.major, candidate.university].filter(Boolean).join(' · ') || 'Chưa cập nhật ngành học')}</p>
+                                </div>
+                                <span class="candidate-rating"><i data-lucide="star" style="width:14px;height:14px;"></i> ${Number(candidate.rating || 0).toFixed(1)} (${candidate.reviewsCount || 0})</span>
+                            </div>
+                            <p class="candidate-bio">${escapeHtml(candidate.bio || candidate.experience || 'Ứng viên chưa cập nhật mô tả hồ sơ.')}</p>
+                            <div class="job-tags">${(candidate.skills || []).slice(0, 8).map(skill => `<span class="job-tag">${escapeHtml(skill)}</span>`).join('')}</div>
+                        </div>
+                        <div class="candidate-side">
+                            <strong>${candidate.expectedSalary > 0 ? formatVND(candidate.expectedSalary) : 'Thỏa thuận'}</strong>
+                            <span>Mức lương mong muốn</span>
+                            <button class="btn-sm btn-primary" data-action="view">Xem hồ sơ</button>
+                            <button class="btn-sm btn-outline" data-action="save">${candidate.isSaved ? 'Bỏ lưu' : 'Lưu ứng viên'}</button>
+                        </div>
+                    </article>
+                `).join('')}
+            </div>`;
+
+        if (window.lucide) lucide.createIcons();
+        panel.querySelectorAll('.candidate-card').forEach(card => {
+            const studentId = Number(card.dataset.candidateId);
+            card.querySelector('[data-action="view"]')?.addEventListener('click', () => openCandidateProfileModal(studentId));
+            card.querySelector('[data-action="save"]')?.addEventListener('click', e => toggleSaveCandidate(studentId, e.currentTarget));
+        });
+    }
+
+    function openCandidateProfileModal(studentId) {
+        fetch(`/Home/GetCandidateProfile?studentId=${studentId}`)
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    showToast(data.message || 'Không thể tải hồ sơ ứng viên.', 'error');
+                    return;
+                }
+
+                const candidate = data.candidate;
+                const modal = document.createElement('div');
+                modal.className = 'modal-overlay';
+                modal.innerHTML = `
+                    <div class="modal-content" style="max-width:840px;max-height:88vh;overflow-y:auto;">
+                        <button class="modal-close"><i data-lucide="x" style="width:20px;height:20px;"></i></button>
+                        <div class="candidate-profile-cover" style="${candidate.coverImageUrl ? `background-image:url('${escapeHtml(candidate.coverImageUrl)}')` : ''}">
+                            <div class="candidate-profile-avatar">
+                                ${candidate.avatarUrl ? `<img src="${escapeHtml(candidate.avatarUrl)}" alt="${escapeHtml(candidate.name)}" />` : `<span>${getInitials(candidate.name)}</span>`}
+                            </div>
+                        </div>
+                        <div class="modal-body candidate-profile-body">
+                            <div class="candidate-profile-head">
+                                <div>
+                                    <h2>${escapeHtml(candidate.name)}</h2>
+                                    <p>${escapeHtml([candidate.major, candidate.university].filter(Boolean).join(' · ') || 'Chưa cập nhật ngành học')}</p>
+                                </div>
+                                <button class="btn-sm btn-outline" id="btnSaveCandidateFromModal">${candidate.isSaved ? 'Bỏ lưu' : 'Lưu ứng viên'}</button>
+                            </div>
+                            <div class="candidate-profile-stats">
+                                <div><strong>${Number(candidate.rating || 0).toFixed(1)}</strong><span>Đánh giá</span></div>
+                                <div><strong>${candidate.reviewsCount || 0}</strong><span>Lượt đánh giá</span></div>
+                                <div><strong>${candidate.expectedSalary > 0 ? formatVND(candidate.expectedSalary) : 'Thỏa thuận'}</strong><span>Lương mong muốn</span></div>
+                                <div><strong>${candidate.graduationYear || '--'}</strong><span>Năm tốt nghiệp</span></div>
+                            </div>
+                            <section>
+                                <h3>Giới thiệu</h3>
+                                <p>${escapeHtml(candidate.bio || 'Ứng viên chưa cập nhật giới thiệu.')}</p>
+                                <p>${escapeHtml(candidate.experience || '')}</p>
+                            </section>
+                            <section>
+                                <h3>Kỹ năng</h3>
+                                <div class="job-tags">${(candidate.skills || []).map(skill => `<span class="job-tag">${escapeHtml(skill.name)} · ${escapeHtml(skill.level)}${skill.months ? ` · ${skill.months} tháng` : ''}</span>`).join('') || '<span class="job-tag">Chưa cập nhật</span>'}</div>
+                            </section>
+                            <section>
+                                <h3>Portfolio</h3>
+                                <div class="candidate-profile-list">
+                                    ${(candidate.portfolio || []).length ? candidate.portfolio.map(item => `
+                                        <div>
+                                            <strong>${escapeHtml(item.title)}</strong>
+                                            <p>${escapeHtml(item.description)}</p>
+                                            ${item.projectUrl ? `<a href="${escapeHtml(item.projectUrl)}" target="_blank" rel="noopener">Mở liên kết</a>` : ''}
+                                        </div>
+                                    `).join('') : '<p>Chưa có portfolio.</p>'}
+                                </div>
+                            </section>
+                            <section>
+                                <h3>Chứng chỉ</h3>
+                                <div class="candidate-profile-list">
+                                    ${(candidate.certificates || []).length ? candidate.certificates.map(cert => `
+                                        <div>
+                                            <strong>${escapeHtml(cert.name)}</strong>
+                                            <p>${escapeHtml(cert.organization)} · ${escapeHtml(cert.issuedDate)}</p>
+                                        </div>
+                                    `).join('') : '<p>Chưa có chứng chỉ.</p>'}
+                                </div>
+                            </section>
+                            <section>
+                                <h3>Đánh giá</h3>
+                                <div class="candidate-profile-list">
+                                    ${(candidate.reviews || []).length ? candidate.reviews.map(review => `
+                                        <div>
+                                            <strong>${Number(review.rating || 0).toFixed(1)} sao</strong>
+                                            <p>${escapeHtml(review.comment || 'Không có nhận xét.')}</p>
+                                            <small>${escapeHtml(review.createdAt)}</small>
+                                        </div>
+                                    `).join('') : '<p>Chưa có đánh giá.</p>'}
+                                </div>
+                            </section>
+                        </div>
+                        <div class="modal-footer"><button class="btn-modal-cancel">Đóng</button></div>
+                    </div>`;
+
+                document.body.appendChild(modal);
+                if (window.lucide) lucide.createIcons();
+                requestAnimationFrame(() => modal.classList.add('active'));
+                modal.querySelector('.modal-close').addEventListener('click', () => closeModal(modal));
+                modal.querySelector('.btn-modal-cancel').addEventListener('click', () => closeModal(modal));
+                modal.addEventListener('click', e => { if (e.target === modal) closeModal(modal); });
+                modal.querySelector('#btnSaveCandidateFromModal')?.addEventListener('click', e => {
+                    toggleSaveCandidate(studentId, e.currentTarget);
+                    closeModal(modal);
+                });
+            })
+            .catch(err => {
+                console.error(err);
+                showToast('Không thể kết nối đến máy chủ.', 'error');
+            });
+    }
+
+    function toggleSaveCandidate(studentId, button) {
+        if (button) button.disabled = true;
+        postJson('/Home/ToggleSaveCandidate', { studentId })
+            .then(data => {
+                showToast(data.message || 'Đã cập nhật ứng viên.', data.success ? 'success' : 'error');
+                if (data.success && button) {
+                    button.textContent = data.isSaved ? 'Bỏ lưu' : 'Lưu ứng viên';
+                    button.disabled = false;
+                } else if (button) {
+                    button.disabled = false;
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showToast('Không thể lưu ứng viên.', 'error');
+                if (button) button.disabled = false;
+            });
+    }
+
+    function getInitials(name) {
+        return (name || 'UV')
+            .split(' ')
+            .map(word => word[0])
+            .join('')
+            .slice(0, 2)
+            .toUpperCase();
+    }
+
     function renderProjectsView() {
         mainContent.innerHTML = `
             <div class="page-header">
@@ -470,10 +1729,10 @@
                 return `
                 <div class="review-modern-item">
                     <div class="review-avatar-box">
-                        ${r.reviewerAvatar 
-                            ? `<img src="${r.reviewerAvatar}" alt="${escapeHtml(r.reviewerName)}" />` 
-                            : `<span>${escapeHtml(revInitials)}</span>`
-                        }
+                        ${r.reviewerAvatar
+                        ? `<img src="${r.reviewerAvatar}" alt="${escapeHtml(r.reviewerName)}" />`
+                        : `<span>${escapeHtml(revInitials)}</span>`
+                    }
                     </div>
                     <div class="review-body-box">
                         <div class="review-header-box">
@@ -492,7 +1751,7 @@
 
         if (data.role === 'Student') {
             const tagline = 'Freelancer chuyên nghiệp | Sinh viên';
-            
+
             const skillsHTML = data.skills && data.skills.length > 0
                 ? data.skills.map(s => `<span class="skill-modern-tag">${escapeHtml(s)}</span>`).join('')
                 : '<p style="color: var(--text-muted); font-style: italic; font-size: 13px;">Chưa cập nhật kỹ năng chuyên môn.</p>';
@@ -525,19 +1784,19 @@
             mainContent.innerHTML = `
                 <div class="profile-modern-container">
                     <div class="profile-cover-modern">
-                        ${data.coverImageUrl 
-                            ? `<img src="${data.coverImageUrl}" class="profile-cover-image" alt="Cover Photo" />` 
-                            : ''
-                        }
+                        ${data.coverImageUrl
+                    ? `<img src="${data.coverImageUrl}" class="profile-cover-image" alt="Cover Photo" />`
+                    : ''
+                }
                     </div>
 
                     <div class="profile-header-card animate-in">
                         <div class="profile-header-info">
                             <div class="profile-avatar-frame">
-                                ${data.avatarUrl 
-                                    ? `<img src="${data.avatarUrl}" alt="${escapeHtml(data.fullName)}" id="profileAvatarImg" />` 
-                                    : `<span>${escapeHtml(initials)}</span>`
-                                }
+                                ${data.avatarUrl
+                    ? `<img src="${data.avatarUrl}" alt="${escapeHtml(data.fullName)}" id="profileAvatarImg" />`
+                    : `<span>${escapeHtml(initials)}</span>`
+                }
                             </div>
                             <div class="profile-meta-text">
                                 <h2>${escapeHtml(data.fullName)}</h2>
@@ -549,9 +1808,14 @@
                                 </div>
                             </div>
                         </div>
-                        <button class="btn-modern-primary" id="btnEditProfile">
-                            <i data-lucide="edit-3" style="width:16px;height:16px;"></i> Chỉnh sửa hồ sơ
-                        </button>
+                        <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;">
+                            <button class="btn-modern-primary" id="btnViewBusinessJobs">
+                                <i data-lucide="briefcase-business" style="width:16px;height:16px;"></i> Xem trang việc làm
+                            </button>
+                            <button class="btn-modern-primary" id="btnEditProfile">
+                                <i data-lucide="edit-3" style="width:16px;height:16px;"></i> Chỉnh sửa hồ sơ
+                            </button>
+                        </div>
                     </div>
 
                     <div class="profile-stats-modern-grid">
@@ -701,25 +1965,30 @@
         } else {
             mainContent.innerHTML = `
                 <div class="profile-modern-container">
-                    <div class="profile-cover-modern" style="height: 180px;"></div>
+                    <div class="profile-cover-modern" style="height: 180px;">
+                        ${data.coverImageUrl
+                    ? `<img src="${data.coverImageUrl}" class="profile-cover-image" alt="Company Cover" />`
+                    : ''
+                }
+                    </div>
 
                     <div class="profile-header-card animate-in">
                         <div class="profile-header-info">
                             <div class="profile-avatar-frame">
-                                ${data.logoUrl 
-                                    ? `<img src="${data.logoUrl}" alt="${escapeHtml(data.companyName)}" />` 
-                                    : `<span>${escapeHtml(initials)}</span>`
-                                }
+                                ${data.logoUrl
+                    ? `<img src="${data.logoUrl}" alt="${escapeHtml(data.companyName)}" />`
+                    : `<span>${escapeHtml(initials)}</span>`
+                }
                             </div>
                             <div class="profile-meta-text">
                                 <h2>${escapeHtml(data.companyName)}</h2>
                                 <div class="tagline">${escapeHtml(data.industry || 'Lĩnh vực kinh doanh')}</div>
                                 <div class="badge-row">
                                     <span class="badge-modern badge-modern-blue"><i data-lucide="shield-check" style="width:13px;height:13px;"></i> Doanh nghiệp</span>
-                                    ${data.isVerified 
-                                        ? `<span class="badge-modern badge-modern-green"><i data-lucide="check-circle" style="width:13px;height:13px;"></i> Đã xác thực</span>` 
-                                        : `<span class="badge-modern badge-modern-gray"><i data-lucide="alert-circle" style="width:13px;height:13px;"></i> Chưa xác thực</span>`
-                                    }
+                                    ${data.isVerified
+                    ? `<span class="badge-modern badge-modern-green"><i data-lucide="check-circle" style="width:13px;height:13px;"></i> Đã xác thực</span>`
+                    : `<span class="badge-modern badge-modern-gray"><i data-lucide="alert-circle" style="width:13px;height:13px;"></i> Chưa xác thực</span>`
+                }
                                     <span class="badge-modern badge-modern-orange">★ ${avgRating} (${reviewsCount} đánh giá)</span>
                                 </div>
                             </div>
@@ -740,8 +2009,8 @@
                         <div class="stat-modern-card animate-in">
                             <div class="stat-modern-icon"><i data-lucide="check-square" style="width:20px;height:20px;"></i></div>
                             <div class="stat-modern-info">
-                                <span class="stat-modern-value">${data.completedJobsCount}</span>
-                                <span class="stat-modern-title">Dự án hoàn thành</span>
+                                <span class="stat-modern-value">${data.openJobsCount || 0}</span>
+                                <span class="stat-modern-title">Tin đang mở</span>
                             </div>
                         </div>
                         <div class="stat-modern-card animate-in">
@@ -761,6 +2030,13 @@
                     </div>
 
                     <div class="profile-content-grid" style="grid-template-columns: 1fr;">
+                        <div class="profile-card-modern animate-in">
+                            <h3><i data-lucide="file-text" style="width:16px;height:16px;"></i> Mô tả doanh nghiệp</h3>
+                            <p style="font-size:14px; color: var(--text-secondary); margin:0; line-height: 1.6; white-space: pre-line;">
+                                ${escapeHtml(data.description || 'Chưa cập nhật mô tả doanh nghiệp.')}
+                            </p>
+                        </div>
+
                         <div class="profile-card-modern animate-in">
                             <h3><i data-lucide="info" style="width:16px;height:16px;"></i> Thông tin liên hệ & doanh nghiệp</h3>
                             <div class="info-list-modern">
@@ -816,6 +2092,13 @@
         document.getElementById('btnEditProfile').addEventListener('click', () => {
             openEditProfileModal(data);
         });
+
+        document.getElementById('btnViewBusinessJobs')?.addEventListener('click', () => {
+            const currentUserId = document.getElementById('userProfile')?.getAttribute('data-user-id');
+            if (currentUserId) {
+                window.location.href = `/business/${currentUserId}/jobs`;
+            }
+        });
     }
 
     function formatDate(dateStr) {
@@ -839,7 +2122,7 @@
     function openEditProfileModal(data) {
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
-        
+
         let tempPortfolio = data.portfolio ? [...data.portfolio] : [];
         let tempCertificates = data.certificates ? [...data.certificates] : [];
         let uploadedAvatarBase64 = data.role === 'Student' ? data.avatarUrl : data.logoUrl;
@@ -889,8 +2172,18 @@
                         </div>
                         ` : `
                         <div class="form-group">
-                            <label class="form-label">Lĩnh vực hoạt động</label>
-                            <input type="text" class="form-input" id="editIndustry" value="${escapeHtml(data.industry || '')}" placeholder="Lĩnh vực: IT, Marketing, Xây dựng..." />
+                            <label class="form-label">Ảnh bìa doanh nghiệp</label>
+                            <div class="file-upload-wrapper">
+                                <input type="file" id="editCoverFile" accept="image/*" />
+                                <div class="file-upload-placeholder">
+                                    <span class="file-upload-icon">🖼️</span>
+                                    <span id="coverFileLabel">Chọn ảnh bìa mới</span>
+                                </div>
+                                <div style="position: relative; display: inline-block; width: 100%; margin-top: 10px;" id="coverPreviewContainer" class="${uploadedCoverBase64 ? '' : 'd-none'}">
+                                    <img src="${uploadedCoverBase64 || ''}" class="file-preview-img" id="coverPreview" style="margin-top:0;" />
+                                    <button type="button" class="btn-recrop-img" id="btnRecropCover" style="position: absolute; right: 8px; bottom: 8px; z-index: 10; background: rgba(15, 23, 42, 0.75); border: none; border-radius: 4px; padding: 4px 8px; color: white; font-size: 11px; display: flex; align-items: center; gap: 4px; cursor: pointer; pointer-events: auto;"><i data-lucide="crop" style="width:12px;height:12px;"></i> Cắt hình</button>
+                                </div>
+                            </div>
                         </div>
                         `}
                     </div>
@@ -901,9 +2194,22 @@
                             <input type="text" class="form-input" id="editName" value="${escapeHtml(isStudent ? data.fullName : data.companyName)}" required />
                         </div>
                         <div class="form-group">
+                            <label class="form-label">Email tài khoản</label>
+                            <input type="email" class="form-input" id="editEmail" value="${escapeHtml(data.email || '')}" />
+                        </div>
+                    </div>
+
+                    <div class="form-grid-2">
+                        <div class="form-group">
                             <label class="form-label">Số điện thoại liên hệ</label>
                             <input type="text" class="form-input" id="editPhone" value="${escapeHtml(data.phone || '')}" />
                         </div>
+                        ${!isStudent ? `
+                        <div class="form-group">
+                            <label class="form-label">Lĩnh vực hoạt động</label>
+                            <input type="text" class="form-input" id="editIndustry" value="${escapeHtml(data.industry || '')}" placeholder="Lĩnh vực: IT, Marketing, Xây dựng..." />
+                        </div>
+                        ` : `<div></div>`}
                     </div>
 
                     ${isStudent ? `
@@ -1029,6 +2335,11 @@
                         </div>
                     </div>
                     ` : `
+                    <div class="form-group">
+                        <label class="form-label">Mô tả doanh nghiệp</label>
+                        <textarea class="form-textarea" id="editBusinessDescription" rows="4" placeholder="Giới thiệu ngắn về doanh nghiệp, môi trường làm việc và định hướng tuyển dụng...">${escapeHtml(data.description || '')}</textarea>
+                    </div>
+
                     <div class="form-grid-2">
                         <div class="form-group">
                             <label class="form-label">Mã số thuế</label>
@@ -1118,6 +2429,40 @@
             });
         }
 
+        if (!isStudent) {
+            const coverInput = modal.querySelector('#editCoverFile');
+            const coverPreview = modal.querySelector('#coverPreview');
+            const coverPreviewContainer = modal.querySelector('#coverPreviewContainer');
+            const btnRecropCover = modal.querySelector('#btnRecropCover');
+
+            coverInput?.addEventListener('change', function (e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function (evt) {
+                        openCropModal(evt.target.result, 3.4, function (croppedBase64) {
+                            uploadedCoverBase64 = croppedBase64;
+                            coverPreview.src = croppedBase64;
+                            coverPreviewContainer.classList.remove('d-none');
+                            if (window.lucide) lucide.createIcons();
+                        });
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            btnRecropCover?.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (uploadedCoverBase64) {
+                    openCropModal(uploadedCoverBase64, 3.4, function (croppedBase64) {
+                        uploadedCoverBase64 = croppedBase64;
+                        coverPreview.src = croppedBase64;
+                    });
+                }
+            });
+        }
+
         if (isStudent) {
             const coverInput = modal.querySelector('#editCoverFile');
             const coverPreview = modal.querySelector('#coverPreview');
@@ -1186,7 +2531,7 @@
                     </div>
                 `).join('');
                 if (window.lucide) lucide.createIcons();
-                
+
                 modalPortfolioList.querySelectorAll('.btn-delete-portfolio').forEach(btn => {
                     btn.addEventListener('click', function () {
                         const index = parseInt(this.dataset.index);
@@ -1236,7 +2581,7 @@
                     </div>
                 `).join('');
                 if (window.lucide) lucide.createIcons();
-                
+
                 modalCertList.querySelectorAll('.btn-delete-cert').forEach(btn => {
                     btn.addEventListener('click', function () {
                         const index = parseInt(this.dataset.index);
@@ -1263,7 +2608,7 @@
                     const issued = modal.querySelector('#newCertIssuedDate').value;
                     const expiry = modal.querySelector('#newCertExpiryDate').value;
                     const url = modal.querySelector('#newCertUrl').value.trim();
-                    
+
                     if (!name) {
                         showToast('Vui lòng nhập tên chứng chỉ!', 'warning');
                         return;
@@ -1276,7 +2621,7 @@
                         showToast('Vui lòng nhập ngày cấp!', 'warning');
                         return;
                     }
-                    
+
                     tempCertificates.push({
                         certificateName: name,
                         organization: org,
@@ -1284,13 +2629,13 @@
                         expiryDate: expiry || null,
                         credentialUrl: url
                     });
-                    
+
                     modal.querySelector('#newCertName').value = '';
                     modal.querySelector('#newCertOrg').value = '';
                     modal.querySelector('#newCertIssuedDate').value = '';
                     modal.querySelector('#newCertExpiryDate').value = '';
                     modal.querySelector('#newCertUrl').value = '';
-                    
+
                     renderModalCertItems();
                 });
             }
@@ -1298,6 +2643,7 @@
 
         modal.querySelector('#btnSaveProfile').addEventListener('click', function () {
             let payload = {
+                email: modal.querySelector('#editEmail').value.trim(),
                 phone: modal.querySelector('#editPhone').value.trim()
             };
 
@@ -1340,6 +2686,8 @@
                 payload.companySize = modal.querySelector('#editCompanySize').value.trim();
                 payload.address = modal.querySelector('#editAddress').value.trim();
                 payload.logoUrl = uploadedAvatarBase64;
+                payload.coverImageUrl = uploadedCoverBase64;
+                payload.businessDescription = modal.querySelector('#editBusinessDescription').value.trim();
 
                 if (!payload.companyName) {
                     showToast('Vui lòng nhập tên doanh nghiệp!', 'warning');
@@ -1359,30 +2707,30 @@
                 },
                 body: JSON.stringify(payload)
             })
-            .then(res => res.json())
-            .then(resData => {
-                if (resData.success) {
-                    closeModal(modal);
-                    showToast(resData.message || '✅ Đã lưu thay đổi hồ sơ thành công!', 'success');
-                    
-                    const topNavUserName = document.querySelector('#userProfile .user-name');
-                    if (topNavUserName) {
-                        topNavUserName.textContent = isStudent ? payload.fullName : payload.companyName;
+                .then(res => res.json())
+                .then(resData => {
+                    if (resData.success) {
+                        closeModal(modal);
+                        showToast(resData.message || '✅ Đã lưu thay đổi hồ sơ thành công!', 'success');
+
+                        const topNavUserName = document.querySelector('#userProfile .user-name');
+                        if (topNavUserName) {
+                            topNavUserName.textContent = isStudent ? payload.fullName : payload.companyName;
+                        }
+
+                        renderProfileView();
+                    } else {
+                        showToast(resData.message || 'Lỗi khi lưu thông tin.', 'error');
+                        saveBtn.disabled = false;
+                        saveBtn.innerHTML = originalBtnHTML;
                     }
-                    
-                    renderProfileView();
-                } else {
-                    showToast(resData.message || 'Lỗi khi lưu thông tin.', 'error');
+                })
+                .catch(err => {
+                    console.error(err);
+                    showToast('Không thể lưu hồ sơ do lỗi kết nối.', 'error');
                     saveBtn.disabled = false;
                     saveBtn.innerHTML = originalBtnHTML;
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                showToast('Không thể lưu hồ sơ do lỗi kết nối.', 'error');
-                saveBtn.disabled = false;
-                saveBtn.innerHTML = originalBtnHTML;
-            });
+                });
         });
 
         const submitChangePwBtn = modal.querySelector('#btnSubmitChangePassword');
@@ -1412,24 +2760,24 @@
                     },
                     body: JSON.stringify({ oldPassword, newPassword })
                 })
-                .then(res => res.json())
-                .then(resData => {
-                    if (resData.success) {
-                        showToast('✅ Đổi mật khẩu thành công!', 'success');
-                        modal.querySelector('#changePasswordOld').value = '';
-                        modal.querySelector('#changePasswordNew').value = '';
-                    } else {
-                        showToast(resData.message || 'Lỗi khi đổi mật khẩu.', 'error');
-                    }
-                    submitChangePwBtn.disabled = false;
-                    submitChangePwBtn.innerHTML = originalBtnText;
-                })
-                .catch(err => {
-                    console.error(err);
-                    showToast('Không thể đổi mật khẩu do lỗi kết nối.', 'error');
-                    submitChangePwBtn.disabled = false;
-                    submitChangePwBtn.innerHTML = originalBtnText;
-                });
+                    .then(res => res.json())
+                    .then(resData => {
+                        if (resData.success) {
+                            showToast('✅ Đổi mật khẩu thành công!', 'success');
+                            modal.querySelector('#changePasswordOld').value = '';
+                            modal.querySelector('#changePasswordNew').value = '';
+                        } else {
+                            showToast(resData.message || 'Lỗi khi đổi mật khẩu.', 'error');
+                        }
+                        submitChangePwBtn.disabled = false;
+                        submitChangePwBtn.innerHTML = originalBtnText;
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        showToast('Không thể đổi mật khẩu do lỗi kết nối.', 'error');
+                        submitChangePwBtn.disabled = false;
+                        submitChangePwBtn.innerHTML = originalBtnText;
+                    });
             });
         }
     }
@@ -1596,7 +2944,165 @@
     // ============================================
     // RENDER: Tin nhắn
     // ============================================
+    function isBusinessAccount() {
+        return document.getElementById('userProfile')?.dataset.userRole === 'Business';
+    }
+
+    function renderBusinessMessagesView() {
+        mainContent.innerHTML = `
+            <div class="page-header">
+                <h1 class="page-title"><i data-lucide="message-circle" style="width:24px;height:24px;"></i> Tin nhắn</h1>
+                <p class="page-subtitle">Trao đổi với ứng viên và đối tác</p>
+            </div>
+            <div class="messages-container">
+                <div class="messages-list" id="businessMessagesList">
+                    <div style="padding:18px;color:var(--text-muted);font-weight:700;"><span class="spinner-border spinner-border-sm" style="margin-right:8px;"></span> Đang tải hội thoại...</div>
+                </div>
+                <div class="chat-panel" id="chatPanel">
+                    <div class="chat-placeholder">
+                        <i data-lucide="message-square" style="width:48px;height:48px;color:var(--text-muted);"></i>
+                        <p>Chọn một cuộc trò chuyện để bắt đầu</p>
+                    </div>
+                </div>
+            </div>`;
+        if (window.lucide) lucide.createIcons();
+        loadBusinessConversations();
+    }
+
+    function loadBusinessConversations() {
+        fetch('/Home/GetMessageConversations')
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    showToast(data.message || 'Không thể tải hội thoại.', 'error');
+                    return;
+                }
+                renderBusinessConversations(data.conversations || []);
+            })
+            .catch(err => {
+                console.error(err);
+                showToast('Không thể kết nối đến máy chủ.', 'error');
+            });
+    }
+
+    function renderBusinessConversations(conversations) {
+        const list = document.getElementById('businessMessagesList');
+        if (!list) return;
+
+        if (!conversations.length) {
+            list.innerHTML = '<div style="padding:18px;color:var(--text-muted);font-weight:700;">Chưa có hội thoại nào.</div>';
+            return;
+        }
+
+        list.innerHTML = conversations.map(conv => `
+            <div class="message-item ${conv.unread > 0 ? 'unread' : ''}" data-user-id="${conv.userId}">
+                <div class="msg-avatar" style="background:${conv.avatarUrl ? 'none' : '#0ea5e9'}">
+                    ${conv.avatarUrl ? `<img src="${escapeHtml(conv.avatarUrl)}" alt="${escapeHtml(conv.name)}" />` : getInitials(conv.name)}
+                </div>
+                <div class="msg-content">
+                    <div class="msg-header">
+                        <span class="msg-name">${escapeHtml(conv.name)}</span>
+                        <span class="msg-time">${escapeHtml(conv.time)}</span>
+                    </div>
+                    <p class="msg-preview">${escapeHtml(conv.lastMsg)}</p>
+                </div>
+                ${conv.unread > 0 ? `<span class="msg-badge">${conv.unread}</span>` : ''}
+            </div>
+        `).join('');
+
+        list.querySelectorAll('.message-item').forEach(item => {
+            item.addEventListener('click', () => openBusinessChat(Number(item.dataset.userId)));
+        });
+
+        if (pendingChatUserId) {
+            const target = pendingChatUserId;
+            pendingChatUserId = null;
+            openBusinessChat(target);
+        }
+    }
+
+    function openBusinessChat(userId) {
+        document.querySelectorAll('.message-item').forEach(i => i.classList.toggle('selected', Number(i.dataset.userId) === userId));
+
+        fetch(`/Home/GetConversationMessages?userId=${userId}`)
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    showToast(data.message || 'Không thể tải tin nhắn.', 'error');
+                    return;
+                }
+                renderBusinessChat(data.user, data.messages || []);
+            })
+            .catch(err => {
+                console.error(err);
+                showToast('Không thể kết nối đến máy chủ.', 'error');
+            });
+    }
+
+    function renderBusinessChat(user, messages) {
+        const chatPanel = document.getElementById('chatPanel');
+        if (!chatPanel) return;
+
+        chatPanel.innerHTML = `
+            <div class="chat-header">
+                <div class="chat-user-info">
+                    <div class="msg-avatar small" style="background:${user.avatarUrl ? 'none' : '#0ea5e9'}">
+                        ${user.avatarUrl ? `<img src="${escapeHtml(user.avatarUrl)}" alt="${escapeHtml(user.name)}" />` : getInitials(user.name)}
+                    </div>
+                    <div>
+                        <div class="chat-user-name">${escapeHtml(user.name)}</div>
+                        <div class="chat-status">Ứng viên</div>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                ${messages.map(m => `
+                    <div class="chat-bubble ${m.fromMe ? 'me' : 'them'}">
+                        <p>${escapeHtml(m.text)}</p>
+                        <span class="bubble-time">${escapeHtml(m.time)}</span>
+                    </div>
+                `).join('')}
+            </div>
+            <div class="chat-input-area">
+                <input type="text" placeholder="Nhập tin nhắn..." class="chat-input" id="chatInput" />
+                <button class="chat-send-btn" id="chatSendBtn"><i data-lucide="send" style="width:18px;height:18px;"></i></button>
+            </div>`;
+        if (window.lucide) lucide.createIcons();
+
+        const chatMessages = document.getElementById('chatMessages');
+        if (chatMessages) chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        const send = () => {
+            const input = document.getElementById('chatInput');
+            const text = input?.value.trim();
+            if (!text) return;
+
+            postJson('/Home/SendConversationMessage', { receiverId: user.id, content: text })
+                .then(data => {
+                    if (!data.success) {
+                        showToast(data.message || 'Không thể gửi tin nhắn.', 'error');
+                        return;
+                    }
+                    input.value = '';
+                    openBusinessChat(user.id);
+                    loadBusinessConversations();
+                })
+                .catch(err => {
+                    console.error(err);
+                    showToast('Không thể kết nối đến máy chủ.', 'error');
+                });
+        };
+
+        document.getElementById('chatSendBtn')?.addEventListener('click', send);
+        document.getElementById('chatInput')?.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
+    }
+
     function renderMessagesView() {
+        if (isBusinessAccount()) {
+            renderBusinessMessagesView();
+            return;
+        }
+
         mainContent.innerHTML = `
             <div class="page-header">
                 <h1 class="page-title"><i data-lucide="message-circle" style="width:24px;height:24px;"></i> Tin nhắn</h1>
@@ -1801,7 +3307,7 @@
                 `).join('')}
             </div>`;
         if (window.lucide) lucide.createIcons();
-        document.getElementById('walletDeposit')?.addEventListener('click', () => showToast('💰 Đã nạp thành công 500.000 đ vào ví!', 'success'));
+        document.getElementById('walletDeposit')?.addEventListener('click', () => openDepositQrModal());
         document.getElementById('walletWithdraw')?.addEventListener('click', () => showToast('🏦 Yêu cầu rút 1.000.000 đ đã được gửi!', 'success'));
     }
 
@@ -2309,8 +3815,8 @@
     // FINANCIAL MODALS (Right Sidebar)
     // ============================================
     function bindFinancialButtons() {
+        document.getElementById('btnDeposit')?.addEventListener('click', () => openDepositQrModal());
         const configs = {
-            'btnDeposit': { title: 'Nạp tiền vào ví', icon: '💰', message: 'Bạn đã nạp thành công <strong>500.000 đ</strong> vào ví J4S!', detail: 'Số dư hiện tại: 2.950.000 đ' },
             'btnWithdraw': { title: 'Rút tiền', icon: '🏦', message: 'Yêu cầu rút <strong>1.000.000 đ</strong> đã được gửi!', detail: 'Tiền sẽ về tài khoản ngân hàng trong 1-3 ngày làm việc.' },
             'btnHistory': { title: 'Lịch sử giao dịch', icon: '📊', isHistory: true, transactions: mockWalletTransactions.slice(0, 5) },
             'btnPromo': { title: 'Ưu đãi cho bạn', icon: '🎁', message: 'Chúc mừng! Bạn có mã giảm <strong>20%</strong> phí dịch vụ.', detail: 'Mã: J4S20OFF — Hết hạn: 30/06/2026' }
@@ -2319,6 +3825,83 @@
             const btn = document.getElementById(id);
             if (!btn) return;
             btn.addEventListener('click', () => openFinancialModal(config));
+        });
+    }
+
+    function openDepositQrModal() {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal-content modal-sm">
+                <button class="modal-close"><i data-lucide="x" style="width:20px;height:20px;"></i></button>
+                <div class="modal-header"><h2>Nạp tiền doanh nghiệp</h2></div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Số tiền nạp</label>
+                        <input type="number" class="form-input" id="depositAmountInput" min="50000" step="50000" value="50000" />
+                        <small style="display:block;margin-top:6px;color:var(--text-muted);font-weight:600;">Số tiền phải là bội của 50.000 đ. Mã QR chỉ dùng một lần và hết hạn sau 15 phút.</small>
+                    </div>
+                    <div id="depositQrResult"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-apply-job" id="btnGenerateDepositQr"><i data-lucide="qr-code" style="width:16px;height:16px;"></i> Tạo mã QR</button>
+                    <button class="btn-modal-cancel">Đóng</button>
+                </div>
+            </div>`;
+
+        document.body.appendChild(modal);
+        if (window.lucide) lucide.createIcons();
+        requestAnimationFrame(() => modal.classList.add('active'));
+
+        modal.querySelector('.modal-close').addEventListener('click', () => closeModal(modal));
+        modal.querySelector('.btn-modal-cancel').addEventListener('click', () => closeModal(modal));
+        modal.addEventListener('click', e => { if (e.target === modal) closeModal(modal); });
+
+        modal.querySelector('#btnGenerateDepositQr').addEventListener('click', function () {
+            const amount = Number(modal.querySelector('#depositAmountInput').value);
+            const result = modal.querySelector('#depositQrResult');
+
+            if (!Number.isFinite(amount) || amount < 50000 || amount % 50000 !== 0) {
+                showToast('Số tiền nạp phải là bội của 50.000 đ.', 'warning');
+                return;
+            }
+
+            const btn = this;
+            const original = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm" style="margin-right:8px;"></span> Đang tạo...';
+
+            fetch('/Home/GenerateDepositQr', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ amount })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.success) {
+                        showToast(data.message || 'Không thể tạo mã QR.', 'error');
+                        return;
+                    }
+
+                    const qrUrl = `https://quickchart.io/qr?size=220&margin=1&text=${encodeURIComponent(data.qrPayload)}`;
+                    result.innerHTML = `
+                        <div class="financial-result" style="margin-top:16px;">
+                            <img src="${qrUrl}" alt="QR nạp tiền" style="width:220px;height:220px;border-radius:8px;border:1px solid var(--border-color);background:#fff;padding:8px;" />
+                            <p class="result-message" style="margin-top:12px;">Mã giao dịch: <strong>${escapeHtml(data.transactionCode)}</strong></p>
+                            <p class="result-detail">Số tiền: <strong>${formatVND(data.amount)}</strong><br/>Hết hạn: ${escapeHtml(data.expiresAt)}</p>
+                            <textarea readonly class="form-textarea" style="height:76px;font-size:12px;">${escapeHtml(data.qrPayload)}</textarea>
+                        </div>`;
+                    if (window.lucide) lucide.createIcons();
+                    showToast('Đã tạo mã QR nạp tiền dùng một lần.', 'success');
+                })
+                .catch(err => {
+                    console.error(err);
+                    showToast('Không thể kết nối đến máy chủ.', 'error');
+                })
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = original;
+                });
         });
     }
 
@@ -2476,16 +4059,20 @@
             const initials = initialsEl ? initialsEl.textContent.trim() : 'US';
             const avatarSrc = avatarImg ? avatarImg.src : null;
             const email = btn.getAttribute('data-email') || (role === 'Freelancer' ? 'sinhvien@j4s.vn' : 'doanhnghiep@j4s.vn');
+            const userId = btn.getAttribute('data-user-id');
+            const userRole = btn.getAttribute('data-user-role') || '';
+            const isBusiness = userRole === 'Business';
+            const businessJobsUrl = isBusiness && userId ? `/business/${userId}/jobs` : '#';
 
             const dropdown = document.createElement('div');
             dropdown.className = 'dropdown-panel user-dropdown';
             dropdown.innerHTML = `
                 <div class="dropdown-user-header">
                     <div class="user-avatar" style="background: ${avatarSrc ? 'none' : 'linear-gradient(135deg, #2563eb, #3b82f6)'}; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; color: white; font-weight: 700; overflow: hidden; flex-shrink: 0;">
-                        ${avatarSrc 
-                            ? `<img src="${avatarSrc}" style="width: 100%; height: 100%; object-fit: cover;" />` 
-                            : `<span>${escapeHtml(initials)}</span>`
-                        }
+                        ${avatarSrc
+                    ? `<img src="${avatarSrc}" style="width: 100%; height: 100%; object-fit: cover;" />`
+                    : `<span>${escapeHtml(initials)}</span>`
+                }
                     </div>
                     <div>
                         <div class="dropdown-user-name">${escapeHtml(name)}</div>
@@ -2494,7 +4081,28 @@
                 </div>
                 <div class="dropdown-divider"></div>
                 <div class="dropdown-menu-list">
-                    <div class="dropdown-menu-item" data-action="profile"><i data-lucide="user" style="width:16px;height:16px;"></i> Hồ sơ của tôi</div>
+                    ${isBusiness ? `
+                        <div class="dropdown-section-label">Doanh nghiệp</div>
+                        <div class="dropdown-menu-item" data-action="deposit"><i data-lucide="wallet-cards" style="width:16px;height:16px;"></i> Nạp tiền</div>
+                        <div class="dropdown-menu-item" data-action="business-jobs"><i data-lucide="briefcase-business" style="width:16px;height:16px;"></i> Xem trang việc làm</div>
+                        <div class="dropdown-menu-item" data-action="profile"><i data-lucide="building-2" style="width:16px;height:16px;"></i> Hồ sơ doanh nghiệp</div>
+                        <div class="dropdown-menu-item" data-action="edit-profile"><i data-lucide="pencil" style="width:16px;height:16px;"></i> Chỉnh sửa thông tin công ty</div>
+                        <div class="dropdown-menu-item" data-action="edit-profile"><i data-lucide="image" style="width:16px;height:16px;"></i> Thay đổi logo doanh nghiệp</div>
+                        <div class="dropdown-menu-item" data-action="edit-profile"><i data-lucide="panorama" style="width:16px;height:16px;"></i> Cập nhật ảnh bìa</div>
+                        <div class="dropdown-menu-item" data-action="edit-profile"><i data-lucide="file-text" style="width:16px;height:16px;"></i> Chỉnh sửa mô tả doanh nghiệp</div>
+                        <div class="dropdown-menu-item" data-action="edit-profile"><i data-lucide="map-pin" style="width:16px;height:16px;"></i> Cập nhật địa chỉ</div>
+                        <div class="dropdown-menu-item" data-action="edit-profile"><i data-lucide="globe" style="width:16px;height:16px;"></i> Cập nhật website</div>
+                        <div class="dropdown-menu-item" data-action="edit-profile"><i data-lucide="users" style="width:16px;height:16px;"></i> Cập nhật quy mô công ty</div>
+                        <div class="dropdown-menu-item" data-action="edit-profile"><i data-lucide="factory" style="width:16px;height:16px;"></i> Cập nhật lĩnh vực hoạt động</div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-section-label">Tài khoản</div>
+                        <div class="dropdown-menu-item" data-action="edit-profile"><i data-lucide="badge" style="width:16px;height:16px;"></i> Hiển thị tên doanh nghiệp</div>
+                        <div class="dropdown-menu-item" data-action="edit-profile"><i data-lucide="phone" style="width:16px;height:16px;"></i> Chỉnh sửa số điện thoại</div>
+                        <div class="dropdown-menu-item" data-action="edit-profile"><i data-lucide="mail" style="width:16px;height:16px;"></i> Chỉnh sửa email</div>
+                        <div class="dropdown-menu-item" data-action="edit-profile"><i data-lucide="key-round" style="width:16px;height:16px;"></i> Đổi mật khẩu</div>
+                    ` : `
+                        <div class="dropdown-menu-item" data-action="profile"><i data-lucide="user" style="width:16px;height:16px;"></i> Hồ sơ của tôi</div>
+                    `}
                     <div class="dropdown-menu-item" data-action="policies"><i data-lucide="shield-check" style="width:16px;height:16px;"></i> Điều khoản & Chính sách</div>
                     <div class="dropdown-divider"></div>
                     <div class="dropdown-menu-item danger" data-action="logout"><i data-lucide="log-out" style="width:16px;height:16px;"></i> Đăng xuất</div>
@@ -2514,7 +4122,10 @@
                     dropdown.classList.remove('show');
                     setTimeout(() => dropdown.remove(), 200);
                     switch (action) {
+                        case 'deposit': openDepositQrModal(); break;
+                        case 'business-jobs': window.location.href = businessJobsUrl; break;
                         case 'profile': setActiveSidebar('profile'); currentSidebarMode = 'profile'; renderProfileView(); break;
+                        case 'edit-profile': openEditProfileFromMenu(); break;
                         case 'policies': setActiveSidebar(''); currentSidebarMode = 'policies'; renderPoliciesView(); break;
                         case 'logout':
                             const logoutForm = document.getElementById('logoutForm');
@@ -2538,6 +4149,22 @@
                 });
             }, 10);
         });
+    }
+
+    function openEditProfileFromMenu() {
+        fetch('/Home/GetProfile')
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    showToast(data.message || 'Không thể tải hồ sơ.', 'error');
+                    return;
+                }
+                openEditProfileModal(data);
+            })
+            .catch(err => {
+                console.error(err);
+                showToast('Không thể kết nối đến máy chủ.', 'error');
+            });
     }
 
     function renderPoliciesView() {
@@ -2594,7 +4221,7 @@
                     </div>
                 </div>
             </div>`;
-        
+
         if (window.lucide) lucide.createIcons();
     }
 
@@ -2660,8 +4287,151 @@
         });
     }
 
-    function openPostJobModal() {
-        // Disabled
+    function openPostJobModal(job = null) {
+        const isEdit = !!job;
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width:760px;max-height:85vh;overflow-y:auto;">
+                <button class="modal-close"><i data-lucide="x" style="width:20px;height:20px;"></i></button>
+                <div class="modal-header"><h2>${isEdit ? 'Chỉnh sửa tin tuyển dụng' : 'Đăng việc mới'}</h2></div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Tiêu đề công việc</label>
+                        <input type="text" class="form-input" id="postJobTitle" value="${escapeHtml(job?.title || '')}" placeholder="VD: Thiết kế poster sự kiện..." />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Mô tả chi tiết</label>
+                        <textarea class="form-textarea" id="postJobDesc" rows="3" placeholder="Mô tả yêu cầu công việc...">${escapeHtml(job?.description || '')}</textarea>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Danh mục</label>
+                            <select class="form-select" id="postJobCategory">
+                                ${['Thiết kế', 'Làm slide', 'Dịch thuật', 'Viết content', 'Code web', 'Edit video', 'Khác'].map(c => `<option ${job?.category === c ? 'selected' : ''}>${c}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Ngân sách (VNĐ)</label>
+                            <input type="number" class="form-input" id="postJobBudget" value="${job?.budget || ''}" placeholder="150000" />
+                        </div>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Hình thức ngân sách</label>
+                            <select class="form-select" id="postJobBudgetType">
+                                <option value="Fixed" ${job?.budgetType === 'Fixed' ? 'selected' : ''}>Cố định</option>
+                                <option value="Hourly" ${job?.budgetType === 'Hourly' ? 'selected' : ''}>Theo giờ</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Kinh nghiệm yêu cầu</label>
+                            <select class="form-select" id="postJobExperience">
+                                <option value="No_Experience" ${job?.experienceLevel === 'No_Experience' ? 'selected' : ''}>Không yêu cầu</option>
+                                <option value="Mid_Level" ${job?.experienceLevel === 'Mid_Level' ? 'selected' : ''}>Trung cấp</option>
+                                <option value="Expert" ${job?.experienceLevel === 'Expert' ? 'selected' : ''}>Chuyên gia</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Hình thức</label>
+                            <input type="text" class="form-input" id="postJobLocation" value="${escapeHtml(job?.location || 'Online')}" placeholder="Remote, Quận 1, TP.HCM..." />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Số lượng tuyển</label>
+                            <input type="number" min="1" class="form-input" id="postJobQuantity" value="${job?.quantity || 1}" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Kỹ năng cần có (cách nhau bằng dấu phẩy)</label>
+                        <input type="text" class="form-input" id="postJobSkills" value="${escapeHtml((job?.skills || []).join(', '))}" placeholder="Figma, Photoshop, Content..." />
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Yêu cầu</label>
+                            <textarea class="form-textarea" id="postJobRequirements" rows="3">${escapeHtml(job?.requirements || '')}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Quyền lợi</label>
+                            <textarea class="form-textarea" id="postJobBenefits" rows="3">${escapeHtml(job?.benefits || '')}</textarea>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Thời hạn</label>
+                        <input type="date" class="form-input" id="postJobDeadline" value="${escapeHtml(job?.deadline || '')}" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-apply-job" id="btnSubmitJob"><i data-lucide="send" style="width:16px;height:16px;"></i> Đăng ngay</button>
+                    <button class="btn-sm btn-outline" id="btnSaveDraftJob" type="button">Lưu nháp</button>
+                    <button class="btn-modal-cancel">Hủy</button>
+                </div>
+            </div>`;
+
+        document.body.appendChild(modal);
+        if (window.lucide) lucide.createIcons();
+        requestAnimationFrame(() => modal.classList.add('active'));
+
+        modal.querySelector('.modal-close').addEventListener('click', () => closeModal(modal));
+        modal.querySelector('.btn-modal-cancel').addEventListener('click', () => closeModal(modal));
+        modal.addEventListener('click', e => { if (e.target === modal) closeModal(modal); });
+
+        const submitBusinessJob = (saveAsDraft) => {
+            const title = modal.querySelector('#postJobTitle').value.trim();
+            const description = modal.querySelector('#postJobDesc').value.trim();
+            const deadline = modal.querySelector('#postJobDeadline').value;
+            const budget = Number(modal.querySelector('#postJobBudget').value);
+
+            if (!title) { showToast('Vui lòng nhập tiêu đề công việc.', 'warning'); return; }
+            if (!saveAsDraft && !description) { showToast('Vui lòng nhập mô tả công việc.', 'warning'); return; }
+            if (!saveAsDraft && !deadline) { showToast('Vui lòng chọn deadline tuyển dụng.', 'warning'); return; }
+            if (!saveAsDraft && (!Number.isFinite(budget) || budget <= 0)) { showToast('Vui lòng nhập mức lương hợp lệ.', 'warning'); return; }
+
+            const payload = {
+                id: job?.id || null,
+                title,
+                description,
+                requirements: modal.querySelector('#postJobRequirements').value.trim(),
+                benefits: modal.querySelector('#postJobBenefits').value.trim(),
+                category: modal.querySelector('#postJobCategory').value,
+                skills: modal.querySelector('#postJobSkills').value.split(',').map(s => s.trim()).filter(Boolean),
+                budget: Number.isFinite(budget) ? budget : 0,
+                budgetType: modal.querySelector('#postJobBudgetType').value,
+                experienceLevel: modal.querySelector('#postJobExperience').value,
+                location: modal.querySelector('#postJobLocation').value.trim() || 'Online',
+                quantity: Number(modal.querySelector('#postJobQuantity').value) || 1,
+                deadline,
+                saveAsDraft
+            };
+
+            const btn = modal.querySelector(saveAsDraft ? '#btnSaveDraftJob' : '#btnSubmitJob');
+            const original = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm" style="margin-right:8px;"></span> Đang lưu...';
+
+            postJson('/Home/SaveBusinessJobPost', payload)
+                .then(data => {
+                    if (data.success) {
+                        closeModal(modal);
+                        showToast(data.message || 'Đã lưu tin tuyển dụng.', 'success');
+                        if (currentSidebarMode === 'businessJobs') loadBusinessJobs();
+                    } else {
+                        showToast(data.message || 'Không thể lưu tin tuyển dụng.', 'error');
+                        btn.disabled = false;
+                        btn.innerHTML = original;
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    showToast('Không thể kết nối đến máy chủ.', 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = original;
+                });
+        };
+
+        modal.querySelector('#btnSubmitJob').addEventListener('click', () => submitBusinessJob(false));
+        modal.querySelector('#btnSaveDraftJob').addEventListener('click', () => submitBusinessJob(true));
     }
 
     // ============================================
@@ -2713,49 +4483,4 @@
 
 })();
 
-document.addEventListener('DOMContentLoaded', () => {
-    const btnSubmitJob = document.getElementById('btnSubmitJob');
-    if (btnSubmitJob) {
-        btnSubmitJob.addEventListener('click', async () => {
-            const form = document.getElementById('postJobForm');
-            if (!form.checkValidity()) {
-                form.reportValidity();
-                return;
-            }
-            const formData = new FormData(form);
-            try {
-                const response = await fetch('/Home/PostJob', {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
-                    }
-                });
-                
-                if (!response.ok) {
-                    const text = await response.text();
-                    console.error("Server returned error:", response.status, text);
-                    showToast('Lỗi từ máy chủ: ' + response.status + '. Vui lòng xem F12 Console.', 'error');
-                    return;
-                }
 
-                const data = await response.json();
-                if (data.success) {
-                    showToast(data.message, 'success');
-                    const modalEl = document.getElementById('postJobModal');
-                    if (modalEl) {
-                        const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-                        modal.hide();
-                        form.reset();
-                    }
-                    setTimeout(() => window.location.reload(), 1500);
-                } else {
-                    showToast(data.message || 'Lỗi khi đăng bài', 'error');
-                }
-            } catch (err) {
-                console.error("Lỗi fetch:", err);
-                showToast('Lỗi kết nối hoặc lỗi xử lý dữ liệu', 'error');
-            }
-        });
-    }
-});

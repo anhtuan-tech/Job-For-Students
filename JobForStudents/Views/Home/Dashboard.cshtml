@@ -885,7 +885,7 @@
 
             <!-- User Menu Dropdown -->
             <div class="dropdown">
-                <div class="user-profile" id="userProfile" data-bs-toggle="dropdown" aria-expanded="false" data-email="@User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value">
+                <div class="user-profile" id="userProfile" data-bs-toggle="dropdown" aria-expanded="false" data-email="@User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value" data-user-id="@Model.CurrentUserId" data-user-role="@Model.CurrentUserRole">
                     <div class="user-avatar" style="background: @(string.IsNullOrEmpty(Model.CurrentUserAvatarUrl) ? "linear-gradient(135deg, #0ea5e9, #38bdf8)" : "none");">
                         @if (!string.IsNullOrEmpty(Model.CurrentUserAvatarUrl))
                         {
@@ -902,10 +902,21 @@
                     </div>
                     <i data-lucide="chevron-down" class="dropdown-arrow" style="width:14px;height:14px;"></i>
                 </div>
-                <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2" style="border-radius: 12px; min-width: 200px;">
-                    <li><a class="dropdown-item py-2 small rounded-3 d-flex align-items-center gap-2" href="#"><i data-lucide="user" style="width:16px;"></i> Hồ sơ cá nhân</a></li>
-                    <li><a class="dropdown-item py-2 small rounded-3 d-flex align-items-center gap-2" href="#"><i data-lucide="settings" style="width:16px;"></i> Thiết lập tài khoản</a></li>
-                    <li><a class="dropdown-item py-2 small rounded-3 d-flex align-items-center gap-2" href="#"><i data-lucide="shield" style="width:16px;"></i> Bảo mật & Quyền riêng tư</a></li>
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2" style="border-radius: 12px; min-width: 280px;">
+                    @if (User.IsInRole("Business"))
+                    {
+                        <li><a class="dropdown-item py-2 small rounded-3 d-flex align-items-center gap-2" href="#"><i data-lucide="wallet-cards" style="width:16px;"></i> Nạp tiền</a></li>
+                        <li><a class="dropdown-item py-2 small rounded-3 d-flex align-items-center gap-2" href="/business/@Model.CurrentUserId/jobs"><i data-lucide="briefcase-business" style="width:16px;"></i> Xem trang việc làm</a></li>
+                        <li><a class="dropdown-item py-2 small rounded-3 d-flex align-items-center gap-2" href="#"><i data-lucide="building-2" style="width:16px;"></i> Hồ sơ doanh nghiệp</a></li>
+                        <li><a class="dropdown-item py-2 small rounded-3 d-flex align-items-center gap-2" href="#"><i data-lucide="pencil" style="width:16px;"></i> Chỉnh sửa thông tin công ty</a></li>
+                        <li><a class="dropdown-item py-2 small rounded-3 d-flex align-items-center gap-2" href="#"><i data-lucide="shield" style="width:16px;"></i> Điều khoản & Chính sách</a></li>
+                    }
+                    else
+                    {
+                        <li><a class="dropdown-item py-2 small rounded-3 d-flex align-items-center gap-2" href="#"><i data-lucide="user" style="width:16px;"></i> Hồ sơ cá nhân</a></li>
+                        <li><a class="dropdown-item py-2 small rounded-3 d-flex align-items-center gap-2" href="#"><i data-lucide="settings" style="width:16px;"></i> Thiết lập tài khoản</a></li>
+                        <li><a class="dropdown-item py-2 small rounded-3 d-flex align-items-center gap-2" href="#"><i data-lucide="shield" style="width:16px;"></i> Bảo mật & Quyền riêng tư</a></li>
+                    }
                     <li><hr class="dropdown-divider"></li>
                     <li>
                         <form asp-controller="Auth" asp-action="LogoutPost" method="post" class="m-0">
@@ -1065,6 +1076,21 @@
             <!-- Nhóm: QUẢN LÝ -->
             <div class="sidebar-group">
                 <div class="sidebar-label">Quản lý</div>
+                @if (User.IsInRole("Business"))
+                {
+                    <a href="#" class="sidebar-item" data-nav="businessJobs" id="navBusinessJobs">
+                        <span class="item-icon"><i data-lucide="briefcase-business" style="width:18px;height:18px;"></i></span>
+                        Quản lý tin đăng
+                    </a>
+                    <a href="#" class="sidebar-item" data-nav="servicePackages" id="navServicePackages">
+                        <span class="item-icon"><i data-lucide="package-check" style="width:18px;height:18px;"></i></span>
+                        Gói dịch vụ
+                    </a>
+                    <a href="#" class="sidebar-item" data-nav="candidateSearch" id="navCandidateSearch">
+                        <span class="item-icon"><i data-lucide="user-search" style="width:18px;height:18px;"></i></span>
+                        Tìm hồ sơ ứng viên
+                    </a>
+                }
                 <a href="#" class="sidebar-item" data-nav="profile" id="navProfile">
                     <span class="item-icon"><i data-lucide="user" style="width:18px;height:18px;"></i></span>
                     Hồ sơ của tôi
@@ -1082,14 +1108,12 @@
                     <span class="item-icon"><i data-lucide="star" style="width:18px;height:18px;"></i></span>
                     Đánh giá
                 </a>
-                @if (false)
-                {
-                    <a href="#" class="sidebar-item" data-nav="wallet" id="navWallet">
-                        <span class="item-icon"><i data-lucide="wallet" style="width:18px;height:18px;"></i></span>
-                        Ví tiền
-                    </a>
-                }
+                <a href="#" class="sidebar-item" data-nav="wallet" id="navWallet">
+                    <span class="item-icon"><i data-lucide="wallet" style="width:18px;height:18px;"></i></span>
+                    Ví tiền
+                </a>
             </div>
+
 
             <!-- Nhóm: KHÁM PHÁ -->
             <div class="sidebar-group">

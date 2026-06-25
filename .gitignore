@@ -23,9 +23,6 @@ publish/
 packages/
 *.nupkg
 
-# EF Core
-Migrations/
-
 # OS
 .DS_Store
 Thumbs.db

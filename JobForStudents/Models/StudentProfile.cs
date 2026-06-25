@@ -29,4 +29,5 @@ public class StudentProfile
     public virtual ICollection<SavedJob> SavedJobs { get; set; } = new List<SavedJob>();
     public virtual ICollection<JobBid> JobBids { get; set; } = new List<JobBid>();
     public virtual ICollection<JobContract> JobContracts { get; set; } = new List<JobContract>();
+    public virtual ICollection<SavedCandidate> SavedByBusinesses { get; set; } = new List<SavedCandidate>();
 }

@@ -35,8 +35,10 @@ public enum ExperienceLevel
 
 public enum JobStatus
 {
+    Draft,
     Open,
     In_Progress,
+    Paused,
     Closed,
     Rejected
 }
@@ -79,4 +81,11 @@ public enum TransactionStatus
     Pending,
     Success,
     Failed
+}
+
+public enum SubscriptionStatus
+{
+    Active,
+    Expired,
+    Cancelled
 }

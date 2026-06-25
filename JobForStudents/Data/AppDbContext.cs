@@ -27,6 +27,9 @@ public class AppDbContext : DbContext
     public DbSet<Review> Reviews { get; set; } = null!;
     public DbSet<Wallet> Wallets { get; set; } = null!;
     public DbSet<Transaction> Transactions { get; set; } = null!;
+    public DbSet<ServicePlan> ServicePlans { get; set; } = null!;
+    public DbSet<BusinessSubscription> BusinessSubscriptions { get; set; } = null!;
+    public DbSet<SavedCandidate> SavedCandidates { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -238,6 +241,74 @@ public class AppDbContext : DbContext
             entity.HasOne(t => t.Wallet)
                   .WithMany(w => w.Transactions)
                   .HasForeignKey(t => t.WalletId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ServicePlan>(entity =>
+        {
+            entity.HasData(
+                new ServicePlan
+                {
+                    Id = 1,
+                    Name = "Business Starter",
+                    Description = "Gói khởi đầu cho doanh nghiệp đăng tuyển quy mô nhỏ.",
+                    Price = 0,
+                    DurationDays = 14,
+                    JobPostLimit = 3,
+                    Benefits = "3 tin tuyển dụng;Trang tuyển dụng công khai;Nhận ứng viên cơ bản",
+                    IsActive = true
+                },
+                new ServicePlan
+                {
+                    Id = 2,
+                    Name = "Business Growth",
+                    Description = "Gói tăng trưởng cho doanh nghiệp tuyển nhiều vị trí.",
+                    Price = 299000,
+                    DurationDays = 30,
+                    JobPostLimit = 15,
+                    Benefits = "15 tin tuyển dụng;Ưu tiên hiển thị tin;Xem ứng viên từng tin;Thông báo tuyển dụng nâng cao",
+                    IsActive = true
+                },
+                new ServicePlan
+                {
+                    Id = 3,
+                    Name = "Business Pro",
+                    Description = "Gói chuyên nghiệp cho chiến dịch tuyển dụng liên tục.",
+                    Price = 799000,
+                    DurationDays = 90,
+                    JobPostLimit = 60,
+                    Benefits = "60 tin tuyển dụng;Ưu tiên cao;Trang doanh nghiệp nổi bật;Lịch sử thanh toán chi tiết",
+                    IsActive = true
+                });
+        });
+
+        modelBuilder.Entity<BusinessSubscription>(entity =>
+        {
+            entity.Property(bs => bs.Status).HasConversion<string>();
+
+            entity.HasOne(bs => bs.BusinessProfile)
+                  .WithMany(bp => bp.BusinessSubscriptions)
+                  .HasForeignKey(bs => bs.BusinessId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(bs => bs.ServicePlan)
+                  .WithMany(sp => sp.BusinessSubscriptions)
+                  .HasForeignKey(bs => bs.ServicePlanId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<SavedCandidate>(entity =>
+        {
+            entity.HasKey(sc => new { sc.BusinessId, sc.StudentId });
+
+            entity.HasOne(sc => sc.BusinessProfile)
+                  .WithMany(bp => bp.SavedCandidates)
+                  .HasForeignKey(sc => sc.BusinessId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(sc => sc.StudentProfile)
+                  .WithMany(sp => sp.SavedByBusinesses)
+                  .HasForeignKey(sc => sc.StudentId)
                   .OnDelete(DeleteBehavior.Cascade);
         });
     }
