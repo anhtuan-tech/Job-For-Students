@@ -223,14 +223,14 @@ public class HomeController : Controller
                 if (wallet != null)
                 {
                     var latestPkgTx = wallet.Transactions
-                        .Where(t => t.Type == TransactionType.Holding && t.Status == TransactionStatus.Success && t.Description != null && t.Description.Contains("gói dịch vụ"))
+                        .Where(t => t.Type == TransactionType.Withdraw && t.Status == TransactionStatus.Success && t.Description != null && t.Description.Contains("gói dịch vụ"))
                         .OrderByDescending(t => t.CreatedAt)
                         .FirstOrDefault();
 
                     if (latestPkgTx != null && latestPkgTx.CreatedAt.AddDays(30) > today)
                     {
-                        var isPremium = latestPkgTx.Description.Contains("Premium");
-                        var isVip = latestPkgTx.Description.Contains("VIP");
+                        var isPremium = latestPkgTx.Description?.Contains("Premium") ?? false;
+                        var isVip = latestPkgTx.Description?.Contains("VIP") ?? false;
 
                         if (isPremium)
                         {
@@ -365,7 +365,7 @@ public class HomeController : Controller
                     {
                         Id = sp.UserId,
                         FullName = sp.FullName,
-                        Role = sp.StudentSkills.FirstOrDefault()?.Skill.Name ?? "Chương trình viên",
+                        Role = sp.StudentSkills?.FirstOrDefault()?.Skill.Name ?? "Chương trình viên",
                         AvatarUrl = sp.AvatarUrl ?? string.Empty,
                         TimeAgo = timeAgoStr,
                         MatchLevel = matchLevel,
@@ -1150,7 +1150,7 @@ public class HomeController : Controller
             var totalUsers = await _context.Users.CountAsync(u => !u.IsDeleted);
             var totalJobs = await _context.JobPosts.CountAsync(j => !j.IsDeleted);
             var totalContracts = await _context.JobContracts.CountAsync();
-            var systemVolume = await _context.Wallets.SumAsync(w => w.Balance);
+            var systemVolume = await _context.Wallets.Where(w => w.User.Role == UserRole.Business).SumAsync(w => w.Balance);
 
             var reviews = await _context.Reviews
                 .Include(r => r.Reviewer)
@@ -2687,7 +2687,6 @@ public class HomeController : Controller
 
     // ============================================
     // ADMIN ACTIONS (AJAX Endpoints)
-    // ============================================
     [Authorize(Roles = "Admin")]
     [HttpGet]
     public async Task<IActionResult> GetAdminStats()
@@ -2695,14 +2694,18 @@ public class HomeController : Controller
         var totalUsers = await _context.Users.CountAsync(u => !u.IsDeleted);
         var totalJobs = await _context.JobPosts.CountAsync(j => !j.IsDeleted);
         var totalContracts = await _context.JobContracts.CountAsync();
-        var systemVolume = await _context.Wallets.SumAsync(w => w.Balance);
+        var systemVolume = await _context.Wallets.Where(w => w.User.Role == UserRole.Business).SumAsync(w => w.Balance);
+        var systemRevenue = await _context.Transactions
+            .Where(t => t.Type == TransactionType.Withdraw && t.Status == TransactionStatus.Success && t.Description != null && (t.Description.Contains("gói") || t.Description.Contains("PLAN")))
+            .SumAsync(t => t.Amount);
 
         return Json(new
         {
             totalUsers,
             totalJobs,
             totalContracts,
-            systemVolume
+            systemVolume,
+            systemRevenue
         });
     }
 
@@ -2722,8 +2725,8 @@ public class HomeController : Controller
                 status = u.Status.ToString(),
                 createdAt = u.CreatedAt.ToString("dd/MM/yyyy HH:mm"),
                 displayName = u.Role == UserRole.Student
-                    ? u.StudentProfile.FullName
-                    : u.BusinessProfile.CompanyName
+                    ? (u.StudentProfile != null ? u.StudentProfile.FullName : null)
+                    : (u.BusinessProfile != null ? u.BusinessProfile.CompanyName : null)
             })
             .ToListAsync();
 
@@ -2792,6 +2795,7 @@ public class HomeController : Controller
         var txs = await _context.Transactions
             .Include(t => t.Wallet)
                 .ThenInclude(w => w.User)
+            .Where(t => t.Wallet.User.Role == UserRole.Business)
             .OrderByDescending(t => t.CreatedAt)
             .Select(t => new {
                 id = t.Id,
@@ -2857,14 +2861,14 @@ public class HomeController : Controller
         var today = DateTime.UtcNow;
 
         var latestPkgTx = await _context.Transactions
-            .Where(t => t.WalletId == wallet.Id && t.Type == TransactionType.Holding && t.Status == TransactionStatus.Success && t.Description != null && t.Description.Contains("gói dịch vụ"))
+            .Where(t => t.WalletId == wallet.Id && t.Type == TransactionType.Withdraw && t.Status == TransactionStatus.Success && t.Description != null && t.Description.Contains("gói dịch vụ"))
             .OrderByDescending(t => t.CreatedAt)
             .FirstOrDefaultAsync();
 
         if (latestPkgTx != null && latestPkgTx.CreatedAt.AddDays(30) > today)
         {
-            var isPremium = latestPkgTx.Description.Contains("Premium");
-            var isVip = latestPkgTx.Description.Contains("VIP");
+            var isPremium = latestPkgTx.Description?.Contains("Premium") ?? false;
+            var isVip = latestPkgTx.Description?.Contains("VIP") ?? false;
 
             if (isPremium)
             {
@@ -3080,7 +3084,7 @@ public class HomeController : Controller
         {
             WalletId = wallet.Id,
             Amount = price,
-            Type = TransactionType.Holding,
+            Type = TransactionType.Withdraw,
             TransactionCode = txCode,
             Status = TransactionStatus.Success,
             Description = $"Thanh toán mua gói dịch vụ {request.PackageName}",

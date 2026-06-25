@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace JobForStudents.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260622173248_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260625173740_AddBusinessProfileCoverAndDescription")]
+    partial class AddBusinessProfileCoverAndDescription
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -66,6 +66,48 @@ namespace JobForStudents.Migrations
                     b.ToTable("BusinessProfiles");
                 });
 
+            modelBuilder.Entity("JobForStudents.Models.BusinessSubscription", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BusinessId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("RemainingJobPosts")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ServicePlanId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BusinessId");
+
+                    b.HasIndex("ServicePlanId");
+
+                    b.ToTable("BusinessSubscriptions");
+                });
+
             modelBuilder.Entity("JobForStudents.Models.Certificate", b =>
                 {
                     b.Property<int>("Id")
@@ -99,6 +141,43 @@ namespace JobForStudents.Migrations
                     b.HasIndex("StudentId");
 
                     b.ToTable("Certificates");
+                });
+
+            modelBuilder.Entity("JobForStudents.Models.Feedback", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Details")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Feedbacks");
                 });
 
             modelBuilder.Entity("JobForStudents.Models.JobBid", b =>
@@ -206,6 +285,9 @@ namespace JobForStudents.Migrations
                     b.Property<int>("BusinessId")
                         .HasColumnType("integer");
 
+                    b.Property<string>("Category")
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -219,6 +301,9 @@ namespace JobForStudents.Migrations
                     b.Property<string>("ExperienceLevelRequired")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<bool>("IsApproved")
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
@@ -243,6 +328,9 @@ namespace JobForStudents.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("ViewCount")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("BusinessId");
@@ -263,6 +351,45 @@ namespace JobForStudents.Migrations
                     b.HasIndex("SkillId");
 
                     b.ToTable("JobPostSkills");
+                });
+
+            modelBuilder.Entity("JobForStudents.Models.JobTemplate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Budget")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("BusinessId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Category")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BusinessId");
+
+                    b.ToTable("JobTemplates");
                 });
 
             modelBuilder.Entity("JobForStudents.Models.Message", b =>
@@ -389,6 +516,9 @@ namespace JobForStudents.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<bool>("IsReported")
+                        .HasColumnType("boolean");
+
                     b.Property<int?>("ParentReviewId")
                         .HasColumnType("integer");
 
@@ -409,6 +539,27 @@ namespace JobForStudents.Migrations
                     b.ToTable("Reviews");
                 });
 
+            modelBuilder.Entity("JobForStudents.Models.SavedCandidate", b =>
+                {
+                    b.Property<int>("BusinessId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("StudentId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("SavedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("BusinessId", "StudentId");
+
+                    b.HasIndex("StudentId");
+
+                    b.HasIndex("BusinessId", "StudentId")
+                        .IsUnique();
+
+                    b.ToTable("SavedCandidates");
+                });
+
             modelBuilder.Entity("JobForStudents.Models.SavedJob", b =>
                 {
                     b.Property<int>("StudentId")
@@ -425,6 +576,78 @@ namespace JobForStudents.Migrations
                     b.HasIndex("JobPostId");
 
                     b.ToTable("SavedJobs");
+                });
+
+            modelBuilder.Entity("JobForStudents.Models.ServicePlan", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Benefits")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("DurationDays")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("JobPostLimit")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("numeric");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ServicePlans");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Benefits = "3 tin tuyển dụng;Trang tuyển dụng công khai;Nhận ứng viên cơ bản",
+                            Description = "Gói khởi đầu cho doanh nghiệp đăng tuyển quy mô nhỏ.",
+                            DurationDays = 14,
+                            IsActive = true,
+                            JobPostLimit = 3,
+                            Name = "Business Starter",
+                            Price = 0m
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Benefits = "15 tin tuyển dụng;Ưu tiên hiển thị tin;Xem ứng viên từng tin;Thông báo tuyển dụng nâng cao",
+                            Description = "Gói tăng trưởng cho doanh nghiệp tuyển nhiều vị trí.",
+                            DurationDays = 30,
+                            IsActive = true,
+                            JobPostLimit = 15,
+                            Name = "Business Growth",
+                            Price = 299000m
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Benefits = "60 tin tuyển dụng;Ưu tiên cao;Trang doanh nghiệp nổi bật;Lịch sử thanh toán chi tiết",
+                            Description = "Gói chuyên nghiệp cho chiến dịch tuyển dụng liên tục.",
+                            DurationDays = 90,
+                            IsActive = true,
+                            JobPostLimit = 60,
+                            Name = "Business Pro",
+                            Price = 799000m
+                        });
                 });
 
             modelBuilder.Entity("JobForStudents.Models.Skill", b =>
@@ -518,6 +741,43 @@ namespace JobForStudents.Migrations
                     b.HasIndex("SkillId");
 
                     b.ToTable("StudentSkills");
+                });
+
+            modelBuilder.Entity("JobForStudents.Models.SupportRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("SupportRequests");
                 });
 
             modelBuilder.Entity("JobForStudents.Models.Transaction", b =>
@@ -655,6 +915,25 @@ namespace JobForStudents.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("JobForStudents.Models.BusinessSubscription", b =>
+                {
+                    b.HasOne("JobForStudents.Models.BusinessProfile", "BusinessProfile")
+                        .WithMany("BusinessSubscriptions")
+                        .HasForeignKey("BusinessId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("JobForStudents.Models.ServicePlan", "ServicePlan")
+                        .WithMany("BusinessSubscriptions")
+                        .HasForeignKey("ServicePlanId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("BusinessProfile");
+
+                    b.Navigation("ServicePlan");
+                });
+
             modelBuilder.Entity("JobForStudents.Models.Certificate", b =>
                 {
                     b.HasOne("JobForStudents.Models.StudentProfile", "StudentProfile")
@@ -664,6 +943,17 @@ namespace JobForStudents.Migrations
                         .IsRequired();
 
                     b.Navigation("StudentProfile");
+                });
+
+            modelBuilder.Entity("JobForStudents.Models.Feedback", b =>
+                {
+                    b.HasOne("JobForStudents.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("JobForStudents.Models.JobBid", b =>
@@ -742,6 +1032,17 @@ namespace JobForStudents.Migrations
                     b.Navigation("Skill");
                 });
 
+            modelBuilder.Entity("JobForStudents.Models.JobTemplate", b =>
+                {
+                    b.HasOne("JobForStudents.Models.BusinessProfile", "BusinessProfile")
+                        .WithMany()
+                        .HasForeignKey("BusinessId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BusinessProfile");
+                });
+
             modelBuilder.Entity("JobForStudents.Models.Message", b =>
                 {
                     b.HasOne("JobForStudents.Models.User", "Receiver")
@@ -809,6 +1110,25 @@ namespace JobForStudents.Migrations
                     b.Navigation("Reviewer");
                 });
 
+            modelBuilder.Entity("JobForStudents.Models.SavedCandidate", b =>
+                {
+                    b.HasOne("JobForStudents.Models.BusinessProfile", "BusinessProfile")
+                        .WithMany("SavedCandidates")
+                        .HasForeignKey("BusinessId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("JobForStudents.Models.StudentProfile", "StudentProfile")
+                        .WithMany("SavedByBusinesses")
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BusinessProfile");
+
+                    b.Navigation("StudentProfile");
+                });
+
             modelBuilder.Entity("JobForStudents.Models.SavedJob", b =>
                 {
                     b.HasOne("JobForStudents.Models.JobPost", "JobPost")
@@ -858,6 +1178,17 @@ namespace JobForStudents.Migrations
                     b.Navigation("StudentProfile");
                 });
 
+            modelBuilder.Entity("JobForStudents.Models.SupportRequest", b =>
+                {
+                    b.HasOne("JobForStudents.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("JobForStudents.Models.Transaction", b =>
                 {
                     b.HasOne("JobForStudents.Models.Wallet", "Wallet")
@@ -882,9 +1213,13 @@ namespace JobForStudents.Migrations
 
             modelBuilder.Entity("JobForStudents.Models.BusinessProfile", b =>
                 {
+                    b.Navigation("BusinessSubscriptions");
+
                     b.Navigation("JobContracts");
 
                     b.Navigation("JobPosts");
+
+                    b.Navigation("SavedCandidates");
                 });
 
             modelBuilder.Entity("JobForStudents.Models.JobContract", b =>
@@ -908,6 +1243,11 @@ namespace JobForStudents.Migrations
                     b.Navigation("Replies");
                 });
 
+            modelBuilder.Entity("JobForStudents.Models.ServicePlan", b =>
+                {
+                    b.Navigation("BusinessSubscriptions");
+                });
+
             modelBuilder.Entity("JobForStudents.Models.Skill", b =>
                 {
                     b.Navigation("JobPostSkills");
@@ -924,6 +1264,8 @@ namespace JobForStudents.Migrations
                     b.Navigation("JobContracts");
 
                     b.Navigation("PortfolioProjects");
+
+                    b.Navigation("SavedByBusinesses");
 
                     b.Navigation("SavedJobs");
 

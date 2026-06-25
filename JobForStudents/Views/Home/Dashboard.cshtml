@@ -1,6 +1,6 @@
 @model JobForStudents.Models.DashboardViewModel
 @{
-    ViewData["Title"] = "Trang chủ";
+    ViewData["Title"] = User.IsInRole("Admin") ? "Admin Dashboard" : "Trang chủ";
     Layout = "~/Views/Shared/_DashboardLayout.cshtml";
 
     // Gradient colors for freelancer avatars without images
@@ -107,157 +107,18 @@
     .bg-slate-50 {
         background-color: #f8fafc !important;
     }
-    /* ----------------------------------------------
-           1. Overrides for Business Role (nav-business & layout-business)
-           ---------------------------------------------- */
-    .nav-business, .layout-business {
-        --primary: #4F46E5 !important;
-        --primary-light: #6366F1 !important;
-        --primary-dark: #3730A3 !important;
-        --primary-50: #EEF2FF !important;
-        --primary-100: #E0E7FF !important;
-        --primary-200: #C7D2FE !important;
-    }
+    /* Removed Business Overrides to use standard blue theme */
 
-        .nav-business .j4s-logo-box {
-            background: #4F46E5 !important;
-            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2) !important;
-        }
-
-        .nav-business .j4s-logo-text {
-            color: #4F46E5 !important;
-        }
-
-        .nav-business .nav-search input:focus {
-            border-color: #4F46E5 !important;
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15) !important;
-        }
-
-        .nav-business .hamburger:hover {
-            background: #EEF2FF !important;
-            color: #4F46E5 !important;
-        }
-
-        .nav-business .view-job-posts-link {
-            border-color: #cbd5e1 !important;
-            color: #4F46E5 !important;
-            transition: all 0.2s;
-        }
-
-            .nav-business .view-job-posts-link:hover {
-                border-color: #4F46E5 !important;
-                background-color: #EEF2FF !important;
-            }
-
-        .nav-business .user-avatar {
-            background: #1e3a8a !important; /* Navy/Dark Indigo */
-            color: #ffffff !important;
-        }
-
-        .layout-business .sidebar-item.active {
-            background-color: #EEF2FF !important;
-            color: #4F46E5 !important;
-            font-weight: 600;
-        }
-
-            .layout-business .sidebar-item.active .item-icon {
-                color: #4F46E5 !important;
-            }
-
-            .layout-business .sidebar-item.active::before {
-                content: '';
-                position: absolute;
-                left: 0 !important;
-                top: 0 !important;
-                bottom: 0 !important;
-                width: 4px !important;
-                background: #4F46E5 !important;
-                border-radius: 0 4px 4px 0 !important;
-            }
-
-        .layout-business .sidebar-item:hover {
-            background-color: #EEF2FF !important;
-            color: #4F46E5 !important;
-        }
-
-            .layout-business .sidebar-item:hover .item-icon {
-                color: #4F46E5 !important;
-            }
-
-    /* ----------------------------------------------
-           2. Overrides for Admin Role (nav-admin & layout-admin)
-           ---------------------------------------------- */
-    .nav-admin, .layout-admin {
-        --primary: #4F46E5 !important;
-        --primary-light: #6366F1 !important;
-        --primary-dark: #3730A3 !important;
-        --primary-50: #EEF2FF !important;
-        --primary-100: #E0E7FF !important;
-        --primary-200: #C7D2FE !important;
-    }
-
-        .nav-admin .j4s-logo-box {
-            background: #4F46E5 !important;
-            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2) !important;
-        }
-
-        .nav-admin .j4s-logo-text {
-            color: #4F46E5 !important;
-        }
-
-        .nav-admin .nav-search input:focus {
-            border-color: #4F46E5 !important;
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15) !important;
-        }
-
-        .nav-admin .hamburger:hover {
-            background: #EEF2FF !important;
-            color: #4F46E5 !important;
-        }
-
-        .nav-admin .user-avatar {
-            background: #312e81 !important; /* Deep Indigo */
-            color: #ffffff !important;
-        }
-
-        .layout-admin .sidebar-item.active {
-            background-color: #EEF2FF !important;
-            color: #4F46E5 !important;
-            font-weight: 600;
-        }
-
-            .layout-admin .sidebar-item.active .item-icon {
-                color: #4F46E5 !important;
-            }
-
-            .layout-admin .sidebar-item.active::before {
-                content: '';
-                position: absolute;
-                left: 0 !important;
-                top: 0 !important;
-                bottom: 0 !important;
-                width: 4px !important;
-                background: #4F46E5 !important;
-                border-radius: 0 4px 4px 0 !important;
-            }
-
-        .layout-admin .sidebar-item:hover {
-            background-color: #EEF2FF !important;
-            color: #4F46E5 !important;
-        }
-
-            .layout-admin .sidebar-item:hover .item-icon {
-                color: #4F46E5 !important;
-            }
+    /* Removed Admin Overrides to use standard blue theme */
 
     /* ----------------------------------------------
            2D. Admin Specific Components Styling
            ---------------------------------------------- */
     .admin-stats-grid {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 16px;
-        margin-bottom: 24px;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+        margin-bottom: 22px;
     }
 
     @@media (max-width: 1024px) {
@@ -274,30 +135,38 @@
 
     .admin-stat-card {
         background: #ffffff;
-        border-radius: 12px;
-        padding: 20px;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.01);
+        border-radius: 14px;
+        padding: 18px 16px;
+        border: 1px solid #e5e9f2;
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
         display: flex;
         align-items: center;
-        gap: 16px;
-        transition: transform 0.2s, box-shadow 0.2s;
+        gap: 12px;
+        min-height: 96px;
+        transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
     }
 
         .admin-stat-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(79, 70, 229, 0.05);
+            border-color: #cfd8ee;
+            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.08);
         }
 
     .admin-stat-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 10px;
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
     }
+
+        .admin-stat-icon i,
+        .admin-stat-icon svg {
+            width: 21px;
+            height: 21px;
+        }
 
         .admin-stat-icon.indigo {
             background: #EEF2FF;
@@ -320,17 +189,149 @@
         }
 
     .admin-stat-val {
-        font-size: 1.75rem;
-        font-weight: 800;
+        font-size: 2rem;
+        font-weight: 900;
         color: #0f172a;
         line-height: 1;
+        letter-spacing: -0.03em;
+        margin-bottom: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
     }
 
     .admin-stat-label {
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: #64748b;
+        line-height: 1.25;
+    }
+
+    .admin-home-grid {
+        display: grid;
+        grid-template-columns: 1.45fr 1fr;
+        gap: 16px;
+        margin-bottom: 18px;
+    }
+
+    .admin-home-panel {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 18px;
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
+    }
+
+    .admin-hero {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: center;
+        background: linear-gradient(135deg, #eef2ff 0%, #f8faff 55%, #ffffff 100%);
+        border: 1px solid #dbe4ff;
+        border-radius: 14px;
+        padding: 16px 18px;
+        margin-bottom: 16px;
+    }
+
+    .admin-hero h3 {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #1e293b;
+    }
+
+    .admin-hero p {
+        margin: 6px 0 0;
+        color: #64748b;
+        font-size: 0.85rem;
+    }
+
+    .admin-kpi-inline {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 10px;
+        border-radius: 10px;
+        background: #ffffff;
+        border: 1px solid #dbeafe;
+        color: #1d4ed8;
+        font-size: 0.8rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .admin-system-list {
+        display: grid;
+        gap: 10px;
+        margin-top: 8px;
+    }
+
+    .admin-system-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: #f8fafc;
+        border: 1px solid #edf2f7;
+        color: #475569;
         font-size: 0.85rem;
         font-weight: 600;
-        color: #64748b;
-        margin-top: 4px;
+    }
+
+    .admin-chart-panel {
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);
+        padding: 20px;
+    }
+
+    .admin-chart-panel h3 {
+        font-size: 1rem;
+        font-weight: 800;
+        margin-bottom: 14px;
+        color: #0f172a;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .admin-quick-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+    }
+
+    .admin-quick-btn {
+        border: 1px solid #cbd5e1;
+        background: #ffffff;
+        color: #334155;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        padding: 6px 10px;
+    }
+
+    .admin-quick-btn:hover {
+        background: #eef2ff;
+        border-color: #a5b4fc;
+        color: #3730a3;
+    }
+
+    @@media (max-width: 1100px) {
+        .admin-home-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .admin-hero {
+            flex-direction: column;
+            align-items: flex-start;
+        }
     }
 
     .admin-section {
@@ -1028,21 +1029,20 @@
     </div>
 
     <!-- Thanh tìm kiếm -->
-    <div class="nav-search">
-        <i data-lucide="search" class="search-icon" style="width:16px;height:16px;"></i>
-        @if (User.IsInRole("Business"))
-        {
-            <input type="text" placeholder="Tìm hồ sơ ứng viên, bài đăng, kỹ năng..." id="searchInput" />
-        }
-        else if (User.IsInRole("Admin"))
-        {
-            <input type="text" placeholder="Tìm kiếm nhanh hệ thống..." id="searchInput" disabled style="opacity:0.6; cursor:not-allowed;" />
-        }
-        else
-        {
-            <input type="text" placeholder="Tìm kiếm công việc, kỹ năng..." id="searchInput" />
-        }
-    </div>
+    @if (!User.IsInRole("Admin"))
+    {
+        <div class="nav-search">
+            <i data-lucide="search" class="search-icon" style="width:16px;height:16px;"></i>
+            @if (User.IsInRole("Business"))
+            {
+                <input type="text" placeholder="Tìm hồ sơ ứng viên, bài đăng, kỹ năng..." id="searchInput" />
+            }
+            else
+            {
+                <input type="text" placeholder="Tìm kiếm công việc, kỹ năng..." id="searchInput" />
+            }
+        </div>
+    }
 
     <!-- Phần bên phải -->
     <div class="nav-right">
@@ -1082,7 +1082,7 @@
 
             <!-- User Menu Dropdown -->
             <div class="dropdown">
-                <div class="user-profile" id="userProfile" data-bs-toggle="dropdown" aria-expanded="false" data-email="@User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value" data-user-id="@Model.CurrentUserId" data-user-role="@Model.CurrentUserRole">
+                <div class="user-profile" id="userProfile" data-email="@User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value" data-user-id="@Model.CurrentUserId" data-user-role="@Model.CurrentUserRole">
                     <div class="user-avatar" style="background: @(string.IsNullOrEmpty(Model.CurrentUserAvatarUrl) ? "linear-gradient(135deg, #0ea5e9, #38bdf8)" : "none");">
                         @if (!string.IsNullOrEmpty(Model.CurrentUserAvatarUrl))
                         {
@@ -1099,31 +1099,6 @@
                     </div>
                     <i data-lucide="chevron-down" class="dropdown-arrow" style="width:14px;height:14px;"></i>
                 </div>
-                <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2" style="border-radius: 12px; min-width: 280px;">
-                    @if (User.IsInRole("Business"))
-                    {
-                        <li><a class="dropdown-item py-2 small rounded-3 d-flex align-items-center gap-2" href="#"><i data-lucide="wallet-cards" style="width:16px;"></i> Nạp tiền</a></li>
-                        <li><a class="dropdown-item py-2 small rounded-3 d-flex align-items-center gap-2" href="/business/@Model.CurrentUserId/jobs"><i data-lucide="briefcase-business" style="width:16px;"></i> Xem trang việc làm</a></li>
-                        <li><a class="dropdown-item py-2 small rounded-3 d-flex align-items-center gap-2" href="#"><i data-lucide="building-2" style="width:16px;"></i> Hồ sơ doanh nghiệp</a></li>
-                        <li><a class="dropdown-item py-2 small rounded-3 d-flex align-items-center gap-2" href="#"><i data-lucide="pencil" style="width:16px;"></i> Chỉnh sửa thông tin công ty</a></li>
-                        <li><a class="dropdown-item py-2 small rounded-3 d-flex align-items-center gap-2" href="#"><i data-lucide="shield" style="width:16px;"></i> Điều khoản & Chính sách</a></li>
-                    }
-                    else
-                    {
-                        <li><a class="dropdown-item py-2 small rounded-3 d-flex align-items-center gap-2" href="#"><i data-lucide="user" style="width:16px;"></i> Hồ sơ cá nhân</a></li>
-                        <li><a class="dropdown-item py-2 small rounded-3 d-flex align-items-center gap-2" href="#"><i data-lucide="settings" style="width:16px;"></i> Thiết lập tài khoản</a></li>
-                        <li><a class="dropdown-item py-2 small rounded-3 d-flex align-items-center gap-2" href="#"><i data-lucide="shield" style="width:16px;"></i> Bảo mật & Quyền riêng tư</a></li>
-                    }
-                    <li><hr class="dropdown-divider"></li>
-                    <li>
-                        <form asp-controller="Auth" asp-action="LogoutPost" method="post" class="m-0">
-                            @Html.AntiForgeryToken()
-                            <button type="submit" class="dropdown-item py-2 small text-danger rounded-3 d-flex align-items-center gap-2 w-100 border-0 bg-transparent">
-                                <i data-lucide="log-out" style="width:16px;"></i> Đăng xuất
-                            </button>
-                        </form>
-                    </li>
-                </ul>
             </div>
         }
         else
@@ -1352,7 +1327,7 @@
             <!-- ============================================
                  3C. CỘT GIỮA - NỘI DUNG ADMIN
                  ============================================ -->
-            <main class="main-content" style="max-width: 100%; padding: 24px;" id="mainContent">
+            <main class="main-content" id="mainContent">
                 <!-- Welcome Header -->
                 <div class="welcome-box-business" style="padding: 24px;">
                     <div>
@@ -1385,10 +1360,10 @@
                         </div>
                     </div>
                     <div class="admin-stat-card">
-                        <div class="admin-stat-icon rose"><i data-lucide="wallet"></i></div>
+                        <div class="admin-stat-icon indigo"><i data-lucide="wallet"></i></div>
                         <div>
-                            <div class="admin-stat-val" id="statVolume">--</div>
-                            <div class="admin-stat-label">Tổng số dư ví</div>
+                            <div class="admin-stat-val" id="statRevenue">--</div>
+                            <div class="admin-stat-label">Số dư ví</div>
                         </div>
                     </div>
                 </div>
@@ -2075,12 +2050,20 @@
 }
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/notifications.js" asp-append-version="true"></script>
     <script>
         // Hamburger menu toggle
         document.getElementById('menuToggle')?.addEventListener('click', function () {
-        document.getElementById('sidebar')?.classList.toggle('open');
+        const sidebar = document.getElementById('sidebar');
+        if (!sidebar) return;
+
+        if (window.matchMedia('(max-width: 768px)').matches) {
+            sidebar.classList.toggle('open');
+        } else {
+            document.body.classList.toggle('sidebar-collapsed');
+        }
         });
     </script>
 
@@ -2863,653 +2846,825 @@
         <script>
             const adminPendingJobsData = @Html.Raw(Json.Serialize(Model.AdminPendingJobs ?? new List<AdminPendingJobViewModel>()));
 
+            window.adminDataCache = {
+                users: [],
+                pendingJobs: [],
+                allJobs: [],
+                txs: [],
+                support: [],
+                feedback: []
+            };
+
+            window.adminPageState = {
+                users: { currentPage: 1, pageSize: 10 },
+                pendingJobs: { currentPage: 1, pageSize: 5 },
+                allJobs: { currentPage: 1, pageSize: 10 },
+                txs: { currentPage: 1, pageSize: 10 },
+                support: { currentPage: 1, pageSize: 10 },
+                feedback: { currentPage: 1, pageSize: 10 }
+            };
+
+            window.triggerReloadAdminList = function(listKey) {
+                if (listKey === 'users') renderAdminUsers(true);
+                else if (listKey === 'pendingJobs' || listKey === 'allJobs') renderAdminJobs(true);
+                else if (listKey === 'txs') renderAdminTxs(true);
+                else if (listKey === 'support') renderAdminSupport(true);
+                else if (listKey === 'feedback') renderAdminFeedback(true);
+            };
+
+            window.renderAdminTable = function(listKey, data, headers, rowRenderer, containerId = 'adminSectionBody') {
+                if (!window.adminPageState[listKey]) {
+                    window.adminPageState[listKey] = { currentPage: 1, pageSize: 10 };
+                }
+                const state = window.adminPageState[listKey];
+                const container = document.getElementById(containerId);
+                if (!container) return;
+
+                const totalItems = data.length;
+                const totalPages = Math.ceil(totalItems / state.pageSize) || 1;
+                if (state.currentPage > totalPages) state.currentPage = totalPages;
+                if (state.currentPage < 1) state.currentPage = 1;
+
+                const startIndex = (state.currentPage - 1) * state.pageSize;
+                const endIndex = Math.min(startIndex + state.pageSize, totalItems);
+                const pageData = data.slice(startIndex, endIndex);
+
+                const finalHeaders = ['STT', ...headers];
+
+                let html = `
+                <div class="table-responsive w-100">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                ${finalHeaders.map(h => `<th>${h}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                if (totalItems === 0) {
+                    html += `<tr><td colspan="${finalHeaders.length}" class="text-center text-muted py-4">Chưa có dữ liệu.</td></tr>`;
+                } else {
+                    pageData.forEach((item, index) => {
+                        const globalIndex = startIndex + index + 1;
+                        const rowCells = rowRenderer(item, globalIndex);
+                        html += `
+                        <tr>
+                            <td class="fw-bold text-center" style="width: 60px; color: #64748b;">${globalIndex}</td>
+                            ${rowCells}
+                        </tr>`;
+                    });
+                }
+
+                html += `
+                        </tbody>
+                    </table>
+                </div>
+                `;
+
+                if (totalItems > 0) {
+                    const pageSizeOptions = [5, 10, 15, 20, 30, 50];
+                    const selectOptions = pageSizeOptions.map(size => `<option value="${size}" ${size === state.pageSize ? 'selected' : ''}>${size}</option>`).join('');
+
+                    html += `
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mt-4 p-3 bg-light rounded-3 border" style="font-size: 0.9rem;">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="text-secondary">Hiển thị</span>
+                            <select class="form-select form-select-sm" style="width: auto; font-weight: 600;" onchange="window.adminPageState['${listKey}'].pageSize = parseInt(this.value); window.adminPageState['${listKey}'].currentPage = 1; triggerReloadAdminList('${listKey}');">
+                                ${selectOptions}
+                            </select>
+                            <span class="text-secondary">kết quả / trang</span>
+                        </div>
+                        
+                        <div class="text-secondary font-medium">
+                            Hiển thị <strong>${totalItems === 0 ? 0 : startIndex + 1}-${endIndex}</strong> trong tổng số <strong>${totalItems}</strong> kết quả
+                        </div>
+                        
+                        <div class="d-flex align-items-center gap-1">
+                            <button class="btn btn-sm btn-outline-secondary ${state.currentPage === 1 ? 'disabled' : ''}" onclick="window.adminPageState['${listKey}'].currentPage = 1; triggerReloadAdminList('${listKey}');">« Đầu</button>
+                            <button class="btn btn-sm btn-outline-secondary ${state.currentPage === 1 ? 'disabled' : ''}" onclick="window.adminPageState['${listKey}'].currentPage--; triggerReloadAdminList('${listKey}');">‹ Trước</button>
+                            
+                            <span class="px-3 text-secondary">Trang <strong>${state.currentPage}</strong> / <strong>${totalPages}</strong></span>
+                            
+                            <button class="btn btn-sm btn-outline-secondary ${state.currentPage === totalPages ? 'disabled' : ''}" onclick="window.adminPageState['${listKey}'].currentPage++; triggerReloadAdminList('${listKey}');">Sau ›</button>
+                            <button class="btn btn-sm btn-outline-secondary ${state.currentPage === totalPages ? 'disabled' : ''}" onclick="window.adminPageState['${listKey}'].currentPage = ${totalPages}; triggerReloadAdminList('${listKey}');">Cuối »</button>
+                        </div>
+                    </div>
+                    `;
+                }
+
+                container.innerHTML = html;
+            };
+
             document.addEventListener('DOMContentLoaded', () => {
-            // Initialize Admin Panel
-            initAdminPanel();
+                // Initialize Admin Panel
+                initAdminPanel();
             });
 
             async function initAdminPanel() {
-            // Load stats first
-            await updateAdminStats();
+                // Load stats first
+                await updateAdminStats();
 
-            // Set up navigation
-            const navHome = document.getElementById('adminNavHome');
-            const navUsers = document.getElementById('adminNavUsers');
-            const navJobs = document.getElementById('adminNavJobs');
-            const navTxs = document.getElementById('adminNavTxs');
-            const navSupport = document.getElementById('adminNavSupport');
-            const navFeedback = document.getElementById('adminNavFeedback');
-            const navItems = [navHome, navUsers, navJobs, navTxs, navSupport, navFeedback];
+                // Set up navigation
+                const navHome = document.getElementById('adminNavHome');
+                const navUsers = document.getElementById('adminNavUsers');
+                const navJobs = document.getElementById('adminNavJobs');
+                const navTxs = document.getElementById('adminNavTxs');
+                const navSupport = document.getElementById('adminNavSupport');
+                const navFeedback = document.getElementById('adminNavFeedback');
+                const navItems = [navHome, navUsers, navJobs, navTxs, navSupport, navFeedback];
 
-            function clearActive() {
-            navItems.forEach(item => item?.classList.remove('active'));
-            }
+                function clearActive() {
+                    navItems.forEach(item => item?.classList.remove('active'));
+                }
 
-            navHome?.addEventListener('click', (e) => {
-            e.preventDefault();
-            clearActive();
-            navHome.classList.add('active');
-            renderAdminHome();
-            });
+                navHome?.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    clearActive();
+                    navHome.classList.add('active');
+                    renderAdminHome();
+                });
 
-            navUsers?.addEventListener('click', (e) => {
-            e.preventDefault();
-            clearActive();
-            navUsers.classList.add('active');
-            renderAdminUsers();
-            });
+                navUsers?.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    clearActive();
+                    navUsers.classList.add('active');
+                    renderAdminUsers();
+                });
 
-            navJobs?.addEventListener('click', (e) => {
-            e.preventDefault();
-            clearActive();
-            navJobs.classList.add('active');
-            renderAdminJobs();
-            });
+                navJobs?.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    clearActive();
+                    navJobs.classList.add('active');
+                    renderAdminJobs();
+                });
 
-            navTxs?.addEventListener('click', (e) => {
-            e.preventDefault();
-            clearActive();
-            navTxs.classList.add('active');
-            renderAdminTxs();
-            });
+                navTxs?.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    clearActive();
+                    navTxs.classList.add('active');
+                    renderAdminTxs();
+                });
 
-            navSupport?.addEventListener('click', (e) => {
-            e.preventDefault();
-            clearActive();
-            navSupport.classList.add('active');
-            renderAdminSupport();
-            });
+                navSupport?.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    clearActive();
+                    navSupport.classList.add('active');
+                    renderAdminSupport();
+                });
 
-            navFeedback?.addEventListener('click', (e) => {
-            e.preventDefault();
-            clearActive();
-            navFeedback.classList.add('active');
-            renderAdminFeedback();
-            });
+                navFeedback?.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    clearActive();
+                    navFeedback.classList.add('active');
+                    renderAdminFeedback();
+                });
 
-            // Render initial home view
-            renderAdminHome();
+                // Render initial home view
+                renderAdminHome();
             }
 
             async function updateAdminStats() {
-            try {
-            const res = await fetch('/Home/GetAdminStats');
-            const stats = await res.json();
+                try {
+                    const res = await fetch('/Home/GetAdminStats');
+                    const stats = await res.json();
 
-            document.getElementById('statUsers').textContent = stats.totalUsers;
-            document.getElementById('statJobs').textContent = stats.totalJobs;
-            document.getElementById('statContracts').textContent = stats.totalContracts;
-            document.getElementById('statVolume').textContent = new Intl.NumberFormat('vi-VN').format(stats.systemVolume) + ' đ';
-            } catch (err) {
-            console.error('Error fetching admin stats:', err);
-            }
+                    document.getElementById('statUsers').textContent = stats.totalUsers;
+                    document.getElementById('statJobs').textContent = stats.totalJobs;
+                    document.getElementById('statContracts').textContent = stats.totalContracts;
+                    document.getElementById('statRevenue').textContent = new Intl.NumberFormat('vi-VN').format(stats.systemRevenue) + ' đ';
+                    document.getElementById('statVolume').textContent = new Intl.NumberFormat('vi-VN').format(stats.systemVolume) + ' đ';
+                } catch (err) {
+                    console.error('Error fetching admin stats:', err);
+                }
             }
 
             function showSpinner(container) {
-            container.innerHTML = `
-            <div style="display:flex; justify-content:center; align-items:center; min-height:200px; width:100%;">
-            <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>
-            </div>`;
+                container.innerHTML = `
+                <div style="display:flex; justify-content:center; align-items:center; min-height:200px; width:100%;">
+                    <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>
+                </div>`;
             }
 
             async function renderAdminHome() {
-            const title = document.getElementById('adminSectionTitle');
-            const body = document.getElementById('adminSectionBody');
-            title.textContent = "Tổng quan hệ thống";
-            showSpinner(body);
+                const title = document.getElementById('adminSectionTitle');
+                const body = document.getElementById('adminSectionBody');
+                title.textContent = "Tổng quan hệ thống";
+                showSpinner(body);
 
-            await updateAdminStats();
+                await updateAdminStats();
 
-            body.innerHTML = `
-            <div class="row w-100 g-4 m-0">
-            <div class="col-md-6 p-2">
-            <div class="card border-0 shadow-sm p-4" style="border-radius:12px; background:#fafafa;">
-            <h3 style="font-size:1rem; font-weight:700; margin-bottom:16px; color:#475569; display:flex; align-items:center; gap:8px;">
-            <i data-lucide="shield-alert" style="color:#ef4444; width:18px; height:18px;"></i> Quy tắc bảo mật
-            </h3>
-            <p style="font-size:0.9rem; color:#475569;">Admin có quyền kiểm soát tuyệt đối thông tin trên nền tảng J4S. Khi xử lý vi phạm:</p>
-            <ul style="font-size:0.85rem; color:#64748b; padding-left:20px; line-height:1.8;">
-            <li>Chỉ khóa tài khoản khi có dấu hiệu gian lận hoặc báo cáo spam được kiểm chứng.</li>
-            <li>Chỉ xóa tin đăng nếu tin vi phạm thuần phong mỹ tục hoặc chứa nội dung sai sự thật.</li>
-            <li>Lịch sử giao dịch được ghi lại vĩnh viễn và không thể sửa xóa thủ công.</li>
-            </ul>
-            </div>
-            </div>
-            <div class="col-md-6 p-2">
-            <div class="card border-0 shadow-sm p-4" style="border-radius:12px; background:#fafafa;">
-            <h3 style="font-size:1rem; font-weight:700; margin-bottom:16px; color:#475569; display:flex; align-items:center; gap:8px;">
-            <i data-lucide="activity" style="color:#10b981; width:18px; height:18px;"></i> Trạng thái hệ thống
-            </h3>
-            <div style="display:flex; flex-direction:column; gap:12px; font-size:0.9rem;">
-            <div style="display:flex; justify-content:space-between;">
-            <span style="color:#64748b;">Kết nối Database</span>
-            <span class="badge bg-success" style="padding:4px 8px; border-radius:12px;">BÌNH THƯỜNG</span>
-            </div>
-            <div style="display:flex; justify-content:space-between;">
-            <span style="color:#64748b;">Cổng thanh toán</span>
-            <span class="badge bg-success" style="padding:4px 8px; border-radius:12px;">ĐANG HOẠT ĐỘNG</span>
-            </div>
-            <div style="display:flex; justify-content:space-between;">
-            <span style="color:#64748b;">Gửi email tự động</span>
-            <span class="badge bg-success" style="padding:4px 8px; border-radius:12px;">ĐANG KẾT NỐI</span>
-            </div>
-            </div>
-            </div>
-            </div>
-            </div>
-            `;
-            if (window.lucide) lucide.createIcons();
+                const currentYear = new Date().getFullYear();
+
+                body.innerHTML = `
+                <div class="admin-home-grid">
+                    <div class="admin-home-panel">
+                        <div class="admin-hero">
+                            <div>
+                                <h3>Trung tâm điều hành hệ thống J4S</h3>
+                                <p>Giám sát an toàn nền tảng, chất lượng dữ liệu và trạng thái giao dịch theo thời gian thực.</p>
+                            </div>
+                            <div class="admin-kpi-inline">
+                                <i data-lucide="shield-check" style="width:16px;height:16px;"></i>
+                                Hệ thống ổn định
+                            </div>
+                        </div>
+
+                        <h3 style="font-size:0.95rem; font-weight:800; margin-bottom:12px; color:#334155; display:flex; align-items:center; gap:8px;">
+                            <i data-lucide="shield-alert" style="color:#ef4444; width:17px; height:17px;"></i>
+                            Nguyên tắc kiểm duyệt quan trọng
+                        </h3>
+                        <ul style="font-size:0.84rem; color:#64748b; padding-left:18px; line-height:1.9; margin:0;">
+                            <li>Khóa tài khoản khi có bằng chứng gian lận hoặc spam đã được xác minh.</li>
+                            <li>Gỡ tin tuyển dụng vi phạm chính sách nội dung hoặc thông tin sai lệch.</li>
+                            <li>Bảo toàn lịch sử giao dịch và nhật ký xử lý để phục vụ đối soát.</li>
+                        </ul>
+                    </div>
+
+                    <div class="admin-home-panel">
+                        <h3 style="font-size:0.95rem; font-weight:800; margin-bottom:12px; color:#334155; display:flex; align-items:center; gap:8px;">
+                            <i data-lucide="activity" style="color:#10b981; width:17px; height:17px;"></i>
+                            Trạng thái hệ thống
+                        </h3>
+                        <div class="admin-system-list">
+                            <div class="admin-system-item">
+                                <span>Kết nối Database</span>
+                                <span class="badge bg-success" style="padding:4px 8px; border-radius:12px;">Bình thường</span>
+                            </div>
+                            <div class="admin-system-item">
+                                <span>Cổng thanh toán</span>
+                                <span class="badge bg-success" style="padding:4px 8px; border-radius:12px;">Đang hoạt động</span>
+                            </div>
+                            <div class="admin-system-item">
+                                <span>Gửi email tự động</span>
+                                <span class="badge bg-success" style="padding:4px 8px; border-radius:12px;">Đang kết nối</span>
+                            </div>
+                        </div>
+                        <div class="admin-quick-actions">
+                            <button class="admin-quick-btn" onclick="document.getElementById('adminNavUsers')?.click()">Quản lý người dùng</button>
+                            <button class="admin-quick-btn" onclick="document.getElementById('adminNavJobs')?.click()">Duyệt tin tuyển dụng</button>
+                            <button class="admin-quick-btn" onclick="document.getElementById('adminNavTxs')?.click()">Kiểm tra giao dịch</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-chart-panel">
+                    <h3>
+                        <i data-lucide="trending-up" style="color:#2563eb; width:19px; height:19px;"></i>
+                        Doanh thu gói & dòng tiền nạp vào hệ thống năm ${currentYear}
+                    </h3>
+                    <div style="position: relative; height: 350px; width: 100%;">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+                `;
+
+                if (window.lucide) lucide.createIcons();
+
+                let txs = window.adminDataCache.txs;
+                if (!txs || txs.length === 0) {
+                    try {
+                        const res = await fetch('/Home/GetAdminTransactions');
+                        txs = await res.json();
+                        window.adminDataCache.txs = txs;
+                    } catch (err) {
+                        console.error("Error loading transactions for charts:", err);
+                        txs = [];
+                    }
+                }
+                initAdminCharts(txs);
             }
 
-            async function renderAdminUsers() {
-            const title = document.getElementById('adminSectionTitle');
-            const body = document.getElementById('adminSectionBody');
-            title.textContent = "Quản lý người dùng";
-            showSpinner(body);
+            function initAdminCharts(txs) {
+                const monthlyData = Array(12).fill(0).map(() => ({ deposit: 0, packages: 0 }));
+                const currentYear = new Date().getFullYear();
 
-            try {
-            const res = await fetch('/Home/GetAdminUsers');
-            const users = await res.json();
+                txs.forEach(t => {
+                    if (t.status !== 'Success') return;
 
-            if (users.length === 0) {
-            body.innerHTML = '<p class="text-muted text-center py-4">Chưa có người dùng nào trên hệ thống.</p>';
-            return;
+                    const datePart = t.createdAt.split(' ')[0]; // "dd/MM/yyyy"
+                    const parts = datePart.split('/');
+                    if (parts.length === 3) {
+                        const month = parseInt(parts[1], 10);
+                        const year = parseInt(parts[2], 10);
+
+                        if (year === currentYear && month >= 1 && month <= 12) {
+                            if (t.type === 'Deposit') {
+                                monthlyData[month - 1].deposit += t.amount;
+                            } else if (t.type === 'Withdraw') {
+                                const desc = (t.description || '').toLowerCase();
+                                if (desc.includes('gói') || desc.includes('plan') || desc.includes('vip') || desc.includes('premium')) {
+                                    monthlyData[month - 1].packages += t.amount;
+                                }
+                            }
+                        }
+                    }
+                });
+
+                const monthLabels = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
+                const depositDataset = monthlyData.map(d => d.deposit);
+                const packageDataset = monthlyData.map(d => d.packages);
+
+                function createChartInstances() {
+                    if (!window.Chart) {
+                        setTimeout(createChartInstances, 100);
+                        return;
+                    }
+
+                    const ctxRev = document.getElementById('revenueChart');
+
+                    if (ctxRev) {
+                        new Chart(ctxRev, {
+                            type: 'bar',
+                            data: {
+                                labels: monthLabels,
+                                datasets: [
+                                    {
+                                        label: 'Tiền nạp vào ví (đ)',
+                                        data: depositDataset,
+                                        backgroundColor: 'rgba(37, 99, 235, 0.65)',
+                                        borderColor: '#2563eb',
+                                        borderWidth: 1,
+                                        type: 'bar',
+                                        yAxisID: 'y'
+                                    },
+                                    {
+                                        label: 'Doanh thu gói dịch vụ (đ)',
+                                        data: packageDataset,
+                                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                        borderColor: '#10b981',
+                                        borderWidth: 2.5,
+                                        fill: true,
+                                        type: 'line',
+                                        tension: 0.35,
+                                        yAxisID: 'y1'
+                                    }
+                                ]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: { position: 'top' }
+                                },
+                                scales: {
+                                    y: {
+                                        type: 'linear',
+                                        display: true,
+                                        position: 'left',
+                                        beginAtZero: true,
+                                        ticks: {
+                                            callback: function(value) {
+                                                return new Intl.NumberFormat('vi-VN').format(value) + ' đ';
+                                            }
+                                        },
+                                        title: {
+                                            display: true,
+                                            text: 'Tiền nạp ví',
+                                            font: { weight: 'bold' }
+                                        }
+                                    },
+                                    y1: {
+                                        type: 'linear',
+                                        display: true,
+                                        position: 'right',
+                                        beginAtZero: true,
+                                        grid: {
+                                            drawOnChartArea: false
+                                        },
+                                        ticks: {
+                                            callback: function(value) {
+                                                return new Intl.NumberFormat('vi-VN').format(value) + ' đ';
+                                            }
+                                        },
+                                        title: {
+                                            display: true,
+                                            text: 'Doanh thu gói',
+                                            font: { weight: 'bold' }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }
+
+                createChartInstances();
             }
 
-            let tableHTML = `
-            <div class="table-responsive w-100">
-            <table class="admin-table">
-            <thead>
-            <tr>
-            <th>Tên hiển thị</th>
-            <th>Email</th>
-            <th>Số điện thoại</th>
-            <th>Vai trò</th>
-            <th>Ngày đăng ký</th>
-            <th>Trạng thái</th>
-            <th>Thao tác</th>
-            </tr>
-            </thead>
-            <tbody>
-            `;
+            async function renderAdminUsers(isPagedReload = false) {
+                const title = document.getElementById('adminSectionTitle');
+                const body = document.getElementById('adminSectionBody');
+                title.textContent = "Quản lý người dùng";
 
-            users.forEach(u => {
-            const statusBadge = u.status === 'Active'
-            ? '<span class="admin-badge active">Hoạt động</span>'
-            : '<span class="admin-badge banned">Đang khóa</span>';
+                if (!isPagedReload || !window.adminDataCache.users || window.adminDataCache.users.length === 0) {
+                    showSpinner(body);
+                    try {
+                        const res = await fetch('/Home/GetAdminUsers');
+                        window.adminDataCache.users = await res.json();
+                    } catch (err) {
+                        body.innerHTML = '<p class="text-danger text-center py-4">Lỗi khi tải dữ liệu người dùng.</p>';
+                        console.error(err);
+                        return;
+                    }
+                }
 
-            const roleBadge = u.role === 'Student'
-            ? '<span class="admin-badge student">Sinh viên</span>'
-            : u.role === 'Business'
-            ? '<span class="admin-badge business">Doanh nghiệp</span>'
-            : '<span class="admin-badge" style="background:#e2e8f0; color:#334155;">Admin</span>';
+                const users = window.adminDataCache.users;
+                const headers = ['Tên hiển thị', 'Email', 'Số điện thoại', 'Vai trò', 'Ngày đăng ký', 'Trạng thái', 'Thao tác'];
 
-            const actionBtn = u.role === 'Admin'
-            ? '<span class="text-muted small">Mặc định</span>'
-            : u.status === 'Active'
-            ? `<button class="btn-admin-action ban" onclick="toggleUserStatus(${u.id})">Khóa tài khoản</button>`
-            : `<button class="btn-admin-action unban" onclick="toggleUserStatus(${u.id})">Mở khóa</button>`;
+                const rowRenderer = (u, globalIndex) => {
+                    const statusBadge = u.status === 'Active'
+                        ? '<span class="admin-badge active">Hoạt động</span>'
+                        : '<span class="admin-badge banned">Đang khóa</span>';
 
-            tableHTML += `
-            <tr>
-            <td class="fw-semibold">${escapeHtml(u.displayName || 'Chưa cập nhật')}</td>
-            <td>${escapeHtml(u.email)}</td>
-            <td>${escapeHtml(u.phone || 'N/A')}</td>
-            <td>${roleBadge}</td>
-            <td>${u.createdAt}</td>
-            <td id="user-status-${u.id}">${statusBadge}</td>
-            <td id="user-action-${u.id}">${actionBtn}</td>
-            </tr>
-            `;
-            });
+                    const roleBadge = u.role === 'Student'
+                        ? '<span class="admin-badge student">Sinh viên</span>'
+                        : u.role === 'Business'
+                        ? '<span class="admin-badge business">Doanh nghiệp</span>'
+                        : '<span class="admin-badge" style="background:#e2e8f0; color:#334155;">Admin</span>';
 
-            tableHTML += `
-            </tbody>
-            </table>
-            </div>
-            `;
+                    const actionBtn = u.role === 'Admin'
+                        ? '<span class="text-muted small">Mặc định</span>'
+                        : u.status === 'Active'
+                        ? `<button class="btn-admin-action ban" onclick="toggleUserStatus(${u.id})">Khóa tài khoản</button>`
+                        : `<button class="btn-admin-action unban" onclick="toggleUserStatus(${u.id})">Mở khóa</button>`;
 
-            body.innerHTML = tableHTML;
-            } catch (err) {
-            body.innerHTML = '<p class="text-danger text-center py-4">Lỗi khi tải dữ liệu người dùng.</p>';
-            console.error(err);
-            }
+                    return `
+                        <td class="fw-semibold">${escapeHtml(u.displayName || 'Chưa cập nhật')}</td>
+                        <td>${escapeHtml(u.email)}</td>
+                        <td>${escapeHtml(u.phone || 'N/A')}</td>
+                        <td>${roleBadge}</td>
+                        <td>${u.createdAt}</td>
+                        <td id="user-status-${u.id}">${statusBadge}</td>
+                        <td id="user-action-${u.id}">${actionBtn}</td>
+                    `;
+                };
+
+                window.renderAdminTable('users', users, headers, rowRenderer, 'adminSectionBody');
             }
 
             async function toggleUserStatus(userId) {
-            if (!confirm("Bạn có chắc chắn muốn thay đổi trạng thái hoạt động của tài khoản này?")) return;
+                if (!confirm("Bạn có chắc chắn muốn thay đổi trạng thái hoạt động của tài khoản này?")) return;
 
-            try {
-            const resToggle = await fetch(`/Home/ToggleUserStatus?userId=${userId}`, {
-            method: 'POST',
-            headers: {
-            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
-            }
-            });
-            const data = await resToggle.json();
+                try {
+                    const resToggle = await fetch(`/Home/ToggleUserStatus?userId=${userId}`, {
+                        method: 'POST',
+                        headers: {
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                        }
+                    });
+                    const data = await resToggle.json();
 
-            if (data.success) {
-            showToast("Cập nhật trạng thái thành công!", "success");
-            renderAdminUsers();
-            updateAdminStats();
-            } else {
-            showToast(data.message || "Lỗi khi cập nhật trạng thái.", "error");
-            }
-            } catch (err) {
-            console.error(err);
-            showToast("Không thể kết nối đến máy chủ.", "error");
-            }
-            }
-
-            async function renderAdminJobs() {
-            const title = document.getElementById('adminSectionTitle');
-            const body = document.getElementById('adminSectionBody');
-            title.textContent = "Quản lý tin tuyển dụng";
-            showSpinner(body);
-
-            try {
-            const res = await fetch('/Home/GetAdminJobs');
-            const jobs = await res.json();
-
-            let html = `
-            <h4 class="mb-3 fw-bold" style="color: #0f172a;">Tin tuyển dụng chờ duyệt</h4>
-            `;
-
-            if (adminPendingJobsData && adminPendingJobsData.length > 0) {
-            html += `
-            <div class="table-responsive w-100 mb-5">
-            <table class="admin-table">
-            <thead>
-            <tr>
-            <th>Tiêu đề công việc</th>
-            <th>Doanh nghiệp đăng</th>
-            <th>Ngày tạo</th>
-            <th>Thao tác</th>
-            </tr>
-            </thead>
-            <tbody>
-            `;
-            adminPendingJobsData.forEach(j => {
-            html += `
-            <tr id="pending-job-${j.id}">
-            <td class="fw-semibold">${escapeHtml(j.title)}</td>
-            <td>${escapeHtml(j.companyName)}</td>
-            <td>${j.createdAt}</td>
-            <td>
-            <button class="btn-admin-action" style="background:#10b981; color:white; border-color:#10b981;" onclick="approveJob(${j.id})">Duyệt</button>
-            <button class="btn-admin-action delete" onclick="rejectJob(${j.id})">Từ chối</button>
-            </td>
-            </tr>
-            `;
-            });
-            html += `</tbody></table></div>`;
-            } else {
-            html += '<p class="text-muted mb-5">Không có tin tuyển dụng nào đang chờ duyệt.</p>';
+                    if (data.success) {
+                        showToast("Cập nhật trạng thái thành công!", "success");
+                        window.adminDataCache.users = []; // invalidate cache
+                        renderAdminUsers(false);
+                        updateAdminStats();
+                    } else {
+                        showToast(data.message || "Lỗi khi cập nhật trạng thái.", "error");
+                    }
+                } catch (err) {
+                    console.error(err);
+                    showToast("Không thể kết nối đến máy chủ.", "error");
+                }
             }
 
-            html += `<h4 class="mb-3 fw-bold" style="color: #0f172a;">Tất cả tin tuyển dụng</h4>`;
+            async function renderAdminJobs(isPagedReload = false) {
+                const title = document.getElementById('adminSectionTitle');
+                const body = document.getElementById('adminSectionBody');
+                title.textContent = "Quản lý tin tuyển dụng";
 
-            if (jobs.length === 0) {
-            html += '<p class="text-muted text-center py-4">Chưa có tin tuyển dụng nào trên hệ thống.</p>';
-            } else {
-            html += `
-            <div class="table-responsive w-100">
-            <table class="admin-table">
-            <thead>
-            <tr>
-            <th>Tiêu đề công việc</th>
-            <th>Doanh nghiệp đăng</th>
-            <th>Ngân sách</th>
-            <th>Thời hạn</th>
-            <th>Ngày tạo</th>
-            <th>Trạng thái</th>
-            <th>Thao tác</th>
-            </tr>
-            </thead>
-            <tbody>
-            `;
-            jobs.forEach(j => {
-            const statusBadge = j.status === 'Open'
-            ? '<span class="admin-badge active">Đang nhận đề xuất</span>'
-            : j.status === 'In_Progress'
-            ? '<span class="admin-badge student">Đang thực hiện</span>'
-            : '<span class="admin-badge" style="background:#e2e8f0; color:#334155;">Đóng</span>';
+                window.adminDataCache.pendingJobs = adminPendingJobsData || [];
 
-            html += `
-            <tr>
-            <td class="fw-semibold">${escapeHtml(j.title)}</td>
-            <td>${escapeHtml(j.businessName)}</td>
-            <td class="text-primary fw-bold">${new Intl.NumberFormat('vi-VN').format(j.budget)} đ</td>
-            <td>${j.deadline}</td>
-            <td>${j.createdAt}</td>
-            <td>${statusBadge}</td>
-            <td>
-            <button class="btn-admin-action delete" onclick="deleteJobPost(${j.id})">Gỡ tin</button>
-            </td>
-            </tr>
-            `;
-            });
-            html += `</tbody></table></div>`;
-            }
+                if (!isPagedReload || !window.adminDataCache.allJobs || window.adminDataCache.allJobs.length === 0) {
+                    showSpinner(body);
+                    try {
+                        const res = await fetch('/Home/GetAdminJobs');
+                        window.adminDataCache.allJobs = await res.json();
+                    } catch (err) {
+                        body.innerHTML = '<p class="text-danger text-center py-4">Lỗi khi tải danh sách tin tuyển dụng.</p>';
+                        console.error(err);
+                        return;
+                    }
+                }
 
-            body.innerHTML = html;
-            } catch (err) {
-            body.innerHTML = '<p class="text-danger text-center py-4">Lỗi khi tải danh sách tin tuyển dụng.</p>';
-            console.error(err);
-            }
+                body.innerHTML = `
+                    <h4 class="mb-3 fw-bold" style="color: #0f172a;">Tin tuyển dụng chờ duyệt</h4>
+                    <div id="pendingJobsContainer" class="mb-5"></div>
+                    
+                    <h4 class="mb-3 fw-bold" style="color: #0f172a;">Tất cả tin tuyển dụng</h4>
+                    <div id="allJobsContainer"></div>
+                `;
+
+                // 1. Render pending jobs
+                const pendingHeaders = ['Tiêu đề công việc', 'Doanh nghiệp đăng', 'Ngày tạo', 'Thao tác'];
+                const pendingRowRenderer = (j, globalIndex) => {
+                    return `
+                        <td class="fw-semibold">${escapeHtml(j.title)}</td>
+                        <td>${escapeHtml(j.companyName)}</td>
+                        <td>${j.createdAt}</td>
+                        <td>
+                            <button class="btn-admin-action" style="background:#10b981; color:white; border-color:#10b981;" onclick="approveJob(${j.id})">Duyệt</button>
+                            <button class="btn-admin-action delete" onclick="rejectJob(${j.id})">Từ chối</button>
+                        </td>
+                    `;
+                };
+                window.renderAdminTable('pendingJobs', window.adminDataCache.pendingJobs, pendingHeaders, pendingRowRenderer, 'pendingJobsContainer');
+
+                // 2. Render all jobs
+                const allJobsHeaders = ['Tiêu đề công việc', 'Doanh nghiệp đăng', 'Ngân sách', 'Thời hạn', 'Ngày tạo', 'Trạng thái', 'Thao tác'];
+                const allJobsRowRenderer = (j, globalIndex) => {
+                    const statusBadge = j.status === 'Open'
+                        ? '<span class="admin-badge active">Đang nhận đề xuất</span>'
+                        : j.status === 'In_Progress'
+                        ? '<span class="admin-badge student">Đang thực hiện</span>'
+                        : '<span class="admin-badge" style="background:#e2e8f0; color:#334155;">Đóng</span>';
+
+                    return `
+                        <td class="fw-semibold">${escapeHtml(j.title)}</td>
+                        <td>${escapeHtml(j.businessName)}</td>
+                        <td class="text-primary fw-bold">${new Intl.NumberFormat('vi-VN').format(j.budget)} đ</td>
+                        <td>${j.deadline}</td>
+                        <td>${j.createdAt}</td>
+                        <td>${statusBadge}</td>
+                        <td>
+                            <button class="btn-admin-action delete" onclick="deleteJobPost(${j.id})">Gỡ tin</button>
+                        </td>
+                    `;
+                };
+                window.renderAdminTable('allJobs', window.adminDataCache.allJobs, allJobsHeaders, allJobsRowRenderer, 'allJobsContainer');
             }
 
             async function approveJob(jobId) {
-            if (!confirm("Bạn có chắc chắn muốn duyệt tin tuyển dụng này?")) return;
-            try {
-            const res = await fetch(`/Home/ApproveJob?id=${jobId}`, {
-            method: 'POST',
-            headers: {
-            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
-            }
-            });
-            const data = await res.json();
-            if (data.success) {
-            showToast("Đã duyệt tin thành công!", "success");
-            // Xóa khỏi mảng local
-            const idx = adminPendingJobsData.findIndex(x => x.id === jobId);
-            if (idx > -1) adminPendingJobsData.splice(idx, 1);
-            renderAdminJobs();
-            } else {
-            showToast(data.message || "Lỗi khi duyệt tin", "error");
-            }
-            } catch (err) {
-            showToast("Lỗi kết nối", "error");
-            }
+                if (!confirm("Bạn có chắc chắn muốn duyệt tin tuyển dụng này?")) return;
+                try {
+                    const res = await fetch(`/Home/ApproveJob?id=${jobId}`, {
+                        method: 'POST',
+                        headers: {
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                        }
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        showToast("Đã duyệt tin thành công!", "success");
+                        // Clear pending job locally
+                        const idx = adminPendingJobsData.findIndex(x => x.id === jobId);
+                        if (idx > -1) adminPendingJobsData.splice(idx, 1);
+                        window.adminDataCache.allJobs = []; // invalidate cache
+                        renderAdminJobs(false);
+                    } else {
+                        showToast(data.message || "Lỗi khi duyệt tin", "error");
+                    }
+                } catch (err) {
+                    showToast("Lỗi kết nối", "error");
+                }
             }
 
             async function rejectJob(jobId) {
-            if (!confirm("Bạn có chắc chắn muốn từ chối tin tuyển dụng này?")) return;
-            try {
-            const res = await fetch(`/Home/RejectJob?id=${jobId}`, {
-            method: 'POST',
-            headers: {
-            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
-            }
-            });
-            const data = await res.json();
-            if (data.success) {
-            showToast("Đã từ chối tin.", "success");
-            // Xóa khỏi mảng local
-            const idx = adminPendingJobsData.findIndex(x => x.id === jobId);
-            if (idx > -1) adminPendingJobsData.splice(idx, 1);
-            renderAdminJobs();
-            } else {
-            showToast(data.message || "Lỗi khi từ chối tin", "error");
-            }
-            } catch (err) {
-            showToast("Lỗi kết nối", "error");
-            }
+                if (!confirm("Bạn có chắc chắn muốn từ chối tin tuyển dụng này?")) return;
+                try {
+                    const res = await fetch(`/Home/RejectJob?id=${jobId}`, {
+                        method: 'POST',
+                        headers: {
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                        }
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        showToast("Đã từ chối tin.", "success");
+                        // Clear pending job locally
+                        const idx = adminPendingJobsData.findIndex(x => x.id === jobId);
+                        if (idx > -1) adminPendingJobsData.splice(idx, 1);
+                        window.adminDataCache.allJobs = []; // invalidate cache
+                        renderAdminJobs(false);
+                    } else {
+                        showToast(data.message || "Lỗi khi từ chối tin", "error");
+                    }
+                } catch (err) {
+                    showToast("Lỗi kết nối", "error");
+                }
             }
 
-            
             async function deleteJobPost(jobId) {
-            if (!confirm("Bạn có chắc chắn muốn gỡ (xóa) tin tuyển dụng này khỏi hệ thống?")) return;
+                if (!confirm("Bạn có chắc chắn muốn gỡ (xóa) tin tuyển dụng này khỏi hệ thống?")) return;
 
-            try {
-            const res = await fetch(`/Home/DeleteJobPost?jobId=${jobId}`, {
-            method: 'POST',
-            headers: {
-            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
-            }
-            });
-            const data = await res.json();
-            if (data.success) {
-            showToast("Đã gỡ tin tuyển dụng thành công!", "success");
-            renderAdminJobs();
-            updateAdminStats();
-            } else {
-            showToast("Lỗi khi gỡ tin.", "error");
-            }
-            } catch (err) {
-            console.error(err);
-            showToast("Không thể kết nối đến máy chủ.", "error");
-            }
-            }
-
-            async function renderAdminTxs() {
-            const title = document.getElementById('adminSectionTitle');
-            const body = document.getElementById('adminSectionBody');
-            title.textContent = "Lịch sử giao dịch toàn hệ thống";
-            showSpinner(body);
-
-            try {
-            const res = await fetch('/Home/GetAdminTransactions');
-            const txs = await res.json();
-
-            if (txs.length === 0) {
-            body.innerHTML = '<p class="text-muted text-center py-4">Chưa có giao dịch nào phát sinh.</p>';
-            return;
+                try {
+                    const res = await fetch(`/Home/DeleteJobPost?jobId=${jobId}`, {
+                        method: 'POST',
+                        headers: {
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                        }
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        showToast("Đã gỡ tin tuyển dụng thành công!", "success");
+                        window.adminDataCache.allJobs = []; // invalidate cache
+                        renderAdminJobs(false);
+                        updateAdminStats();
+                    } else {
+                        showToast("Lỗi khi gỡ tin.", "error");
+                    }
+                } catch (err) {
+                    console.error(err);
+                    showToast("Không thể kết nối đến máy chủ.", "error");
+                }
             }
 
-            let tableHTML = `
-            <div class="table-responsive w-100">
-            <table class="admin-table">
-            <thead>
-            <tr>
-            <th>Mã GD</th>
-            <th>Tài khoản</th>
-            <th>Số tiền</th>
-            <th>Loại GD</th>
-            <th>Nội dung</th>
-            <th>Ngày GD</th>
-            <th>Trạng thái</th>
-            </tr>
-            </thead>
-            <tbody>
-            `;
+            async function renderAdminTxs(isPagedReload = false) {
+                const title = document.getElementById('adminSectionTitle');
+                const body = document.getElementById('adminSectionBody');
+                title.textContent = "Lịch sử giao dịch toàn hệ thống";
 
-            txs.forEach(t => {
-            const statusBadge = t.status === 'Success'
-            ? '<span class="admin-badge active">Thành công</span>'
-            : t.status === 'Pending'
-            ? '<span class="admin-badge amber">Chờ xử lý</span>'
-            : '<span class="admin-badge banned">Thất bại</span>';
+                if (!isPagedReload || !window.adminDataCache.txs || window.adminDataCache.txs.length === 0) {
+                    showSpinner(body);
+                    try {
+                        const res = await fetch('/Home/GetAdminTransactions');
+                        window.adminDataCache.txs = await res.json();
+                    } catch (err) {
+                        body.innerHTML = '<p class="text-danger text-center py-4">Lỗi khi tải lịch sử giao dịch.</p>';
+                        console.error(err);
+                        return;
+                    }
+                }
 
-            let typeText = t.type;
-            if (t.type === 'Deposit') typeText = 'Nạp tiền';
-            else if (t.type === 'Withdraw') typeText = 'Rút tiền';
-            else if (t.type === 'Holding') typeText = 'Tạm giữ';
-            else if (t.type === 'Release') typeText = 'Hoàn tất GD';
+                const txs = window.adminDataCache.txs;
+                const headers = ['Mã GD', 'Tài khoản', 'Số tiền', 'Loại GD', 'Nội dung', 'Ngày GD', 'Trạng thái'];
 
-            tableHTML += `
-            <tr>
-            <td>GD#${t.id}</td>
-            <td>${escapeHtml(t.userEmail)}</td>
-            <td class="fw-bold ${t.type === 'Deposit' || t.type === 'Release' ? 'text-success' : 'text-danger'}">
-            ${t.type === 'Deposit' || t.type === 'Release' ? '+' : '-'} ${new Intl.NumberFormat('vi-VN').format(t.amount)} đ
-            </td>
-            <td><span class="fw-semibold">${typeText}</span></td>
-            <td>${escapeHtml(t.description || 'Không có')}</td>
-            <td>${t.createdAt}</td>
-            <td>${statusBadge}</td>
-            </tr>
-            `;
-            });
+                const rowRenderer = (t, globalIndex) => {
+                    const statusBadge = t.status === 'Success'
+                        ? '<span class="admin-badge active">Thành công</span>'
+                        : t.status === 'Pending'
+                        ? '<span class="admin-badge amber">Chờ xử lý</span>'
+                        : '<span class="admin-badge banned">Thất bại</span>';
 
-            tableHTML += `
-            </tbody>
-            </table>
-            </div>
-            `;
+                    let typeText = t.type;
+                    if (t.type === 'Deposit') typeText = 'Nạp tiền';
+                    else if (t.type === 'Withdraw') typeText = 'Rút tiền';
+                    else if (t.type === 'Holding') typeText = 'Tạm giữ';
+                    else if (t.type === 'Release') typeText = 'Hoàn tất GD';
 
-            body.innerHTML = tableHTML;
-            } catch (err) {
-            body.innerHTML = '<p class="text-danger text-center py-4">Lỗi khi tải lịch sử giao dịch.</p>';
-            console.error(err);
-            }
+                    return `
+                        <td>GD#${t.id}</td>
+                        <td>${escapeHtml(t.userEmail)}</td>
+                        <td class="fw-bold ${t.type === 'Deposit' || t.type === 'Release' ? 'text-success' : 'text-danger'}">
+                            ${t.type === 'Deposit' || t.type === 'Release' ? '+' : '-'} ${new Intl.NumberFormat('vi-VN').format(t.amount)} đ
+                        </td>
+                        <td><span class="fw-semibold">${typeText}</span></td>
+                        <td>${escapeHtml(t.description || 'Không có')}</td>
+                        <td>${t.createdAt}</td>
+                        <td>${statusBadge}</td>
+                    `;
+                };
+
+                window.renderAdminTable('txs', txs, headers, rowRenderer, 'adminSectionBody');
             }
 
             function statusBadgeHtml(statusKey, label) {
-            if (statusKey === 'Resolved') return `<span class="admin-badge active">${label}</span>`;
-            if (statusKey === 'InProgress') return `<span class="admin-badge amber">${label}</span>`;
-            return `<span class="admin-badge" style="background:#e2e8f0; color:#334155;">${label}</span>`;
+                if (statusKey === 'Resolved') return `<span class="admin-badge active">${label}</span>`;
+                if (statusKey === 'InProgress') return `<span class="admin-badge amber">${label}</span>`;
+                return `<span class="admin-badge" style="background:#e2e8f0; color:#334155;">${label}</span>`;
             }
 
             function statusSelectHtml(id, statusKey, controller) {
-            const options = [
-            { key: 'Pending', label: controller === 'Support' ? 'Đã tiếp nhận' : 'Đã ghi nhận' },
-            { key: 'InProgress', label: 'Đang xử lý' },
-            { key: 'Resolved', label: 'Đã xử lý' }
-            ];
-            const optionsHtml = options.map(o => `<option value="${o.key}" ${o.key === statusKey ? 'selected' : ''}>${o.label}</option>`).join('');
-            return `<select class="form-select form-select-sm" style="width:auto; display:inline-block;" onchange="updateAdminItemStatus('${controller}', ${id}, this.value)">${optionsHtml}</select>`;
+                const options = [
+                    { key: 'Pending', label: controller === 'Support' ? 'Đã tiếp nhận' : 'Đã ghi nhận' },
+                    { key: 'InProgress', label: 'Đang xử lý' },
+                    { key: 'Resolved', label: 'Đã xử lý' }
+                ];
+                let bg = '#f1f5f9';
+                let color = '#334155';
+                let border = '#cbd5e1';
+                if (statusKey === 'InProgress') {
+                    bg = '#fef3c7';
+                    color = '#92400e';
+                    border = '#fde68a';
+                } else if (statusKey === 'Resolved') {
+                    bg = '#d1fae5';
+                    color = '#065f46';
+                    border = '#a7f3d0';
+                }
+                const optionsHtml = options.map(o => `<option value="${o.key}" ${o.key === statusKey ? 'selected' : ''} style="background-color: #ffffff; color: #334155;">${o.label}</option>`).join('');
+                return `<select class="form-select form-select-sm" style="width:auto; display:inline-block; font-weight: 600; background-color: ${bg}; color: ${color}; border-color: ${border}; transition: all 0.2s;" onchange="this.style.backgroundColor = this.value === 'InProgress' ? '#fef3c7' : this.value === 'Resolved' ? '#d1fae5' : '#f1f5f9'; this.style.color = this.value === 'InProgress' ? '#92400e' : this.value === 'Resolved' ? '#065f46' : '#334155'; this.style.borderColor = this.value === 'InProgress' ? '#fde68a' : this.value === 'Resolved' ? '#a7f3d0' : '#cbd5e1'; updateAdminItemStatus('${controller}', ${id}, this.value)">${optionsHtml}</select>`;
             }
 
-            async function renderAdminSupport() {
-            const title = document.getElementById('adminSectionTitle');
-            const body = document.getElementById('adminSectionBody');
-            title.textContent = "Yêu cầu hỗ trợ từ người dùng";
-            showSpinner(body);
+            async function renderAdminSupport(isPagedReload = false) {
+                const title = document.getElementById('adminSectionTitle');
+                const body = document.getElementById('adminSectionBody');
+                title.textContent = "Yêu cầu hỗ trợ từ người dùng";
 
-            try {
-            const res = await fetch('/Support/GetAllRequests');
-            const data = await res.json();
+                if (!isPagedReload || !window.adminDataCache.support || window.adminDataCache.support.length === 0) {
+                    showSpinner(body);
+                    try {
+                        const res = await fetch('/Support/GetAllRequests');
+                        const data = await res.json();
+                        if (!data.success) {
+                            body.innerHTML = '<p class="text-danger text-center py-4">Không có quyền xem dữ liệu này.</p>';
+                            return;
+                        }
+                        window.adminDataCache.support = data.requests || [];
+                    } catch (err) {
+                        body.innerHTML = '<p class="text-danger text-center py-4">Lỗi khi tải danh sách yêu cầu hỗ trợ.</p>';
+                        console.error(err);
+                        return;
+                    }
+                }
 
-            if (!data.success) {
-            body.innerHTML = '<p class="text-danger text-center py-4">Không có quyền xem dữ liệu này.</p>';
-            return;
+                const requests = window.adminDataCache.support;
+                const headers = ['Người gửi', 'Tiêu đề', 'Loại', 'Nội dung', 'Ngày gửi', 'Trạng thái'];
+
+                const rowRenderer = (r, globalIndex) => {
+                    return `
+                        <td>
+                            <div class="fw-semibold">${escapeHtml(r.userName)}</div>
+                            <div class="text-muted" style="font-size:0.8rem;">${escapeHtml(r.userEmail)}</div>
+                        </td>
+                        <td class="fw-semibold">${escapeHtml(r.subject)}</td>
+                        <td><span class="admin-badge" style="background: #e2e8f0; color: #475569;">${escapeHtml(r.category)}</span></td>
+                        <td style="max-width:280px; white-space:pre-wrap;">${escapeHtml(r.message)}</td>
+                        <td>${r.createdAt}</td>
+                        <td>${statusSelectHtml(r.id, r.status, 'Support')}</td>
+                    `;
+                };
+
+                window.renderAdminTable('support', requests, headers, rowRenderer, 'adminSectionBody');
             }
 
-            const requests = data.requests;
-            if (requests.length === 0) {
-            body.innerHTML = '<p class="text-muted text-center py-4">Chưa có yêu cầu hỗ trợ nào.</p>';
-            return;
-            }
+            async function renderAdminFeedback(isPagedReload = false) {
+                const title = document.getElementById('adminSectionTitle');
+                const body = document.getElementById('adminSectionBody');
+                title.textContent = "Góp ý & Báo lỗi từ người dùng";
 
-            let html = `
-            <div class="table-responsive w-100">
-            <table class="admin-table">
-            <thead>
-            <tr>
-            <th>Người gửi</th>
-            <th>Tiêu đề</th>
-            <th>Loại</th>
-            <th>Nội dung</th>
-            <th>Ngày gửi</th>
-            <th>Trạng thái</th>
-            </tr>
-            </thead>
-            <tbody>
-            `;
+                if (!isPagedReload || !window.adminDataCache.feedback || window.adminDataCache.feedback.length === 0) {
+                    showSpinner(body);
+                    try {
+                        const res = await fetch('/Feedback/GetAllFeedback');
+                        const data = await res.json();
+                        if (!data.success) {
+                            body.innerHTML = '<p class="text-danger text-center py-4">Không có quyền xem dữ liệu này.</p>';
+                            return;
+                        }
+                        window.adminDataCache.feedback = data.items || [];
+                    } catch (err) {
+                        body.innerHTML = '<p class="text-danger text-center py-4">Lỗi khi tải danh sách phản hồi.</p>';
+                        console.error(err);
+                        return;
+                    }
+                }
 
-            requests.forEach(r => {
-            html += `
-            <tr>
-            <td>
-            <div class="fw-semibold">${escapeHtml(r.userName)}</div>
-            <div class="text-muted" style="font-size:0.8rem;">${escapeHtml(r.userEmail)}</div>
-            </td>
-            <td class="fw-semibold">${escapeHtml(r.subject)}</td>
-            <td>${escapeHtml(r.category)}</td>
-            <td style="max-width:280px; white-space:pre-wrap;">${escapeHtml(r.message)}</td>
-            <td>${r.createdAt}</td>
-            <td>${statusSelectHtml(r.id, r.status, 'Support')}</td>
-            </tr>
-            `;
-            });
+                const items = window.adminDataCache.feedback;
+                const headers = ['Người gửi', 'Tiêu đề', 'Loại', 'Chi tiết', 'Ngày gửi', 'Trạng thái'];
 
-            html += `</tbody></table></div>`;
-            body.innerHTML = html;
-            } catch (err) {
-            body.innerHTML = '<p class="text-danger text-center py-4">Lỗi khi tải danh sách yêu cầu hỗ trợ.</p>';
-            console.error(err);
-            }
-            }
+                const rowRenderer = (f, globalIndex) => {
+                    return `
+                        <td>
+                            <div class="fw-semibold">${escapeHtml(f.userName)}</div>
+                            <div class="text-muted" style="font-size:0.8rem;">${escapeHtml(f.userEmail)}</div>
+                        </td>
+                        <td class="fw-semibold">${escapeHtml(f.title)}</td>
+                        <td>${f.type === 'Báo lỗi hệ thống' ? '<span class="admin-badge banned">' + escapeHtml(f.type) + '</span>' : '<span class="admin-badge active" style="background:#eff6ff; color:#1d4ed8;">' + escapeHtml(f.type) + '</span>'}</td>
+                        <td style="max-width:280px; white-space:pre-wrap;">${escapeHtml(f.details)}</td>
+                        <td>${f.createdAt}</td>
+                        <td>${statusSelectHtml(f.id, f.status, 'Feedback')}</td>
+                    `;
+                };
 
-            async function renderAdminFeedback() {
-            const title = document.getElementById('adminSectionTitle');
-            const body = document.getElementById('adminSectionBody');
-            title.textContent = "Góp ý & Báo lỗi từ người dùng";
-            showSpinner(body);
-
-            try {
-            const res = await fetch('/Feedback/GetAllFeedback');
-            const data = await res.json();
-
-            if (!data.success) {
-            body.innerHTML = '<p class="text-danger text-center py-4">Không có quyền xem dữ liệu này.</p>';
-            return;
-            }
-
-            const items = data.items;
-            if (items.length === 0) {
-            body.innerHTML = '<p class="text-muted text-center py-4">Chưa có phản hồi nào.</p>';
-            return;
-            }
-
-            let html = `
-            <div class="table-responsive w-100">
-            <table class="admin-table">
-            <thead>
-            <tr>
-            <th>Người gửi</th>
-            <th>Tiêu đề</th>
-            <th>Loại</th>
-            <th>Chi tiết</th>
-            <th>Ngày gửi</th>
-            <th>Trạng thái</th>
-            </tr>
-            </thead>
-            <tbody>
-            `;
-
-            items.forEach(f => {
-            html += `
-            <tr>
-            <td>
-            <div class="fw-semibold">${escapeHtml(f.userName)}</div>
-            <div class="text-muted" style="font-size:0.8rem;">${escapeHtml(f.userEmail)}</div>
-            </td>
-            <td class="fw-semibold">${escapeHtml(f.title)}</td>
-            <td>${f.type === 'Báo lỗi hệ thống' ? '<span class="admin-badge banned">' + escapeHtml(f.type) + '</span>' : escapeHtml(f.type)}</td>
-            <td style="max-width:280px; white-space:pre-wrap;">${escapeHtml(f.details)}</td>
-            <td>${f.createdAt}</td>
-            <td>${statusSelectHtml(f.id, f.status, 'Feedback')}</td>
-            </tr>
-            `;
-            });
-
-            html += `</tbody></table></div>`;
-            body.innerHTML = html;
-            } catch (err) {
-            body.innerHTML = '<p class="text-danger text-center py-4">Lỗi khi tải danh sách phản hồi.</p>';
-            console.error(err);
-            }
+                window.renderAdminTable('feedback', items, headers, rowRenderer, 'adminSectionBody');
             }
 
             async function updateAdminItemStatus(controller, id, status) {
-            try {
-            const res = await fetch(`/${controller}/UpdateStatus`, {
-            method: 'POST',
-            headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
-            },
-            body: `id=${id}&status=${status}`
-            });
-            const data = await res.json();
-            if (data.success) {
-            showToast(data.message || 'Đã cập nhật trạng thái.', 'success');
-            } else {
-            showToast(data.message || 'Lỗi khi cập nhật trạng thái.', 'error');
-            }
-            } catch (err) {
-            showToast('Lỗi kết nối máy chủ.', 'error');
-            console.error(err);
-            }
+                try {
+                    const res = await fetch(`/${controller}/UpdateStatus`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                        },
+                        body: `id=${id}&status=${status}`
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        showToast(data.message || 'Đã cập nhật trạng thái.', 'success');
+                        if (controller === 'Support') {
+                            const item = window.adminDataCache.support.find(x => x.id === id);
+                            if (item) item.status = status;
+                        } else if (controller === 'Feedback') {
+                            const item = window.adminDataCache.feedback.find(x => x.id === id);
+                            if (item) item.status = status;
+                        }
+                    } else {
+                        showToast(data.message || 'Lỗi khi cập nhật trạng thái.', 'error');
+                    }
+                } catch (err) {
+                    showToast('Lỗi kết nối máy chủ.', 'error');
+                    console.error(err);
+                }
             }
 
             function escapeHtml(str) {
-            if (!str) return '';
-            const div = document.createElement('div');
-            div.textContent = str;
-            return div.innerHTML;
+                if (!str) return '';
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
             }
         </script>
     }

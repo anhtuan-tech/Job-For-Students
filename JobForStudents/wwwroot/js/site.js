@@ -4559,6 +4559,7 @@
     function bindNotificationBtn() {
         const btn = document.getElementById('notificationBtn');
         if (!btn) return;
+        if (btn.closest('.dropdown')?.querySelector('.dropdown-menu')) return;
         btn.addEventListener('click', function (e) {
             e.stopPropagation();
             // Close any existing dropdown
@@ -4639,6 +4640,7 @@
     function bindUserProfileDropdown() {
         const btn = document.getElementById('userProfile');
         if (!btn) return;
+        if (btn.closest('.dropdown')?.querySelector('.dropdown-menu')) return;
         btn.addEventListener('click', function (e) {
             e.stopPropagation();
             document.querySelector('.dropdown-panel')?.remove();
@@ -4653,10 +4655,11 @@
             const role = roleEl ? roleEl.textContent.trim() : 'Thành viên';
             const initials = initialsEl ? initialsEl.textContent.trim() : 'US';
             const avatarSrc = avatarImg ? avatarImg.src : null;
-            const email = btn.getAttribute('data-email') || (role === 'Freelancer' ? 'sinhvien@j4s.vn' : 'doanhnghiep@j4s.vn');
+            const email = btn.getAttribute('data-email') || (role === 'Nhà tuyển dụng' ? 'doanhnghiep@j4s.vn' : role === 'Freelancer' ? 'sinhvien@j4s.vn' : 'admin@j4s.vn');
             const userId = btn.getAttribute('data-user-id');
             const userRole = btn.getAttribute('data-user-role') || '';
             const isBusiness = userRole === 'Business';
+            const isStudent = userRole === 'Student';
             const businessJobsUrl = isBusiness && userId ? `/business/${userId}/jobs` : '#';
 
             const dropdown = document.createElement('div');
@@ -4677,28 +4680,15 @@
                 <div class="dropdown-divider"></div>
                 <div class="dropdown-menu-list">
                     ${isBusiness ? `
-                        <div class="dropdown-section-label">Doanh nghiệp</div>
                         <div class="dropdown-menu-item" data-action="deposit"><i data-lucide="wallet-cards" style="width:16px;height:16px;"></i> Nạp tiền</div>
-                        <div class="dropdown-menu-item" data-action="business-jobs"><i data-lucide="briefcase-business" style="width:16px;height:16px;"></i> Xem trang việc làm</div>
                         <div class="dropdown-menu-item" data-action="profile"><i data-lucide="building-2" style="width:16px;height:16px;"></i> Hồ sơ doanh nghiệp</div>
                         <div class="dropdown-menu-item" data-action="edit-profile"><i data-lucide="pencil" style="width:16px;height:16px;"></i> Chỉnh sửa thông tin công ty</div>
-                        <div class="dropdown-menu-item" data-action="edit-profile"><i data-lucide="image" style="width:16px;height:16px;"></i> Thay đổi logo doanh nghiệp</div>
-                        <div class="dropdown-menu-item" data-action="edit-profile"><i data-lucide="panorama" style="width:16px;height:16px;"></i> Cập nhật ảnh bìa</div>
-                        <div class="dropdown-menu-item" data-action="edit-profile"><i data-lucide="file-text" style="width:16px;height:16px;"></i> Chỉnh sửa mô tả doanh nghiệp</div>
-                        <div class="dropdown-menu-item" data-action="edit-profile"><i data-lucide="map-pin" style="width:16px;height:16px;"></i> Cập nhật địa chỉ</div>
-                        <div class="dropdown-menu-item" data-action="edit-profile"><i data-lucide="globe" style="width:16px;height:16px;"></i> Cập nhật website</div>
-                        <div class="dropdown-menu-item" data-action="edit-profile"><i data-lucide="users" style="width:16px;height:16px;"></i> Cập nhật quy mô công ty</div>
-                        <div class="dropdown-menu-item" data-action="edit-profile"><i data-lucide="factory" style="width:16px;height:16px;"></i> Cập nhật lĩnh vực hoạt động</div>
-                        <div class="dropdown-divider"></div>
-                        <div class="dropdown-section-label">Tài khoản</div>
-                        <div class="dropdown-menu-item" data-action="edit-profile"><i data-lucide="badge" style="width:16px;height:16px;"></i> Hiển thị tên doanh nghiệp</div>
-                        <div class="dropdown-menu-item" data-action="edit-profile"><i data-lucide="phone" style="width:16px;height:16px;"></i> Chỉnh sửa số điện thoại</div>
-                        <div class="dropdown-menu-item" data-action="edit-profile"><i data-lucide="mail" style="width:16px;height:16px;"></i> Chỉnh sửa email</div>
-                        <div class="dropdown-menu-item" data-action="edit-profile"><i data-lucide="key-round" style="width:16px;height:16px;"></i> Đổi mật khẩu</div>
+                        <div class="dropdown-menu-item" data-action="policies"><i data-lucide="shield" style="width:16px;height:16px;"></i> Điều khoản & Chính sách</div>
                     ` : `
-                        <div class="dropdown-menu-item" data-action="profile"><i data-lucide="user" style="width:16px;height:16px;"></i> Hồ sơ của tôi</div>
+                        ${isStudent ? `<div class="dropdown-menu-item" data-action="profile"><i data-lucide="user" style="width:16px;height:16px;"></i> Hồ sơ của tôi</div>` : ''}
+                        ${isStudent ? `<div class="dropdown-menu-item" data-action="account"><i data-lucide="settings" style="width:16px;height:16px;"></i> Thiết lập tài khoản</div>` : ''}
+                        <div class="dropdown-menu-item" data-action="privacy"><i data-lucide="shield" style="width:16px;height:16px;"></i> Bảo mật & Quyền riêng tư</div>
                     `}
-                    <div class="dropdown-menu-item" data-action="policies"><i data-lucide="shield-check" style="width:16px;height:16px;"></i> Điều khoản & Chính sách</div>
                     <div class="dropdown-divider"></div>
                     <div class="dropdown-menu-item danger" data-action="logout"><i data-lucide="log-out" style="width:16px;height:16px;"></i> Đăng xuất</div>
                 </div>`;
@@ -4718,9 +4708,10 @@
                     setTimeout(() => dropdown.remove(), 200);
                     switch (action) {
                         case 'deposit': openDepositQrModal(); break;
-                        case 'business-jobs': window.location.href = businessJobsUrl; break;
                         case 'profile': setActiveSidebar('profile'); currentSidebarMode = 'profile'; renderProfileView(); break;
                         case 'edit-profile': openEditProfileFromMenu(); break;
+                        case 'account': openEditProfileFromMenu(); break;
+                        case 'privacy': setActiveSidebar(''); currentSidebarMode = 'privacy'; renderPoliciesView(); break;
                         case 'policies': setActiveSidebar(''); currentSidebarMode = 'policies'; renderPoliciesView(); break;
                         case 'logout':
                             const logoutForm = document.getElementById('logoutForm');

@@ -72,9 +72,7 @@ public enum NotificationType
 public enum TransactionType
 {
     Deposit,
-    Withdraw,
-    Holding,
-    Release
+    Withdraw
 }
 
 public enum TransactionStatus
