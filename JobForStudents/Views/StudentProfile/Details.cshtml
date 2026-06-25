@@ -1,0 +1,309 @@
+@using JobForStudents.Models
+@model StudentProfileViewModel
+@{
+    ViewData["Title"] = "Hồ sơ ứng viên: " + Model.FullName;
+    Layout = "_DashboardLayout";
+}
+
+<style>
+    .profile-container {
+        display: flex;
+        gap: 24px;
+        padding: 24px;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding-top: 100px;
+    }
+    .profile-sidebar {
+        width: 320px;
+        flex-shrink: 0;
+    }
+    .profile-card {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 32px 24px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        text-align: center;
+        border: 1px solid #f1f5f9;
+        margin-bottom: 24px;
+    }
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-bottom: 16px;
+        box-shadow: 0 4px 10px rgba(14, 165, 233, 0.2);
+        border: 4px solid #ffffff;
+    }
+    .profile-name {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 4px;
+    }
+    .profile-major {
+        font-size: 0.95rem;
+        color: #0ea5e9;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+    .profile-uni {
+        font-size: 0.9rem;
+        color: #64748b;
+        margin-bottom: 20px;
+    }
+    .contact-card {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        border: 1px solid #f1f5f9;
+    }
+    .contact-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+        font-size: 0.95rem;
+        color: #1e293b;
+    }
+    .contact-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: #f0f9ff;
+        color: #0ea5e9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .masked-text {
+        color: #94a3b8;
+        font-style: italic;
+    }
+    .mask-alert {
+        background: #fffbeb;
+        color: #b45309;
+        padding: 12px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        border: 1px solid #fef3c7;
+        margin-bottom: 16px;
+        display: flex;
+        gap: 8px;
+    }
+    
+    .profile-content {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+    .content-card {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        border: 1px solid #f1f5f9;
+    }
+    .content-card h4 {
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .skills-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .skill-badge {
+        background: #f1f5f9;
+        color: #475569;
+        padding: 8px 16px;
+        border-radius: 99px;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+</style>
+
+<div class="profile-container">
+    <div class="profile-sidebar">
+        <div class="profile-card">
+            @if (!string.IsNullOrEmpty(Model.AvatarUrl))
+            {
+                <img src="@Model.AvatarUrl" alt="@Model.FullName" class="profile-avatar" />
+            }
+            else
+            {
+                <div class="profile-avatar" style="background: linear-gradient(135deg, #0ea5e9, #38bdf8); display:flex; align-items:center; justify-content:center; color:white; font-size:2.5rem; font-weight:bold; margin: 0 auto 16px;">
+                    @(Model.FullName.Length >= 2 ? Model.FullName[..2].ToUpper() : "SV")
+                </div>
+            }
+            <div class="profile-name">@Model.FullName</div>
+            <div class="profile-major">@Model.Major</div>
+            <div class="profile-uni"><i data-lucide="building" style="width:14px;height:14px;margin-bottom:-2px"></i> @Model.University</div>
+            
+            <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom: 16px;">
+                <i data-lucide="star" style="width:20px;height:20px;color:#f59e0b;fill:#f59e0b;"></i>
+                <span style="font-weight:700; font-size:1.1rem;">@Model.AverageRating.ToString("F1")</span>
+                <span style="color:#64748b; font-size:0.9rem;">(@Model.TotalReviews đánh giá)</span>
+            </div>
+
+            @if (User.IsInRole("Business"))
+            {
+                <a href="/Message?userId=@Model.UserId" class="btn w-100" style="background:#0ea5e9; color:white; font-weight:600; border-radius:10px; padding:12px;">
+                    <i data-lucide="message-square" style="width:18px;height:18px;"></i> Nhắn tin trao đổi
+                </a>
+            }
+        </div>
+
+        <div class="contact-card">
+            <h5 style="font-weight: 700; margin-bottom: 16px; display:flex; align-items:center; gap:8px;">
+                <i data-lucide="contact" style="width:20px;height:20px;"></i> Thông tin liên hệ
+            </h5>
+
+            @if (Model.IsContactMasked)
+            {
+                <div class="mask-alert">
+                    <i data-lucide="shield-alert" style="width:20px;height:20px;flex-shrink:0;"></i>
+                    <div>Thông tin liên hệ bị ẩn để bảo vệ quyền riêng tư. Bạn cần có dự án đang hoặc đã làm việc chung để xem.</div>
+                </div>
+            }
+
+            <div class="contact-item">
+                <div class="contact-icon"><i data-lucide="phone"></i></div>
+                @if (Model.IsContactMasked) { <span class="masked-text">*** *** ****</span> } else { <span>@(Model.PhoneNumber ?? "Chưa cập nhật")</span> }
+            </div>
+            <div class="contact-item">
+                <div class="contact-icon"><i data-lucide="mail"></i></div>
+                @if (Model.IsContactMasked) { <span class="masked-text">***&#64;***.***</span> } else { <span>@(Model.Email ?? "Chưa cập nhật")</span> }
+            </div>
+            
+            @if (!string.IsNullOrEmpty(Model.ResumeUrl))
+            {
+                <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid #f1f5f9;">
+                    <a href="@Model.ResumeUrl" target="_blank" class="btn btn-outline-secondary w-100" style="border-radius:10px; font-weight:600;">
+                        <i data-lucide="file-text" style="width:18px;height:18px;"></i> Xem CV / Portfolio
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="profile-content">
+        <div class="content-card">
+            <h4><i data-lucide="user" style="width:24px;height:24px;color:#0ea5e9;"></i> Giới thiệu bản thân</h4>
+            <div style="color: #475569; line-height: 1.6;">
+                @(string.IsNullOrEmpty(Model.Bio) ? "Ứng viên này chưa viết giới thiệu bản thân." : Model.Bio)
+            </div>
+        </div>
+
+        <div class="content-card">
+            <h4><i data-lucide="award" style="width:24px;height:24px;color:#0ea5e9;"></i> Kỹ năng chuyên môn</h4>
+            @if (Model.Skills.Any())
+            {
+                <div class="skills-container">
+                    @foreach(var skill in Model.Skills)
+                    {
+                        <div class="skill-badge">@skill</div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div style="color: #94a3b8; font-style: italic;">Chưa cập nhật kỹ năng.</div>
+            }
+        </div>
+
+        <div class="content-card">
+            <h4><i data-lucide="message-circle" style="width:24px;height:24px;color:#0ea5e9;"></i> Đánh giá từ khách hàng</h4>
+            @if (Model.Reviews.Any())
+            {
+                <div style="display:flex; flex-direction:column; gap:20px;">
+                    @foreach (var review in Model.Reviews)
+                    {
+                        <div style="padding:16px; background:#f8fafc; border-radius:12px; border:1px solid #f1f5f9;">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                                <div style="font-weight:600; color:#0f172a;">@(review.Reviewer?.StudentProfile?.FullName ?? review.Reviewer?.BusinessProfile?.CompanyName ?? "Khách hàng")</div>
+                                <div style="color:#f59e0b; display:flex; gap:2px;">
+                                    @for(int i=0; i<5; i++) { <i data-lucide="star" style="width:14px;height:14px;@(i<review.Rating?"fill:#f59e0b;":"color:#cbd5e1;")"></i> }
+                                </div>
+                            </div>
+                            <div style="color:#475569; font-size:0.95rem; line-height:1.5; margin-bottom: 12px;">@review.Comment</div>
+                            
+                            @if (review.Replies != null && review.Replies.Any())
+                            {
+                                <div style="margin-left: 16px; padding-left: 16px; border-left: 2px solid #e2e8f0; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px;">
+                                    @foreach(var reply in review.Replies)
+                                    {
+                                        <div>
+                                            <div style="font-weight:600; color:#0ea5e9; font-size: 0.85rem; margin-bottom: 2px;">@(reply.Reviewer?.StudentProfile?.FullName ?? reply.Reviewer?.BusinessProfile?.CompanyName ?? "Khách hàng") <span style="color:#94a3b8; font-weight:normal;">- Phản hồi</span></div>
+                                            <div style="color:#475569; font-size:0.9rem;">@reply.Comment</div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+
+                            @if (User.IsInRole("Business") || User.IsInRole("Student"))
+                            {
+                                <button type="button" class="btn btn-sm btn-outline-primary" style="font-size: 0.8rem; border-radius: 8px; margin-top: 8px;" onclick="toggleReplyForm(@review.Id)">Phản hồi</button>
+                                <form id="reply-form-@review.Id" style="display:none; margin-top: 12px; display: none;" onsubmit="submitReply(event, @review.Id)">
+                                    <textarea class="form-control" id="reply-input-@review.Id" rows="2" placeholder="Nhập nội dung phản hồi..." required style="font-size: 0.85rem; border-radius: 8px; margin-bottom: 8px;"></textarea>
+                                    <button type="submit" class="btn btn-sm btn-primary" style="font-size: 0.8rem; border-radius: 8px;">Gửi phản hồi</button>
+                                </form>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div style="color: #94a3b8; font-style: italic; text-align:center; padding: 24px;">
+                    Chưa có đánh giá nào.
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleReplyForm(reviewId) {
+            const form = document.getElementById(`reply-form-${reviewId}`);
+            if (form) {
+                form.style.display = form.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+
+        function submitReply(event, reviewId) {
+            event.preventDefault();
+            const input = document.getElementById(`reply-input-${reviewId}`);
+            const comment = input.value;
+            
+            const formData = new FormData();
+            formData.append('parentReviewId', reviewId);
+            formData.append('comment', comment);
+
+            fetch('/Review/Reply', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert(data.message || 'Có lỗi xảy ra.');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Có lỗi xảy ra khi gửi phản hồi.');
+            });
+        }
+    </script>
+}

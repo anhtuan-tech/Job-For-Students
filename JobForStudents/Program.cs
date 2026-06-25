@@ -35,6 +35,32 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     dbContext.Database.Migrate();
+
+    // Tự động tạo tài khoản Admin mặc định nếu chưa tồn tại
+    if (!dbContext.Users.Any(u => u.Email == "admin@j4s.com"))
+    {
+        var adminUser = new User
+        {
+            Email = "admin@j4s.com",
+            Phone = "0000000000",
+            PasswordHash = JobForStudents.Helpers.PasswordHasher.HashPassword("Admin@123"),
+            Role = UserRole.Admin,
+            Status = UserStatus.Active,
+            IsDeleted = false,
+            CreatedAt = DateTime.UtcNow
+        };
+        dbContext.Users.Add(adminUser);
+        dbContext.SaveChanges();
+
+        var wallet = new Wallet
+        {
+            UserId = adminUser.Id,
+            Balance = 0,
+            UpdatedAt = DateTime.UtcNow
+        };
+        dbContext.Wallets.Add(wallet);
+        dbContext.SaveChanges();
+    }
 }
 
 

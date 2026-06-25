@@ -3,7 +3,7 @@
     ViewData["Title"] = "Trang chủ";
     Layout = "~/Views/Shared/_DashboardLayout.cshtml";
 
-    // Gradient colors for freelancer avatars without images (strictly Light Blue & White / no purples)
+    // Gradient colors for freelancer avatars without images
     var avatarGradients = new[] {
         "linear-gradient(135deg, #0ea5e9, #38bdf8)",
         "linear-gradient(135deg, #0284c7, #bae6fd)",
@@ -13,18 +13,815 @@
     };
 }
 
+@if (User.IsInRole("Business"))
+{
+    <style>
+        body {
+            background-color: #f8fafc !important;
+        }
+    </style>
+}
+@if (User.IsInRole("Admin"))
+{
+    <style>
+        body {
+            background-color: #f8fafc !important;
+        }
+    </style>
+}
+
+<!-- Custom Styles for Business & Admin Views -->
+<style>
+    /* Custom Wallet & Service Packages Styles */
+    .bg-success-subtle { background-color: #d1fae5 !important; color: #065f46 !important; }
+    .bg-indigo-subtle { background-color: #e0e7ff !important; color: #3730a3 !important; }
+    .bg-secondary-subtle { background-color: #f1f5f9 !important; color: #334155 !important; }
+    .bg-warning-subtle { background-color: #fef3c7 !important; color: #92400e !important; }
+    .text-indigo-600 { color: #4f46e5 !important; }
+    .bg-indigo { background-color: #4f46e5 !important; color: #fff !important; }
+    .btn-indigo { background-color: #4f46e5 !important; color: #fff !important; border: none !important; }
+    .btn-indigo:hover { background-color: #4338ca !important; color: #fff !important; }
+    .btn-indigo:disabled { background-color: #c7d2fe !important; color: #818cf8 !important; cursor: not-allowed !important; }
+    .hover-up { transition: transform 0.2s, box-shadow 0.2s; }
+    .hover-up:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05) !important; }
+    .text-slate-800 { color: #1e293b !important; }
+    .text-slate-700 { color: #334155 !important; }
+    .text-slate-600 { color: #475569 !important; }
+    .text-slate-500 { color: #64748b !important; }
+    .bg-slate-50 { background-color: #f8fafc !important; }
+    /* ----------------------------------------------
+       1. Overrides for Business Role (nav-business & layout-business)
+       ---------------------------------------------- */
+    .nav-business, .layout-business {
+        --primary: #4F46E5 !important;
+        --primary-light: #6366F1 !important;
+        --primary-dark: #3730A3 !important;
+        --primary-50: #EEF2FF !important;
+        --primary-100: #E0E7FF !important;
+        --primary-200: #C7D2FE !important;
+    }
+    
+    .nav-business .j4s-logo-box {
+        background: #4F46E5 !important;
+        box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2) !important;
+    }
+    
+    .nav-business .j4s-logo-text {
+        color: #4F46E5 !important;
+    }
+    
+    .nav-business .nav-search input:focus {
+        border-color: #4F46E5 !important;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15) !important;
+    }
+    
+    .nav-business .hamburger:hover {
+        background: #EEF2FF !important;
+        color: #4F46E5 !important;
+    }
+    
+    .nav-business .view-job-posts-link {
+        border-color: #cbd5e1 !important;
+        color: #4F46E5 !important;
+        transition: all 0.2s;
+    }
+    .nav-business .view-job-posts-link:hover {
+        border-color: #4F46E5 !important;
+        background-color: #EEF2FF !important;
+    }
+    
+    .nav-business .user-avatar {
+        background: #1e3a8a !important; /* Navy/Dark Indigo */
+        color: #ffffff !important;
+    }
+    
+    .layout-business .sidebar-item.active {
+        background-color: #EEF2FF !important;
+        color: #4F46E5 !important;
+        font-weight: 600;
+    }
+    .layout-business .sidebar-item.active .item-icon {
+        color: #4F46E5 !important;
+    }
+    .layout-business .sidebar-item.active::before {
+        content: '';
+        position: absolute;
+        left: 0 !important;
+        top: 0 !important;
+        bottom: 0 !important;
+        width: 4px !important;
+        background: #4F46E5 !important;
+        border-radius: 0 4px 4px 0 !important;
+    }
+    .layout-business .sidebar-item:hover {
+        background-color: #EEF2FF !important;
+        color: #4F46E5 !important;
+    }
+    .layout-business .sidebar-item:hover .item-icon {
+        color: #4F46E5 !important;
+    }
+
+    /* ----------------------------------------------
+       2. Overrides for Admin Role (nav-admin & layout-admin)
+       ---------------------------------------------- */
+    .nav-admin, .layout-admin {
+        --primary: #4F46E5 !important;
+        --primary-light: #6366F1 !important;
+        --primary-dark: #3730A3 !important;
+        --primary-50: #EEF2FF !important;
+        --primary-100: #E0E7FF !important;
+        --primary-200: #C7D2FE !important;
+    }
+    
+    .nav-admin .j4s-logo-box {
+        background: #4F46E5 !important;
+        box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2) !important;
+    }
+    
+    .nav-admin .j4s-logo-text {
+        color: #4F46E5 !important;
+    }
+    
+    .nav-admin .nav-search input:focus {
+        border-color: #4F46E5 !important;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15) !important;
+    }
+    
+    .nav-admin .hamburger:hover {
+        background: #EEF2FF !important;
+        color: #4F46E5 !important;
+    }
+    
+    .nav-admin .user-avatar {
+        background: #312e81 !important; /* Deep Indigo */
+        color: #ffffff !important;
+    }
+    
+    .layout-admin .sidebar-item.active {
+        background-color: #EEF2FF !important;
+        color: #4F46E5 !important;
+        font-weight: 600;
+    }
+    .layout-admin .sidebar-item.active .item-icon {
+        color: #4F46E5 !important;
+    }
+    .layout-admin .sidebar-item.active::before {
+        content: '';
+        position: absolute;
+        left: 0 !important;
+        top: 0 !important;
+        bottom: 0 !important;
+        width: 4px !important;
+        background: #4F46E5 !important;
+        border-radius: 0 4px 4px 0 !important;
+    }
+    .layout-admin .sidebar-item:hover {
+        background-color: #EEF2FF !important;
+        color: #4F46E5 !important;
+    }
+    .layout-admin .sidebar-item:hover .item-icon {
+        color: #4F46E5 !important;
+    }
+
+    /* ----------------------------------------------
+       2D. Admin Specific Components Styling
+       ---------------------------------------------- */
+    .admin-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    @@media (max-width: 1024px) {
+        .admin-stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    @@media (max-width: 640px) {
+        .admin-stats-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    .admin-stat-card {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.01);
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .admin-stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(79, 70, 229, 0.05);
+    }
+    .admin-stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .admin-stat-icon.indigo { background: #EEF2FF; color: #4F46E5; }
+    .admin-stat-icon.emerald { background: #ECFDF5; color: #10B981; }
+    .admin-stat-icon.amber { background: #FFFBEB; color: #F59E0B; }
+    .admin-stat-icon.rose { background: #FFF1F2; color: #F43F5E; }
+    .admin-stat-val {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: #0f172a;
+        line-height: 1;
+    }
+    .admin-stat-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #64748b;
+        margin-top: 4px;
+    }
+    .admin-section {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 24px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.01);
+        margin-bottom: 24px;
+    }
+    .admin-section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        border-bottom: 1px solid #f1f5f9;
+        padding-bottom: 12px;
+    }
+    .admin-section-title {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #0f172a;
+    }
+    .admin-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+        font-size: 0.9rem;
+    }
+    .admin-table th {
+        background: #f8fafc;
+        color: #475569;
+        font-weight: 600;
+        padding: 12px 16px;
+        border-bottom: 2px solid #cbd5e1;
+    }
+    .admin-table td {
+        padding: 12px 16px;
+        border-bottom: 1px solid #e2e8f0;
+        color: #334155;
+    }
+    .admin-table tbody tr:hover {
+        background-color: #f8fafc;
+    }
+    .admin-badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-align: center;
+    }
+    .admin-badge.active { background: #ECFDF5; color: #065F46; }
+    .admin-badge.banned { background: #FEF2F2; color: #991B1B; }
+    .admin-badge.student { background: #EFF6FF; color: #1E40AF; }
+    .admin-badge.business { background: #F5F3FF; color: #5B21B6; }
+    .admin-badge.amber { background: #FEF3C7; color: #92400E; }
+    .btn-admin-action {
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 1px solid transparent;
+        background: transparent;
+    }
+    .btn-admin-action.ban {
+        color: #DC2626;
+        border-color: #FCA5A5;
+        background: #FEF2F2;
+    }
+    .btn-admin-action.ban:hover {
+        background: #DC2626;
+        color: #ffffff;
+        border-color: #DC2626;
+    }
+    .btn-admin-action.unban {
+        color: #059669;
+        border-color: #6EE7B7;
+        background: #ECFDF5;
+    }
+    .btn-admin-action.unban:hover {
+        background: #059669;
+        color: #ffffff;
+        border-color: #059669;
+    }
+    .btn-admin-action.delete {
+        color: #DC2626;
+        border-color: #FCA5A5;
+        background: #FEF2F2;
+    }
+    .btn-admin-action.delete:hover {
+        background: #DC2626;
+        color: #ffffff;
+        border-color: #DC2626;
+    }
+
+    /* ----------------------------------------------
+       3. Shared & Business Components Styling
+       ---------------------------------------------- */
+    .welcome-box-business {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+        margin-bottom: 24px;
+        border: 1px solid #e2e8f0;
+        position: relative;
+        overflow: hidden;
+    }
+    .welcome-box-business .welcome-text-side {
+        max-width: 60%;
+        position: relative;
+        z-index: 2;
+    }
+    .welcome-box-business .welcome-subtitle {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .welcome-box-business .welcome-title {
+        font-size: 1.85rem;
+        font-weight: 800;
+        color: #0f172a;
+        margin: 8px 0;
+    }
+    .welcome-box-business .welcome-desc {
+        font-size: 0.95rem;
+        color: #475569;
+        margin-bottom: 24px;
+    }
+    .welcome-box-business .welcome-actions-business {
+        display: flex;
+        gap: 12px;
+    }
+    .btn-indigo-solid {
+        background: #4F46E5;
+        color: #ffffff;
+        border: none;
+        border-radius: 9999px;
+        padding: 10px 24px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+    }
+    .btn-indigo-solid:hover {
+        background: #4338CA;
+        transform: translateY(-1px);
+    }
+    .btn-indigo-outline {
+        background: #ffffff;
+        color: #4F46E5;
+        border: 1.5px solid #4F46E5;
+        border-radius: 9999px;
+        padding: 10px 24px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .btn-indigo-outline:hover {
+        background: #EEF2FF;
+        transform: translateY(-1px);
+    }
+    .welcome-box-business .welcome-illustration-business {
+        max-width: 32%;
+        position: relative;
+        z-index: 2;
+    }
+    .welcome-box-business .welcome-illustration-business img {
+        width: 100%;
+        height: auto;
+        object-fit: contain;
+    }
+
+    /* Stat Cards Row for Business */
+    .business-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .business-stat-card {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.01);
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+    .business-stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .business-stat-icon.blue {
+        background: #eff6ff;
+        color: #2563eb;
+    }
+    .business-stat-icon.teal {
+        background: #f0fdfa;
+        color: #0d9488;
+    }
+    .business-stat-icon.orange {
+        background: #fff7ed;
+        color: #ea580c;
+    }
+    .business-stat-val {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: #0f172a;
+        line-height: 1;
+    }
+    .business-stat-label {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #334155;
+        margin-top: 4px;
+    }
+    .business-stat-sub {
+        font-size: 0.75rem;
+        color: #64748b;
+        margin-top: 2px;
+    }
+
+    /* Candidates Section */
+    .candidates-section {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 24px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.01);
+        margin-bottom: 24px;
+    }
+    .candidates-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        border-bottom: 1px solid #f1f5f9;
+        padding-bottom: 12px;
+    }
+    .candidates-title {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #0f172a;
+    }
+    .candidates-link {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #4F46E5;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .candidate-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .candidate-item:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+    .candidate-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+    .candidate-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: #e2e8f0;
+        overflow: hidden;
+    }
+    .candidate-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .candidate-name {
+        font-weight: 700;
+        color: #0f172a;
+        font-size: 0.95rem;
+    }
+    .candidate-role {
+        font-size: 0.8rem;
+        color: #64748b;
+        margin-top: 2px;
+    }
+    .candidate-badge {
+        padding: 3px 8px;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-left: 10px;
+    }
+    .candidate-badge.match-high {
+        background: #EEF2FF;
+        color: #4F46E5;
+    }
+    .candidate-badge.match-medium {
+        background: #FFF7ED;
+        color: #EA580C;
+    }
+    .candidate-time {
+        font-size: 0.8rem;
+        color: #94a3b8;
+    }
+    .candidate-right {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+    .btn-view-profile-sm {
+        background: #ffffff;
+        color: #4F46E5;
+        border: 1px solid #cbd5e1;
+        border-radius: 9999px;
+        padding: 6px 14px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .btn-view-profile-sm:hover {
+        background: #EEF2FF;
+        border-color: #4F46E5;
+    }
+
+    /* Service Package Widget */
+    .service-pkg-widget {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.01);
+        margin-top: 16px;
+    }
+    .service-pkg-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 12px;
+    }
+    .service-pkg-card {
+        background: #fafafa;
+        border-radius: 12px;
+        padding: 16px;
+        border: 1px solid #f1f5f9;
+    }
+    .service-pkg-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 12px;
+    }
+    .service-pkg-name {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #0f172a;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .service-pkg-status {
+        background: #d1fae5;
+        color: #065f46;
+        padding: 2px 8px;
+        border-radius: 9999px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+    .service-pkg-expiry {
+        font-size: 0.75rem;
+        color: #64748b;
+        margin-bottom: 12px;
+    }
+    .service-pkg-bullet {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.8rem;
+        color: #334155;
+        margin-bottom: 6px;
+    }
+    .service-pkg-bullet i {
+        color: #10b981;
+    }
+    .service-pkg-usage {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #334155;
+        margin-top: 12px;
+        display: flex;
+        justify-content: space-between;
+    }
+    .service-pkg-progress-bar {
+        width: 100%;
+        height: 6px;
+        background: #e2e8f0;
+        border-radius: 3px;
+        margin-top: 6px;
+        overflow: hidden;
+    }
+    .service-pkg-progress-fill {
+        height: 100%;
+        background: #4F46E5;
+        border-radius: 3px;
+    }
+    .btn-pkg-action {
+        width: 100%;
+        background: #ffffff;
+        color: #4F46E5;
+        border: 1px solid #4F46E5;
+        border-radius: 9999px;
+        padding: 8px 16px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-top: 16px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .btn-pkg-action:hover {
+        background: #EEF2FF;
+    }
+
+    /* Recent Postings Widget */
+    .recent-posts-widget {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.01);
+    }
+    .recent-posts-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 14px;
+    }
+    .recent-posts-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #0f172a;
+    }
+    .recent-post-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .recent-post-item:last-of-type {
+        border-bottom: none;
+    }
+    .recent-post-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .recent-post-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: #f1f5f9;
+        color: #4b5563;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .recent-post-info {
+        font-size: 0.85rem;
+    }
+    .recent-post-jobtitle {
+        font-weight: 600;
+        color: #0f172a;
+    }
+    .recent-post-candidates {
+        font-size: 0.75rem;
+        color: #64748b;
+        margin-top: 1px;
+    }
+    .recent-post-status {
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    .recent-post-status.active { color: #10b981; }
+    .recent-post-status.warning { color: #ea580c; }
+    .recent-post-status.paused { color: #64748b; }
+
+    .btn-sidebar-outline {
+        width: 100%;
+        background: #ffffff;
+        color: #4F46E5;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 9999px;
+        padding: 8px 16px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-top: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-align: center;
+        display: block;
+        text-decoration: none;
+    }
+    .btn-sidebar-outline:hover {
+        border-color: #4F46E5;
+        background: #EEF2FF;
+    }
+
+    /* Sidebar submenus */
+    .sidebar-submenu {
+        display: none;
+        flex-direction: column;
+        gap: 4px;
+        margin-top: 4px;
+        padding-left: 16px;
+        border-left: 1.5px solid #e2e8f0;
+        margin-left: 20px;
+    }
+    .sidebar-submenu.show {
+        display: flex !important;
+    }
+    .sidebar-item-dropdown .submenu-chevron {
+        transition: transform 0.2s;
+    }
+    .sidebar-item-dropdown.open .submenu-chevron {
+        transform: rotate(180deg);
+    }
+</style>
+
 <!-- Hidden JSON data for JavaScript -->
 <script type="application/json" id="initialJobsData">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Jobs, new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }))</script>
 
 <!-- ============================================
      1. THANH ĐIỀU HƯỚNG TRÊN CÙNG (TOP NAV)
      ============================================ -->
-<nav class="top-nav" id="topNav">
+<nav class="top-nav @(User.IsInRole("Business") ? "nav-business" : User.IsInRole("Admin") ? "nav-admin" : "")" id="topNav">
     <!-- Logo + Hamburger -->
     <div class="nav-left">
         <a href="/" class="j4s-brand text-decoration-none">
             <div class="j4s-logo-box">
-                <i data-lucide="graduation-cap" style="width:20px;height:20px;stroke-width:2.5;"></i>
+                @if (User.IsInRole("Admin"))
+                {
+                    <i data-lucide="shield" style="width:20px;height:20px;stroke-width:2.5;"></i>
+                }
+                else if (User.IsInRole("Business"))
+                {
+                    <i data-lucide="briefcase" style="width:20px;height:20px;stroke-width:2.5;"></i>
+                }
+                else
+                {
+                    <i data-lucide="graduation-cap" style="width:20px;height:20px;stroke-width:2.5;"></i>
+                }
             </div>
             <span class="j4s-logo-text">J4S</span>
         </a>
@@ -36,24 +833,54 @@
     <!-- Thanh tìm kiếm -->
     <div class="nav-search">
         <i data-lucide="search" class="search-icon" style="width:16px;height:16px;"></i>
-        <input type="text" placeholder="Tìm kiếm công việc, kỹ năng..." id="searchInput" />
+        @if (User.IsInRole("Business"))
+        {
+            <input type="text" placeholder="Tìm hồ sơ ứng viên, bài đăng, kỹ năng..." id="searchInput" />
+        }
+        else if (User.IsInRole("Admin"))
+        {
+            <input type="text" placeholder="Tìm kiếm nhanh hệ thống..." id="searchInput" disabled style="opacity:0.6; cursor:not-allowed;" />
+        }
+        else
+        {
+            <input type="text" placeholder="Tìm kiếm công việc, kỹ năng..." id="searchInput" />
+        }
     </div>
 
     <!-- Phần bên phải -->
     <div class="nav-right">
         @if (User.Identity?.IsAuthenticated == true)
         {
-            <button class="btn-find-freelancer" id="btnFindFreelancer">
-                <i data-lucide="users" style="width:14px;height:14px;"></i>
-                Tìm freelancer
-            </button>
+            @if (User.IsInRole("Business"))
+            {
+                <a href="/" target="_blank" class="view-job-posts-link" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border: 1.5px solid #cbd5e1; border-radius: 9999px; text-decoration: none; font-size: 0.85rem; font-weight: 600; color: #475569; margin-right: 8px; background: white;"><i data-lucide="external-link" style="width:14px;height:14px;"></i> Xem trang việc làm</a>
+            }
+            else if (!User.IsInRole("Student") && !User.IsInRole("Admin"))
+            {
+                <button class="btn-find-freelancer" id="btnFindFreelancer">
+                    <i data-lucide="users" style="width:14px;height:14px;"></i>
+                    Tìm freelancer
+                </button>
+            }
 
             <!-- Notification Bell Dropdown -->
             <div class="dropdown">
-                <button class="notification-btn" id="notificationBtn" aria-label="Thông báo">
+                <button class="notification-btn" id="notificationBtn" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside" aria-label="Thông báo">
                     <i data-lucide="bell" style="width:20px;height:20px;"></i>
-                    <span class="notification-badge" style="display: none;">0</span>
+                    <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
                 </button>
+                <div class="dropdown-menu dropdown-menu-end shadow-sm border-0" style="width: 350px; padding: 0; border-radius: 12px; overflow: hidden;" aria-labelledby="notificationBtn">
+                    <div style="padding: 16px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;">
+                        <h6 style="margin: 0; font-weight: 600; color: #1e293b;">Thông báo</h6>
+                        <a href="#" id="btnMarkAllRead" style="font-size: 0.8rem; color: #0284c7; text-decoration: none;">Đánh dấu đã đọc</a>
+                    </div>
+                    <div id="notificationList" style="max-height: 380px; overflow-y: auto;">
+                        <div class="text-center p-4 text-muted" style="font-size: 0.85rem;">
+                            <i data-lucide="bell-off" style="width: 24px; height: 24px; margin-bottom: 8px; color: #cbd5e1;"></i>
+                            <br/>Không có thông báo mới
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- User Menu Dropdown -->
@@ -71,7 +898,7 @@
                     </div>
                     <div class="user-info">
                         <span class="user-name">@Model.CurrentUserName</span>
-                        <span class="user-role">@(User.IsInRole("Student") ? "Freelancer" : User.IsInRole("Business") ? "Doanh nghiệp" : "Admin")</span>
+                        <span class="user-role">@(User.IsInRole("Student") ? "Freelancer" : User.IsInRole("Business") ? "Nhà tuyển dụng" : "Admin")</span>
                     </div>
                     <i data-lucide="chevron-down" class="dropdown-arrow" style="width:14px;height:14px;"></i>
                 </div>
@@ -102,369 +929,2167 @@
 <!-- ============================================
      BỐ CỤC CHÍNH 3 CỘT
      ============================================ -->
-<div class="dashboard-layout">
+<div class="dashboard-layout @(User.IsInRole("Business") ? "layout-business" : User.IsInRole("Admin") ? "layout-admin" : "")">
+    @if (User.IsInRole("Admin"))
+    {
+        <!-- ============================================
+             2C. SIDEBAR DÀNH CHO ADMIN
+             ============================================ -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-group">
+                <div class="sidebar-label" style="text-transform: uppercase; font-weight: 700; color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.5px; margin-bottom: 8px;">Quản trị hệ thống</div>
+                <a href="#" class="sidebar-item active" data-admin-nav="home" id="adminNavHome">
+                    <span class="item-icon"><i data-lucide="home" style="width:18px;height:18px;"></i></span>
+                    Trang chủ
+                </a>
+                <a href="#" class="sidebar-item" data-admin-nav="users" id="adminNavUsers">
+                    <span class="item-icon"><i data-lucide="users" style="width:18px;height:18px;"></i></span>
+                    Quản lý người dùng
+                </a>
+                <a href="#" class="sidebar-item" data-admin-nav="jobs" id="adminNavJobs">
+                    <span class="item-icon"><i data-lucide="file-text" style="width:18px;height:18px;"></i></span>
+                    Quản lý tin tuyển dụng
+                </a>
+                <a href="#" class="sidebar-item" data-admin-nav="txs" id="adminNavTxs">
+                    <span class="item-icon"><i data-lucide="credit-card" style="width:18px;height:18px;"></i></span>
+                    Lịch sử giao dịch
+                </a>
+            </div>
+        </aside>
+    }
+    else if (User.IsInRole("Business"))
+    {
+        <!-- ============================================
+             2A. SIDEBAR DÀNH CHO DOANH NGHIỆP
+             ============================================ -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-group">
+                <div class="sidebar-label" style="text-transform: uppercase; font-weight: 700; color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.5px; margin-bottom: 8px;">Nhà tuyển dụng</div>
+                <a href="#" class="sidebar-item active" data-nav="home" id="navHome">
+                    <span class="item-icon"><i data-lucide="home" style="width:18px;height:18px;"></i></span>
+                    Trang chủ
+                </a>
+                <a href="#" class="sidebar-item" data-nav="projects" id="navProjects">
+                    <span class="item-icon"><i data-lucide="file-text" style="width:18px;height:18px;"></i></span>
+                    Quản lý tin đăng
+                </a>
+                <a href="#" class="sidebar-item" data-nav="topFreelancer" id="navTopFreelancer">
+                    <span class="item-icon"><i data-lucide="users" style="width:18px;height:18px;"></i></span>
+                    Ứng viên
+                </a>
+                <div class="sidebar-item-dropdown" id="walletDropdownWrapper">
+                    <a href="#" class="sidebar-item" id="navWalletParent" style="display:flex; align-items:center; justify-content:space-between;">
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <span class="item-icon"><i data-lucide="credit-card" style="width:18px;height:18px;"></i></span>
+                            <span>Gói dịch vụ & Thanh toán</span>
+                        </div>
+                        <i data-lucide="chevron-down" class="submenu-chevron" style="width:14px; height:14px; transition: transform 0.2s;"></i>
+                    </a>
+                    <div class="sidebar-submenu" id="walletSubmenu" style="display:none; flex-direction:column; gap:4px; padding-left:16px; border-left:1.5px solid #e2e8f0; margin-left:20px; margin-top:4px;">
+                        <a href="#" class="sidebar-item" data-nav="wallet-current" id="navWalletCurrent" style="font-size:0.85rem; padding:8px 12px;">
+                            <span class="item-icon"><i data-lucide="package" style="width:14px;height:14px;"></i></span>
+                            Gói dịch vụ hiện tại
+                        </a>
+                        <a href="#" class="sidebar-item" data-nav="wallet-deposit" id="navWalletDeposit" style="font-size:0.85rem; padding:8px 12px;">
+                            <span class="item-icon"><i data-lucide="plus-circle" style="width:14px;height:14px;"></i></span>
+                            Nạp tiền vào tài khoản
+                        </a>
+                        <a href="#" class="sidebar-item" data-nav="wallet-history" id="navWalletHistory" style="font-size:0.85rem; padding:8px 12px;">
+                            <span class="item-icon"><i data-lucide="history" style="width:14px;height:14px;"></i></span>
+                            Lịch sử giao dịch
+                        </a>
+                    </div>
+                </div>
+                <a href="#" class="sidebar-item" data-nav="messages" id="navMessages" style="position: relative;">
+                    <span class="item-icon"><i data-lucide="bell" style="width:18px;height:18px;"></i></span>
+                    Thông báo
+                    @{ int unreadNotifications = 0; }
+                    @if (unreadNotifications > 0)
+                    {
+                        <span class="sidebar-badge" style="background: #ef4444; color: white; border-radius: 9999px; padding: 2px 6px; font-size: 0.7rem; font-weight: bold; position: absolute; right: 16px; top: 50%; transform: translateY(-50%);">@unreadNotifications</span>
+                    }
+                </a>
+            </div>
+            
+            <div class="sidebar-group">
+                <div class="sidebar-label">Hỗ trợ</div>
+                <a href="#" class="sidebar-item" data-nav="help" id="navHelp">
+                    <span class="item-icon"><i data-lucide="help-circle" style="width:18px;height:18px;"></i></span>
+                    Trung tâm hỗ trợ
+                </a>
+                <a href="#" class="sidebar-item" data-nav="feedback" id="navFeedback">
+                    <span class="item-icon"><i data-lucide="message-square" style="width:18px;height:18px;"></i></span>
+                    Phản hồi & Báo lỗi
+                </a>
+            </div>
 
-    <!-- ============================================
-         2. CỘT TRÁI - SIDEBAR MENU
-         ============================================ -->
-    <aside class="sidebar" id="sidebar">
-        <!-- Nhóm: VIỆC LÀM -->
-        <div class="sidebar-group">
-            <div class="sidebar-label">Việc làm</div>
-            <a href="#" class="sidebar-item active" data-nav="home" id="navHome">
-                <span class="item-icon"><i data-lucide="home" style="width:18px;height:18px;"></i></span>
-                Trang chủ
-            </a>
-            <a href="#" class="sidebar-item" data-nav="find" id="navFindJob">
-                <span class="item-icon"><i data-lucide="search" style="width:18px;height:18px;"></i></span>
-                Tìm việc
-            </a>
-            <a href="#" class="sidebar-item" data-nav="saved" id="navSaved">
-                <span class="item-icon"><i data-lucide="bookmark" style="width:18px;height:18px;"></i></span>
-                Việc đã lưu
-            </a>
-            <a href="#" class="sidebar-item" data-nav="applied" id="navApplied">
-                <span class="item-icon"><i data-lucide="send" style="width:18px;height:18px;"></i></span>
-                Đã ứng tuyển
-            </a>
-            <a href="#" class="sidebar-item" data-nav="projects" id="navProjects">
-                <span class="item-icon"><i data-lucide="folder-open" style="width:18px;height:18px;"></i></span>
-                Dự án đang làm
-            </a>
-        </div>
+            <div class="sidebar-bottom">
+                <button class="btn-post-job" id="btnPostJob" data-bs-toggle="modal" data-bs-target="#postJobModal" style="background: #4F46E5; color: white; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <i data-lucide="plus" style="width:18px;height:18px;"></i>
+                    Đăng tin tuyển dụng
+                </button>
+            </div>
+        </aside>
+    }
+    else
+    {
+        <!-- ============================================
+             2B. SIDEBAR MẶC ĐỊNH / SINH VIÊN
+             ============================================ -->
+        <aside class="sidebar" id="sidebar">
+            <!-- Nhóm: VIỆC LÀM -->
+            <div class="sidebar-group">
+                <div class="sidebar-label">Việc làm</div>
+                <a href="#" class="sidebar-item active" data-nav="home" id="navHome">
+                    <span class="item-icon"><i data-lucide="home" style="width:18px;height:18px;"></i></span>
+                    Trang chủ
+                </a>
+                <a href="#" data-bs-toggle="modal" data-bs-target="#jobSearchModal" class="sidebar-item" id="navFindJob">
+                    <span class="item-icon"><i data-lucide="search" style="width:18px;height:18px;"></i></span>
+                    Tìm việc
+                </a>
+                <a href="#" class="sidebar-item" data-nav="saved" id="navSaved">
+                    <span class="item-icon"><i data-lucide="bookmark" style="width:18px;height:18px;"></i></span>
+                    Việc đã lưu
+                </a>
+                <a href="#" class="sidebar-item" data-nav="applied" id="navApplied">
+                    <span class="item-icon"><i data-lucide="send" style="width:18px;height:18px;"></i></span>
+                    Đã ứng tuyển
+                </a>
+                <a href="#" class="sidebar-item" data-nav="projects" id="navProjects">
+                    <span class="item-icon"><i data-lucide="folder-open" style="width:18px;height:18px;"></i></span>
+                    Dự án đang làm
+                </a>
+            </div>
 
-        <!-- Nhóm: QUẢN LÝ -->
-        <div class="sidebar-group">
-            <div class="sidebar-label">Quản lý</div>
-            <a href="#" class="sidebar-item" data-nav="profile" id="navProfile">
-                <span class="item-icon"><i data-lucide="user" style="width:18px;height:18px;"></i></span>
-                Hồ sơ của tôi
-            </a>
-            <a href="#" class="sidebar-item" data-nav="messages" id="navMessages">
-                <span class="item-icon"><i data-lucide="message-circle" style="width:18px;height:18px;"></i></span>
-                Tin nhắn
-                <span class="sidebar-badge">3</span>
-            </a>
-            <a href="#" class="sidebar-item" data-nav="reviews" id="navReviews">
-                <span class="item-icon"><i data-lucide="star" style="width:18px;height:18px;"></i></span>
-                Đánh giá
-            </a>
-            <a href="#" class="sidebar-item" data-nav="wallet" id="navWallet">
-                <span class="item-icon"><i data-lucide="wallet" style="width:18px;height:18px;"></i></span>
-                Ví tiền
-            </a>
-        </div>
+            <!-- Nhóm: QUẢN LÝ -->
+            <div class="sidebar-group">
+                <div class="sidebar-label">Quản lý</div>
+                <a href="#" class="sidebar-item" data-nav="profile" id="navProfile">
+                    <span class="item-icon"><i data-lucide="user" style="width:18px;height:18px;"></i></span>
+                    Hồ sơ của tôi
+                </a>
+                <a href="#" class="sidebar-item" data-nav="messages" id="navMessages">
+                    <span class="item-icon"><i data-lucide="message-circle" style="width:18px;height:18px;"></i></span>
+                    Tin nhắn
+                    @{ int unreadMessages = 0; }
+                    @if (unreadMessages > 0)
+                    {
+                        <span class="sidebar-badge">@unreadMessages</span>
+                    }
+                </a>
+                <a href="#" class="sidebar-item" data-nav="reviews" id="navReviews">
+                    <span class="item-icon"><i data-lucide="star" style="width:18px;height:18px;"></i></span>
+                    Đánh giá
+                </a>
+                @if (false)
+                {
+                    <a href="#" class="sidebar-item" data-nav="wallet" id="navWallet">
+                        <span class="item-icon"><i data-lucide="wallet" style="width:18px;height:18px;"></i></span>
+                        Ví tiền
+                    </a>
+                }
+            </div>
 
-        <!-- Nhóm: KHÁM PHÁ -->
-        <div class="sidebar-group">
-            <div class="sidebar-label">Khám phá</div>
-            <a href="#" class="sidebar-item" data-nav="topFreelancer" id="navTopFreelancer">
-                <span class="item-icon"><i data-lucide="award" style="width:18px;height:18px;"></i></span>
-                Freelancer nổi bật
-            </a>
-            <a href="#" class="sidebar-item" data-nav="leaderboard" id="navLeaderboard">
-                <span class="item-icon"><i data-lucide="bar-chart-3" style="width:18px;height:18px;"></i></span>
-                Bảng xếp hạng
-            </a>
-            <a href="#" class="sidebar-item" data-nav="blog" id="navBlog">
-                <span class="item-icon"><i data-lucide="book-open" style="width:18px;height:18px;"></i></span>
-                Blog & Hướng dẫn
-            </a>
-        </div>
+            <!-- Nhóm: KHÁM PHÁ -->
+            <div class="sidebar-group">
+                <div class="sidebar-label">Khám phá</div>
 
-        <!-- Nút Đăng việc mới -->
-        <div class="sidebar-bottom">
-            <button class="btn-post-job" id="btnPostJob">
-                <i data-lucide="plus" style="width:18px;height:18px;"></i>
-                Đăng việc mới
-            </button>
-        </div>
-    </aside>
+                <a href="#" class="sidebar-item" data-nav="blog" id="navBlog">
+                    <span class="item-icon"><i data-lucide="book-open" style="width:18px;height:18px;"></i></span>
+                    Blog & Hướng dẫn
+                </a>
+            </div>
+
+            <!-- Nút Đăng việc mới -->
+
+        </aside>
+    }
 
     <!-- ============================================
          VÙNG NỘI DUNG CHÍNH + CỘT PHẢI
          ============================================ -->
     <div class="main-content-wrapper">
-
-        <!-- ============================================
-             3. CỘT GIỮA - NỘI DUNG CHÍNH
-             ============================================ -->
-        <main class="main-content" id="mainContent">
-
-            <!-- === Banner chào mừng === -->
-            <section class="welcome-banner" id="welcomeBanner">
-                <div class="banner-text">
-                    <h1>Kết nối kỹ năng sinh viên<br/>Với công việc bạn cần</h1>
-                    <p>Việc nhỏ hôm nay – Thu nhập mỗi ngày</p>
-                    <div class="banner-actions">
-                        <button class="btn-primary-main" id="btnFindJobNow">
-                            <i data-lucide="search" style="width:16px;height:16px;"></i>
-                            Tìm việc ngay
-                        </button>
-                        <button class="btn-outline-main" id="btnPostJobBanner">
-                            <i data-lucide="plus-circle" style="width:16px;height:16px;"></i>
-                            Đăng việc
-                        </button>
-                    </div>
-                </div>
-                <div class="banner-illustration">
-                    <img src="~/images/student_working.png" alt="Sinh viên làm việc với laptop" />
-                </div>
-            </section>
-
-            <!-- === Danh mục phổ biến === -->
-            <section id="popularCategories">
-                <div class="section-header">
-                    <h2 class="section-title">Danh mục phổ biến</h2>
-                    <a href="#" class="section-link">
-                        Xem tất cả <i data-lucide="chevron-right" style="width:14px;height:14px;"></i>
-                    </a>
-                </div>
-                <div class="categories-grid">
-                    <!-- Thiết kế -->
-                    <div class="category-card animate-in" data-category="Thiết kế">
-                        <div class="category-icon">
-                            <i data-lucide="palette" style="width:24px;height:24px;"></i>
-                        </div>
-                        <div class="category-name">Thiết kế</div>
-                        <div class="category-count">(1200+)</div>
-                    </div>
-                    <!-- Làm slide -->
-                    <div class="category-card animate-in" data-category="Làm slide">
-                        <div class="category-icon">
-                            <i data-lucide="presentation" style="width:24px;height:24px;"></i>
-                        </div>
-                        <div class="category-name">Làm slide</div>
-                        <div class="category-count">(860+)</div>
-                    </div>
-                    <!-- Dịch thuật -->
-                    <div class="category-card animate-in" data-category="Dịch thuật">
-                        <div class="category-icon">
-                            <i data-lucide="languages" style="width:24px;height:24px;"></i>
-                        </div>
-                        <div class="category-name">Dịch thuật</div>
-                        <div class="category-count">(640+)</div>
-                    </div>
-                    <!-- Viết content -->
-                    <div class="category-card animate-in" data-category="Viết content">
-                        <div class="category-icon">
-                            <i data-lucide="pen-tool" style="width:24px;height:24px;"></i>
-                        </div>
-                        <div class="category-name">Viết content</div>
-                        <div class="category-count">(530+)</div>
-                    </div>
-                    <!-- Code web -->
-                    <div class="category-card animate-in" data-category="Code web">
-                        <div class="category-icon">
-                            <i data-lucide="code-2" style="width:24px;height:24px;"></i>
-                        </div>
-                        <div class="category-name">Code web</div>
-                        <div class="category-count">(460+)</div>
-                    </div>
-                    <!-- Edit video -->
-                    <div class="category-card animate-in" data-category="Edit video">
-                        <div class="category-icon">
-                            <i data-lucide="video" style="width:24px;height:24px;"></i>
-                        </div>
-                        <div class="category-name">Edit video</div>
-                        <div class="category-count">(380+)</div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- === Danh sách việc làm mới nhất === -->
-            <section id="latestJobs">
-                <div class="jobs-header">
-                    <h2 class="section-title">Việc làm mới nhất</h2>
-                    <div class="jobs-filters">
-                        <select class="filter-select" id="filterCategory">
-                            <option>Tất cả danh mục</option>
-                            <option>Thiết kế</option>
-                            <option>Dịch thuật</option>
-                            <option>Làm slide</option>
-                            <option>Viết content</option>
-                            <option>Code web</option>
-                            <option>Edit video</option>
-                        </select>
-                        <select class="filter-select" id="filterSort">
-                            <option>Mới nhất</option>
-                            <option>Giá cao nhất</option>
-                            <option>Sắp hết hạn</option>
-                        </select>
+        @if (User.IsInRole("Admin"))
+        {
+            <!-- ============================================
+                 3C. CỘT GIỮA - NỘI DUNG ADMIN
+                 ============================================ -->
+            <main class="main-content" style="max-width: 100%; padding: 24px;" id="mainContent">
+                <!-- Welcome Header -->
+                <div class="welcome-box-business" style="padding: 24px;">
+                    <div>
+                        <h1 class="welcome-title">Xin chào, Admin J4S 👋</h1>
+                        <p class="welcome-desc">Chào mừng quay lại trung tâm quản trị hệ thống. Kiểm soát bảo mật, người dùng và giao dịch.</p>
                     </div>
                 </div>
 
-                <!-- Dynamic Job Feed Container -->
-                <div id="jobFeedContainer">
-                    @{
-                        var iconMap = new Dictionary<string, (string cls, string icon)> {
-                            ["Design"] = ("design", "image"),
-                            ["Translation"] = ("translate", "file-text"),
-                            ["Slides"] = ("slide", "monitor"),
-                            ["Content"] = ("content", "pen-tool"),
-                            ["Code"] = ("code", "code-2"),
-                            ["Video"] = ("video", "video")
-                        };
-                    }
-                    @foreach (var job in Model.Jobs)
-                    {
-                        var info = iconMap.GetValueOrDefault(job.Category, ("design", "briefcase"));
-                        var budgetFormatted = string.Format("{0:N0} đ", job.Budget);
-                        var savedClass = job.IsSaved ? "saved" : "";
-                        var bookmarkIcon = job.IsSaved ? "bookmark-check" : "bookmark";
-                        <div class="job-card animate-in" data-job-id="@job.Id">
-                            <div class="job-icon @info.Item1">
-                                <i data-lucide="@info.Item2" style="width:22px;height:22px;"></i>
-                            </div>
-                            <div class="job-info">
-                                <h3 class="job-title" data-job-id="@job.Id">@job.Title</h3>
-                                <p class="job-desc">@job.Description</p>
-                                <div class="job-tags">
-                                    @foreach (var tag in job.Tags)
-                                    {
-                                        <span class="job-tag">@tag</span>
-                                    }
-                                </div>
-                            </div>
-                            <div class="job-meta">
-                                <span class="job-price">@budgetFormatted</span>
-                                <span class="job-deadline">@job.Deadline</span>
-                                <span class="job-proposals">@job.ApplicantsCount đề xuất@(job.IsApplied ? " " : "")@if (job.IsApplied) {<span class="applied-badge">Đã ứng tuyển</span>}</span>
-                            </div>
-                            <button class="job-bookmark @savedClass" data-job-id="@job.Id" aria-label="Lưu việc">
-                                <i data-lucide="@bookmarkIcon" style="width:18px;height:18px;"></i>
+                <!-- Stats grid -->
+                <div class="admin-stats-grid">
+                    <div class="admin-stat-card">
+                        <div class="admin-stat-icon indigo"><i data-lucide="users"></i></div>
+                        <div>
+                            <div class="admin-stat-val" id="statUsers">--</div>
+                            <div class="admin-stat-label">Tổng người dùng</div>
+                        </div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <div class="admin-stat-icon emerald"><i data-lucide="file-text"></i></div>
+                        <div>
+                            <div class="admin-stat-val" id="statJobs">--</div>
+                            <div class="admin-stat-label">Tổng tin tuyển dụng</div>
+                        </div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <div class="admin-stat-icon amber"><i data-lucide="briefcase"></i></div>
+                        <div>
+                            <div class="admin-stat-val" id="statContracts">--</div>
+                            <div class="admin-stat-label">Dự án/Hợp đồng</div>
+                        </div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <div class="admin-stat-icon rose"><i data-lucide="wallet"></i></div>
+                        <div>
+                            <div class="admin-stat-val" id="statVolume">--</div>
+                            <div class="admin-stat-label">Tổng số dư ví</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main dynamic section -->
+                <div class="admin-section" id="adminMainSection">
+                    <div class="admin-section-header">
+                        <h2 class="admin-section-title" id="adminSectionTitle">Tổng quan hệ thống</h2>
+                    </div>
+                    <div id="adminSectionBody" style="min-height: 200px;">
+                        <!-- Table or details rendered by JS -->
+                    </div>
+                </div>
+            </main>
+        }
+        else if (User.IsInRole("Business"))
+        {
+            <!-- ============================================
+                 3A. CỘT GIỮA - NỘI DUNG DOANH NGHIỆP
+                 ============================================ -->
+            <main class="main-content" id="mainContent">
+                 <!-- Welcome Banner -->
+                 <section class="welcome-box-business">
+                     <div class="welcome-text-side">
+                         <span class="welcome-subtitle">Chào mừng trở lại,</span>
+                         <h1 class="welcome-title">@Model.CurrentUserName 👋</h1>
+                         <p class="welcome-desc">Quản lý tuyển dụng hiệu quả – Tìm đúng người, đúng vị trí</p>
+                         <div class="welcome-actions-business">
+                             <button class="btn-indigo-solid" id="btnPostJobBusiness"><i data-lucide="plus" style="width:18px;height:18px;"></i> Đăng tin tuyển dụng</button>
+                             <button class="btn-indigo-outline" id="btnSearchCandidatesBusiness"><i data-lucide="search" style="width:18px;height:18px;"></i> Tìm hồ sơ ứng viên</button>
+                         </div>
+                     </div>
+                     <div class="welcome-illustration-business">
+                         <img src="~/images/business_illustration.png" alt="Recruitment Illustration" />
+                     </div>
+                 </section>
+
+                 <!-- Stat Cards Row -->
+                 <section class="business-stats-grid">
+                     <div class="business-stat-card">
+                         <div class="business-stat-icon blue">
+                             <i data-lucide="file-text" style="width:24px;height:24px;"></i>
+                         </div>
+                         <div>
+                             <div class="business-stat-val">@Model.BusinessActiveJobsCount</div>
+                             <div class="business-stat-label">Tin đang hiển thị</div>
+                             <div class="business-stat-sub" style="color: #ef4444; font-weight: 600;">@Model.BusinessRecentJobsSoonExpiringCount tin sắp hết hạn</div>
+                         </div>
+                     </div>
+                     <div class="business-stat-card">
+                         <div class="business-stat-icon teal">
+                             <i data-lucide="users" style="width:24px;height:24px;"></i>
+                         </div>
+                         <div>
+                             <div class="business-stat-val">@Model.BusinessNewApplicantsCount</div>
+                             <div class="business-stat-label">Ứng viên mới</div>
+                             <div class="business-stat-sub" style="color: #0d9488; font-weight: 600;">Trong 7 ngày qua</div>
+                         </div>
+                     </div>
+                     <div class="business-stat-card">
+                         <div class="business-stat-icon orange">
+                             <i data-lucide="copy" style="width:24px;height:24px;"></i>
+                         </div>
+                         <div>
+                             <div class="business-stat-val">@Model.BusinessTotalApplicantsCount</div>
+                             <div class="business-stat-label">Tổng số ứng viên</div>
+                             <div class="business-stat-sub">Tất cả tin đăng</div>
+                         </div>
+                     </div>
+                 </section>
+
+                 <!-- Latest Candidates List -->
+                 <section class="candidates-section">
+                     <div class="candidates-header">
+                         <h2 class="candidates-title">Ứng viên mới nhất</h2>
+                         <a href="#" class="candidates-link" id="btnSeeAllCandidates">Xem tất cả <i data-lucide="chevron-down" style="width:14px;height:14px;"></i></a>
+                     </div>
+                     <div class="candidates-list">
+                         @if (Model.BusinessRecentApplicants.Count == 0)
+                         {
+                             <div class="text-center py-4 text-muted w-100">
+                                 <p class="mb-0">Chưa có ứng viên mới ứng tuyển.</p>
+                             </div>
+                         }
+                         else
+                         {
+                             @foreach (var candidate in Model.BusinessRecentApplicants)
+                             {
+                                 var gradient = avatarGradients[candidate.Id % avatarGradients.Length];
+                                 <div class="candidate-item">
+                                     <div class="candidate-left">
+                                         <div class="candidate-avatar" style="background: @(string.IsNullOrEmpty(candidate.AvatarUrl) ? gradient : "none"); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; overflow: hidden;">
+                                             @if (!string.IsNullOrEmpty(candidate.AvatarUrl))
+                                             {
+                                                 <img src="@candidate.AvatarUrl" style="width: 100%; height: 100%; object-fit: cover;" />
+                                             }
+                                             else
+                                             {
+                                                 @candidate.Initials
+                                             }
+                                         </div>
+                                         <div>
+                                             <div class="candidate-name">
+                                                 @candidate.FullName 
+                                                 @if (candidate.MatchLevel == "match-high")
+                                                 {
+                                                     <span class="candidate-badge match-high">Phù hợp cao</span>
+                                                 }
+                                                 else
+                                                 {
+                                                     <span class="candidate-badge match-medium">Phù hợp trung bình</span>
+                                                 }
+                                             </div>
+                                             <div class="candidate-role">@candidate.Role</div>
+                                         </div>
+                                     </div>
+                                     <div class="candidate-right">
+                                         <span class="candidate-time">@candidate.TimeAgo</span>
+                                         <button class="btn-view-profile-sm" onclick="showToast('🔍 Đang hiển thị thông tin ứng viên @Html.Raw(System.Web.HttpUtility.JavaScriptStringEncode(candidate.FullName))...', 'info')">Xem hồ sơ</button>
+                                     </div>
+                                 </div>
+                             }
+                         }
+                     </div>
+                 </section>
+             </main>
+
+             <!-- ============================================
+                  4A. CỘT PHẢI - THÔNG TIN DOANH NGHIỆP
+                  ============================================ -->
+              <aside class="right-sidebar" id="rightSidebar">
+                  @if (Model.BusinessRecentJobs.Any())
+                  {
+                      <!-- Recent Postings Widget -->
+                      <div class="recent-posts-widget">
+                          <div class="recent-posts-header">
+                              <h3 class="recent-posts-title">Tin đăng gần đây</h3>
+                              <a href="#" class="candidates-link" id="btnSeeAllJobs" style="font-size:0.8rem;">Xem tất cả <i data-lucide="chevron-down" style="width:12px;height:12px;"></i></a>
+                          </div>
+                          <div class="recent-posts-list">
+                              @foreach (var rJob in Model.BusinessRecentJobs)
+                              {
+                                  // Determine Lucide icon for category
+                                  var iconName = "briefcase";
+                                  var categoryLower = rJob.Category.ToLower();
+                                  if (categoryLower.Contains("code") || categoryLower.Contains("web")) iconName = "code-2";
+                                  else if (categoryLower.Contains("design") || categoryLower.Contains("thiết kế") || categoryLower.Contains("palette")) iconName = "palette";
+                                  else if (categoryLower.Contains("video") || categoryLower.Contains("edit")) iconName = "video";
+                                  else if (categoryLower.Contains("content") || categoryLower.Contains("viết")) iconName = "pen-tool";
+                                  else if (categoryLower.Contains("slide") || categoryLower.Contains("trình bày")) iconName = "presentation";
+                                  else if (categoryLower.Contains("dịch") || categoryLower.Contains("translate") || categoryLower.Contains("ngôn ngữ")) iconName = "languages";
+
+                                  var statusText = "Đang hiển thị";
+                                  var statusClass = "active";
+                                  if (rJob.Status == "Warning")
+                                  {
+                                      statusText = "Sắp hết hạn";
+                                      statusClass = "warning";
+                                  }
+                                  else if (rJob.Status == "Paused")
+                                  {
+                                      statusText = "Tạm dừng";
+                                      statusClass = "paused";
+                                  }
+
+                                  <div class="recent-post-item">
+                                      <div class="recent-post-left">
+                                          <div class="recent-post-icon"><i data-lucide="@iconName" style="width:16px;height:16px;"></i></div>
+                                          <div class="recent-post-info">
+                                              <div class="recent-post-jobtitle">@rJob.Title</div>
+                                              <div class="recent-post-candidates" style="display:flex; gap: 8px; color: #64748b; font-size: 0.75rem;">
+                                                  <span><i data-lucide="eye" style="width:12px;height:12px;margin-bottom:-2px"></i> @rJob.ViewCount</span>
+                                                  <span><i data-lucide="users" style="width:12px;height:12px;margin-bottom:-2px"></i> @rJob.TotalApplicantsCount</span>
+                                                  <span style="color: #0d9488;">(Mới: @rJob.NewApplicantsCount)</span>
+                                              </div>
+                                          </div>
+                                      </div>
+                                      <span class="recent-post-status @statusClass">@statusText</span>
+                                  </div>
+                              }
+                          </div>
+                          <button class="btn-sidebar-outline" id="btnManageJobsSidebar">Quản lý tin đăng</button>
+                      </div>
+                  }
+
+                  <!-- Current Service Package Widget -->
+                  <div class="service-pkg-widget">
+                      <h3 class="service-pkg-title">Gói dịch vụ hiện tại</h3>
+                      <div class="service-pkg-card" id="sidebarServicePkgCard">
+                          @if (Model.ActivePackageName == "Gói Premium")
+                          {
+                              var premiumProgress = Math.Min(100, Model.ActivePackageUsedCount * 100 / 20);
+                              <div class="service-pkg-header">
+                                  <span class="service-pkg-name"><i data-lucide="star" style="width:18px;height:18px;color:#f59e0b;fill:#f59e0b;"></i> Gói Premium</span>
+                                  <span class="service-pkg-status active" style="background:#d1fae5; color:#065f46; padding:2px 8px; border-radius:12px; font-size:0.75rem; font-weight:600;">Đang hoạt động</span>
+                              </div>
+                              <div class="service-pkg-expiry">Hiệu lực đến: @Model.ActivePackageExpiry</div>
+                              <div class="service-pkg-bullets">
+                                  <div class="service-pkg-bullet"><i data-lucide="check" style="width:14px;height:14px;"></i> <span>Đăng tối đa 20 tin tuyển dụng</span></div>
+                                  <div class="service-pkg-bullet"><i data-lucide="check" style="width:14px;height:14px;"></i> <span>Hiển thị tin ưu tiên</span></div>
+                                  <div class="service-pkg-bullet" style="padding-left: 22px;"><span>Truy cập hồ sơ ứng viên không giới hạn</span></div>
+                                  <div class="service-pkg-bullet"><i data-lucide="check" style="width:14px;height:14px;"></i> <span>Hỗ trợ tuyển dụng ưu tiên</span></div>
+                              </div>
+                              <div class="service-pkg-usage">
+                                  <span>Đã sử dụng</span>
+                                  <span>@Model.ActivePackageUsedCount/20 tin</span>
+                              </div>
+                              <div class="service-pkg-progress-bar">
+                                  <div class="service-pkg-progress-fill" style="width: @(premiumProgress)%;"></div>
+                              </div>
+                          }
+                          else if (Model.ActivePackageName == "Gói VIP")
+                          {
+                              var vipProgress = Math.Min(100, Model.ActivePackageUsedCount * 100 / 5);
+                              <div class="service-pkg-header">
+                                  <span class="service-pkg-name"><i data-lucide="star" style="width:18px;height:18px;color:#f59e0b;fill:#f59e0b;"></i> Gói VIP</span>
+                                  <span class="service-pkg-status active" style="background:#fef3c7; color:#92400e; padding:2px 8px; border-radius:12px; font-size:0.75rem; font-weight:600;">Đang hoạt động</span>
+                              </div>
+                              <div class="service-pkg-expiry">Hiệu lực đến: @Model.ActivePackageExpiry</div>
+                              <div class="service-pkg-bullets">
+                                  <div class="service-pkg-bullet"><i data-lucide="check" style="width:14px;height:14px;"></i> <span>Đăng tối đa 5 tin tuyển dụng</span></div>
+                                  <div class="service-pkg-bullet"><i data-lucide="check" style="width:14px;height:14px;"></i> <span>Hiển thị nhãn VIP nổi bật</span></div>
+                                  <div class="service-pkg-bullet"><i data-lucide="check" style="width:14px;height:14px;"></i> <span>Duyệt tin nhanh trong 1 giờ</span></div>
+                              </div>
+                              <div class="service-pkg-usage">
+                                  <span>Đã sử dụng</span>
+                                  <span>@Model.ActivePackageUsedCount/5 tin</span>
+                              </div>
+                              <div class="service-pkg-progress-bar">
+                                  <div class="service-pkg-progress-fill" style="width: @(vipProgress)%;"></div>
+                              </div>
+                          }
+                          else
+                          {
+                              var freeProgress = Model.ActivePackageUsedCount >= 1 ? 100 : 0;
+                              <div class="service-pkg-header">
+                                  <span class="service-pkg-name"><i data-lucide="briefcase" style="width:18px;height:18px;color:#64748b;"></i> Gói Thường</span>
+                                  <span class="service-pkg-status text-muted" style="background:#f1f5f9; padding:2px 8px; border-radius:12px; font-size:0.75rem; font-weight:600;">Mặc định</span>
+                              </div>
+                              <div class="service-pkg-expiry">Hiệu lực: Vĩnh viễn</div>
+                              <div class="service-pkg-bullets">
+                                  <div class="service-pkg-bullet"><i data-lucide="check" style="width:14px;height:14px;"></i> <span>Đăng tối đa 1 tin tuyển dụng</span></div>
+                                  <div class="service-pkg-bullet"><i data-lucide="check" style="width:14px;height:14px;"></i> <span>Hiển thị chuẩn trên trang chủ</span></div>
+                              </div>
+                              <div class="service-pkg-usage">
+                                  <span>Đã sử dụng</span>
+                                  <span>@Model.ActivePackageUsedCount/1 tin</span>
+                              </div>
+                              <div class="service-pkg-progress-bar">
+                                  <div class="service-pkg-progress-fill" style="width: @(freeProgress)%;"></div>
+                              </div>
+                          }
+                      </div>
+                  </div>
+             </aside>
+        }
+        else
+        {
+            <!-- ============================================
+                 3B. CỘT GIỮA - NỘI DUNG MẶC ĐỊNH / FREELANCER
+                 ============================================ -->
+            <main class="main-content" id="mainContent">
+
+                <!-- === Banner chào mừng === -->
+                <section class="welcome-banner" id="welcomeBanner">
+                    <div class="banner-text">
+                        <h1>Kết nối kỹ năng sinh viên<br/>Với công việc bạn cần</h1>
+                        <p>Việc nhỏ hôm nay – Thu nhập mỗi ngày</p>
+                        <div class="banner-actions">
+                            <button class="btn-primary-main" id="btnFindJobNow" data-bs-toggle="modal" data-bs-target="#jobSearchModal">
+                                <i data-lucide="search" style="width:16px;height:16px;"></i>
+                                Tìm việc ngay
                             </button>
+
                         </div>
-                    }
-                </div>
+                    </div>
+                    <div class="banner-illustration">
+                        <img src="~/images/student_working.png" alt="Sinh viên làm việc với laptop" />
+                    </div>
+                </section>
 
-                <!-- Nút Xem thêm -->
-                <button class="view-more-btn" id="btnViewMore">
-                    Xem thêm việc làm
-                    <i data-lucide="chevron-down" style="width:16px;height:16px;"></i>
-                </button>
-            </section>
-        </main>
-
-        <!-- ============================================
-             4. CỘT PHẢI - THÔNG TIN TIỆN ÍCH
-             ============================================ -->
-        <aside class="right-sidebar" id="rightSidebar">
-
-            <!-- === Box 1: Gợi ý dành cho bạn bởi AI === -->
-            <div class="widget-card" id="aiSuggestions">
-                <div class="widget-header">
-                    <h3 class="widget-title">
-                        <span class="ai-icon">✨</span>
-                        Gợi ý dành cho bạn bởi AI
-                    </h3>
-                </div>
-
-                @for (int i = 0; i < Model.TopFreelancers.Count; i++)
-                {
-                    var freelancer = Model.TopFreelancers[i];
-                    var isStar = i == 0;
-                    var gradient = avatarGradients[i % avatarGradients.Length];
-                    var initials = string.Join("", freelancer.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(w => w[0]));
-                    if (initials.Length > 2) initials = initials[..2];
-
-                    <div class="freelancer-item @(isStar ? "star" : "")">
-                        <div class="freelancer-avatar" style="background: @gradient;">
-                            @if (!string.IsNullOrEmpty(freelancer.Avatar))
-                            {
-                                <img src="@freelancer.Avatar" alt="@freelancer.Name" />
-                            }
-                            else
-                            {
-                                @initials
-                            }
-                        </div>
-                        <div class="freelancer-info">
-                            <div class="freelancer-name">@freelancer.Name</div>
-                            <div class="freelancer-role">@freelancer.Skill</div>
-                            <div class="freelancer-rating">
-                                <span class="star">★</span> @freelancer.Rating.ToString("F1") (@freelancer.ReviewsCount)
+                <!-- === Danh mục phổ biến === -->
+                <section id="popularCategories">
+                    <div class="section-header">
+                        <h2 class="section-title">Danh mục phổ biến</h2>
+                        <a href="#" class="section-link">
+                            Xem tất cả <i data-lucide="chevron-right" style="width:14px;height:14px;"></i>
+                        </a>
+                    </div>
+                    <div class="categories-grid">
+                        <!-- Thiết kế -->
+                        <div class="category-card animate-in" data-category="Thiết kế">
+                            <div class="category-icon">
+                                <i data-lucide="palette" style="width:24px;height:24px;"></i>
                             </div>
+                            <div class="category-name">Thiết kế</div>
+                            <div class="category-count">(1200+)</div>
                         </div>
-                        <div class="freelancer-action">
-                            <span class="match-badge">@freelancer.MatchPercentage</span>
-                            <button class="btn-view-profile">Xem hồ sơ</button>
+                        <!-- Làm slide -->
+                        <div class="category-card animate-in" data-category="Làm slide">
+                            <div class="category-icon">
+                                <i data-lucide="presentation" style="width:24px;height:24px;"></i>
+                            </div>
+                            <div class="category-name">Làm slide</div>
+                            <div class="category-count">(860+)</div>
                         </div>
+                        <!-- Dịch thuật -->
+                        <div class="category-card animate-in" data-category="Dịch thuật">
+                            <div class="category-icon">
+                                <i data-lucide="languages" style="width:24px;height:24px;"></i>
+                            </div>
+                            <div class="category-name">Dịch thuật</div>
+                            <div class="category-count">(640+)</div>
+                        </div>
+                        <!-- Viết content -->
+                        <div class="category-card animate-in" data-category="Viết content">
+                            <div class="category-icon">
+                                <i data-lucide="pen-tool" style="width:24px;height:24px;"></i>
+                            </div>
+                            <div class="category-name">Viết content</div>
+                            <div class="category-count">(530+)</div>
+                        </div>
+                        <!-- Code web -->
+                        <div class="category-card animate-in" data-category="Code web">
+                            <div class="category-icon">
+                                <i data-lucide="code-2" style="width:24px;height:24px;"></i>
+                            </div>
+                            <div class="category-name">Code web</div>
+                            <div class="category-count">(460+)</div>
+                        </div>
+                        <!-- Edit video -->
+                        <div class="category-card animate-in" data-category="Edit video">
+                            <div class="category-icon">
+                                <i data-lucide="video" style="width:24px;height:24px;"></i>
+                            </div>
+                            <div class="category-name">Edit video</div>
+                            <div class="category-count">(380+)</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- === Danh sách việc làm mới nhất === -->
+                <section id="latestJobs">
+                    <div class="jobs-header">
+                        <h2 class="section-title">Việc làm mới nhất</h2>
+                        <div class="jobs-filters">
+                            <select class="filter-select" id="filterCategory">
+                                <option>Tất cả danh mục</option>
+                                <option>Thiết kế</option>
+                                <option>Dịch thuật</option>
+                                <option>Làm slide</option>
+                                <option>Viết content</option>
+                                <option>Code web</option>
+                                <option>Edit video</option>
+                            </select>
+                            <select class="filter-select" id="filterSort">
+                                <option>Mới nhất</option>
+                                <option>Giá cao nhất</option>
+                                <option>Sắp hết hạn</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Job Feed Container -->
+                    <div id="jobFeedContainer">
+                        @{
+                            var iconMap = new Dictionary<string, (string cls, string icon)> {
+                                ["Design"] = ("design", "image"),
+                                ["Translation"] = ("translate", "file-text"),
+                                ["Slides"] = ("slide", "monitor"),
+                                ["Content"] = ("content", "pen-tool"),
+                                ["Code"] = ("code", "code-2"),
+                                ["Video"] = ("video", "video")
+                            };
+                        }
+                        @foreach (var job in Model.Jobs)
+                        {
+                            var info = iconMap.GetValueOrDefault(job.Category, ("design", "briefcase"));
+                            var budgetFormatted = string.Format("{0:N0} đ", job.Budget);
+                            var savedClass = job.IsSaved ? "saved" : "";
+                            var bookmarkIcon = job.IsSaved ? "bookmark-check" : "bookmark";
+                            <div class="job-card animate-in" data-job-id="@job.Id">
+                                <div class="job-icon @info.Item1">
+                                    <i data-lucide="@info.Item2" style="width:22px;height:22px;"></i>
+                                </div>
+                                <div class="job-info">
+                                    <h3 class="job-title" data-job-id="@job.Id">@job.Title</h3>
+                                    <p class="job-desc">@job.Description</p>
+                                    <div class="job-tags">
+                                        @foreach (var tag in job.Tags)
+                                        {
+                                            <span class="job-tag">@tag</span>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="job-meta">
+                                    <span class="job-price">@budgetFormatted</span>
+                                    <span class="job-deadline">@job.Deadline</span>
+                                    <span class="job-proposals">@job.ApplicantsCount đề xuất@(job.IsApplied ? " " : "")@if (job.IsApplied) {<span class="applied-badge">Đã ứng tuyển</span>}</span>
+                                </div>
+                                <button class="job-bookmark @savedClass" data-job-id="@job.Id" aria-label="Lưu việc">
+                                    <i data-lucide="@bookmarkIcon" style="width:18px;height:18px;"></i>
+                                </button>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Nút Xem thêm -->
+                    <button class="view-more-btn" id="btnViewMore">
+                        Xem thêm việc làm
+                        <i data-lucide="chevron-down" style="width:16px;height:16px;"></i>
+                    </button>
+                </section>
+            </main>
+
+            <!-- ============================================
+                 4B. CỘT PHẢI - THÔNG TIN MẶC ĐỊNH / FREELANCER
+                 ============================================ -->
+            <aside class="right-sidebar" id="rightSidebar">
+                @if (User.IsInRole("Student"))
+                {
+                    <!-- === Đã ứng tuyển === -->
+                    <div class="widget-card" id="studentAppliedJobs">
+                        <div class="widget-header">
+                            <h3 class="widget-title">
+                                <span class="ai-icon"><i data-lucide="send" style="width:18px;height:18px;"></i></span>
+                                Đã ứng tuyển
+                            </h3>
+                        </div>
+                        @if (Model.StudentAppliedJobs.Count == 0)
+                        {
+                            <div style="padding: 16px; text-align: center; color: #64748b; font-size: 0.85rem;">Chưa có việc làm nào</div>
+                        }
+                        else
+                        {
+                            @foreach (var bid in Model.StudentAppliedJobs)
+                            {
+                                var statusColor = bid.Status == "Pending" ? "#eab308" : (bid.Status == "Accepted" ? "#10b981" : "#ef4444");
+                                var statusText = bid.Status == "Pending" ? "Đang xét duyệt" : (bid.Status == "Accepted" ? "Được nhận" : "Từ chối");
+                                <div style="padding: 12px; border-bottom: 1px solid #f1f5f9;">
+                                    <div style="font-weight: 600; font-size: 0.9rem; color: #1e293b; margin-bottom: 4px;">@bid.JobTitle</div>
+                                    <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 6px;">@bid.CompanyName - @bid.AppliedAt</div>
+                                    <div style="font-size: 0.75rem; font-weight: 600; color: @statusColor;">Trạng thái: @statusText</div>
+                                </div>
+                            }
+                            <a href="#" style="display: block; text-align: center; font-size: 0.85rem; color: #0ea5e9; margin-top: 12px; text-decoration: none; font-weight: 600;">Xem tất cả</a>
+                        }
+                    </div>
+
+                    <!-- === Dự án đang làm === -->
+                    <div class="widget-card" id="studentActiveContracts" style="margin-top: 24px;">
+                        <div class="widget-header">
+                            <h3 class="widget-title">
+                                <span class="ai-icon"><i data-lucide="folder-open" style="width:18px;height:18px;"></i></span>
+                                Dự án đang làm
+                            </h3>
+                        </div>
+                        @if (Model.StudentActiveContracts.Count == 0)
+                        {
+                            <div style="padding: 16px; text-align: center; color: #64748b; font-size: 0.85rem;">Chưa có dự án nào</div>
+                        }
+                        else
+                        {
+                            @foreach (var contract in Model.StudentActiveContracts)
+                            {
+                                <div style="padding: 12px; border-bottom: 1px solid #f1f5f9;">
+                                    <div style="font-weight: 600; font-size: 0.9rem; color: #1e293b; margin-bottom: 4px;">@contract.JobTitle</div>
+                                    <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 6px;">@contract.CompanyName</div>
+                                    <div style="font-size: 0.8rem; color: #ef4444; font-weight: 600; margin-bottom: 8px;"><i data-lucide="clock" style="width:12px;height:12px;margin-bottom:-2px;"></i> Deadline: @contract.Deadline</div>
+                                    <div style="display: flex; gap: 8px;">
+                                        <button class="btn btn-sm btn-outline-primary" style="flex:1; font-size: 0.75rem; border-radius: 8px;" onclick="window.location.href='/Message?userId=@contract.BusinessUserId'">Trao đổi</button>
+                                        <button class="btn btn-sm btn-primary" style="flex:1; font-size: 0.75rem; border-radius: 8px;">Gửi SP</button>
+                                    </div>
+                                </div>
+                            }
+                        }
                     </div>
                 }
 
-                <a href="#" class="section-link" style="justify-content:flex-end; margin-top:12px;">
-                    Xem tất cả gợi ý <i data-lucide="chevron-right" style="width:14px;height:14px;"></i>
-                </a>
-            </div>
-
-            <!-- === Box 2: Tổng quan thu nhập === -->
-            <div class="income-widget" id="incomeOverview">
-                <div class="income-header">
-                    <h3>Tổng quan thu nhập</h3>
-                    <a href="#" class="widget-link">Xem chi tiết →</a>
-                </div>
-
-                <div class="income-stats">
-                    <div class="income-stat-item">
-                        <div class="label">Thu nhập tháng này</div>
-                        <div class="value">@string.Format("{0:N0} đ", Model.TotalEarnings)</div>
-                        <div class="change">+12% so với tháng trước</div>
+                <!-- === Box 1: Gợi ý dành cho bạn bởi AI === -->
+                <div class="widget-card" id="aiSuggestions">
+                    <div class="widget-header">
+                        <h3 class="widget-title">
+                            <span class="ai-icon">✨</span>
+                            Gợi ý dành cho bạn bởi AI
+                        </h3>
                     </div>
-                    <div class="income-stat-item" style="text-align:right;">
-                        <div class="label">Đã hoàn thành</div>
-                        <div class="value compact">@Model.CompletedJobsCount dự án</div>
-                        <div class="change-note">+2 dự án</div>
+
+                    @for (int i = 0; i < Model.TopFreelancers.Count; i++)
+                    {
+                        var freelancer = Model.TopFreelancers[i];
+                        var isStar = i == 0;
+                        var gradient = avatarGradients[i % avatarGradients.Length];
+                        var initials = string.Join("", freelancer.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(w => w[0]));
+                        if (initials.Length > 2) initials = initials[..2];
+
+                        <div class="freelancer-item @(isStar ? "star" : "")">
+                            <div class="freelancer-avatar" style="background: @gradient;">
+                                @if (!string.IsNullOrEmpty(freelancer.Avatar))
+                                {
+                                    <img src="@freelancer.Avatar" alt="@freelancer.Name" />
+                                }
+                                else
+                                {
+                                    @initials
+                                }
+                            </div>
+                            <div class="freelancer-info">
+                                <div class="freelancer-name">@freelancer.Name</div>
+                                <div class="freelancer-role">@freelancer.Skill</div>
+                                <div class="freelancer-rating">
+                                    <span class="star">★</span> @freelancer.Rating.ToString("F1") (@freelancer.ReviewsCount)
+                                </div>
+                            </div>
+                            <div class="freelancer-action">
+                                <span class="match-badge">@freelancer.MatchPercentage</span>
+                                <button class="btn-view-profile">Xem hồ sơ</button>
+                            </div>
+                        </div>
+                    }
+
+                    <a href="#" class="section-link" style="justify-content:flex-end; margin-top:12px;">
+                        Xem tất cả gợi ý <i data-lucide="chevron-right" style="width:14px;height:14px;"></i>
+                    </a>
+                </div>
+
+                @if (false)
+                {
+                    <!-- === Box 2: Tổng quan thu nhập === -->
+                    <div class="income-widget" id="incomeOverview">
+                        <div class="income-header">
+                            <h3>Tổng quan thu nhập</h3>
+                            <a href="#" class="widget-link">Xem chi tiết →</a>
+                        </div>
+
+                        <div class="income-stats">
+                            <div class="income-stat-item">
+                                <div class="label">Thu nhập tháng này</div>
+                                <div class="value">@string.Format("{0:N0} đ", Model.TotalEarnings)</div>
+                                <div class="change">+12% so với tháng trước</div>
+                            </div>
+                            <div class="income-stat-item" style="text-align:right;">
+                                <div class="label">Đã hoàn thành</div>
+                                <div class="value compact">@Model.CompletedJobsCount dự án</div>
+                                <div class="change-note">+2 dự án</div>
+                            </div>
+                        </div>
+
+                        <div class="income-actions">
+                            <button class="income-action-btn" id="btnDeposit">
+                                <span class="action-icon"><i data-lucide="download" style="width:20px;height:20px;"></i></span>
+                                <span class="action-label">Nạp tiền</span>
+                            </button>
+                            <button class="income-action-btn" id="btnWithdraw">
+                                <span class="action-icon"><i data-lucide="upload" style="width:20px;height:20px;"></i></span>
+                                <span class="action-label">Rút tiền</span>
+                            </button>
+                            <button class="income-action-btn" id="btnHistory">
+                                <span class="action-icon"><i data-lucide="clock" style="width:20px;height:20px;"></i></span>
+                                <span class="action-label">Lịch sử GD</span>
+                            </button>
+                            <button class="income-action-btn" id="btnPromo">
+                                <span class="action-icon"><i data-lucide="gift" style="width:20px;height:20px;"></i></span>
+                                <span class="action-label">Ưu đãi</span>
+                            </button>
+                        </div>
                     </div>
-                </div>
 
-                <div class="income-actions">
-                    <button class="income-action-btn" id="btnDeposit">
-                        <span class="action-icon"><i data-lucide="download" style="width:20px;height:20px;"></i></span>
-                        <span class="action-label">Nạp tiền</span>
-                    </button>
-                    <button class="income-action-btn" id="btnWithdraw">
-                        <span class="action-icon"><i data-lucide="upload" style="width:20px;height:20px;"></i></span>
-                        <span class="action-label">Rút tiền</span>
-                    </button>
-                    <button class="income-action-btn" id="btnHistory">
-                        <span class="action-icon"><i data-lucide="clock" style="width:20px;height:20px;"></i></span>
-                        <span class="action-label">Lịch sử GD</span>
-                    </button>
-                    <button class="income-action-btn" id="btnPromo">
-                        <span class="action-icon"><i data-lucide="gift" style="width:20px;height:20px;"></i></span>
-                        <span class="action-label">Ưu đãi</span>
-                    </button>
-                </div>
-            </div>
 
-            <!-- === Box 3: Banner bảng xếp hạng === -->
-            <div class="leaderboard-banner" id="leaderboardBanner">
-                <div class="leaderboard-content">
-                    <h3>Tham gia bảng xếp hạng</h3>
-                    <p>Nhận thưởng hấp dẫn mỗi tháng!</p>
-                    <button class="btn-leaderboard" id="btnLeaderboard">
-                        Xem ngay
-                        <i data-lucide="arrow-right" style="width:14px;height:14px;"></i>
-                    </button>
-                </div>
-                <img src="~/images/golden_trophy.png" alt="Cúp vàng bảng xếp hạng" class="leaderboard-trophy-img" />
-            </div>
+                    <!-- === Box 3: Banner bảng xếp hạng === -->
+                    <div class="leaderboard-banner" id="leaderboardBanner">
+                        <div class="leaderboard-content">
+                            <h3>Tham gia bảng xếp hạng</h3>
+                            <p>Nhận thưởng hấp dẫn mỗi tháng!</p>
+                            <button class="btn-leaderboard" id="btnLeaderboard">
+                                Xem ngay
+                                <i data-lucide="arrow-right" style="width:14px;height:14px;"></i>
+                            </button>
+                        </div>
+                        <img src="~/images/golden_trophy.png" alt="Cúp vàng bảng xếp hạng" class="leaderboard-trophy-img" />
+                    </div>
+                }
 
-        </aside>
+            </aside>
+        }
     </div>
+
+    @if (User.IsInRole("Business"))
+    {
+        <!-- Post Job Modal -->
+        <div class="modal fade" id="postJobModal" tabindex="-1" aria-labelledby="postJobModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+                    <div class="modal-header" style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; border-radius: 12px 12px 0 0;">
+                        <h5 class="modal-title fw-bold text-dark" id="postJobModalLabel">Đăng tin tuyển dụng mới</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <form id="postJobForm">
+                            <div class="mb-3">
+                                <label for="jobTitle" class="form-label fw-semibold text-secondary">Tiêu đề công việc <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="jobTitle" name="title" required placeholder="VD: Thiết kế logo cho công ty XYZ">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="jobCategory" class="form-label fw-semibold text-secondary">Danh mục <span class="text-danger">*</span></label>
+                                <select class="form-select" id="jobCategory" name="category" required>
+                                    <option value="" disabled selected>Chọn danh mục</option>
+                                    <option value="Thiết kế">Thiết kế</option>
+                                    <option value="IT & Lập trình">IT & Lập trình</option>
+                                    <option value="Marketing">Marketing</option>
+                                    <option value="Viết lách & Dịch thuật">Viết lách & Dịch thuật</option>
+                                    <option value="Video & Animation">Video & Animation</option>
+                                    <option value="Khác">Khác</option>
+                                </select>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="jobBudget" class="form-label fw-semibold text-secondary">Ngân sách (VNĐ) <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" id="jobBudget" name="budget" required min="100000" step="10000" placeholder="VD: 500000">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="jobDeadline" class="form-label fw-semibold text-secondary">Hạn chót ứng tuyển <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="jobDeadline" name="deadline" required>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="jobDescription" class="form-label fw-semibold text-secondary">Mô tả công việc <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="jobDescription" name="description" rows="5" required placeholder="Mô tả chi tiết yêu cầu công việc..."></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer" style="border-top: 1px solid #e2e8f0; background: #f8fafc; border-radius: 0 0 12px 12px;">
+                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
+                        <button type="button" class="btn btn-primary rounded-pill px-4" id="btnSubmitJob" style="background: #4F46E5; border: none;">Đăng tin ngay</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 </div>
 
 <form id="logoutForm" asp-controller="Auth" asp-action="LogoutPost" method="post" class="d-none">
     @Html.AntiForgeryToken()
 </form>
 
-@section Scripts {
-    <script src="~/js/site.js" asp-append-version="true"></script>
+@if (!User.Identity.IsAuthenticated)
+{
     <script>
-        // Hamburger menu toggle
-        document.getElementById('menuToggle').addEventListener('click', function () {
-            document.getElementById('sidebar').classList.toggle('open');
-        });
+        document.addEventListener('click', function(e) {
+            // Cho phép click vào Đăng nhập, Đăng ký và Logo
+            if (e.target.closest('a[href="/Auth/Login"], a[href="/Auth/Register"], .j4s-brand')) {
+                return;
+            }
+            // Chặn click vào các thành phần tương tác và chuyển hướng
+            if (e.target.closest('a, button, input, select, .job-card, .category-card')) {
+                e.preventDefault();
+                e.stopPropagation();
+                window.location.href = '/Auth/Login';
+            }
+        }, true);
     </script>
 }
+
+@section Scripts {
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/notifications.js" asp-append-version="true"></script>
+    <script>
+        // Hamburger menu toggle
+        document.getElementById('menuToggle')?.addEventListener('click', function () {
+            document.getElementById('sidebar')?.classList.toggle('open');
+        });
+    </script>
+
+    @if (User.IsInRole("Business"))
+    {
+        <script>
+            window.businessActiveJobsCount = @Model.BusinessActiveJobsCount;
+            document.addEventListener('DOMContentLoaded', () => {
+                // Bind buttons for Business dashboard
+                document.getElementById('btnPostJobBusiness')?.addEventListener('click', () => {
+                    document.getElementById('btnPostJob')?.click();
+                });
+                document.getElementById('btnSearchCandidatesBusiness')?.addEventListener('click', () => {
+                    document.getElementById('navTopFreelancer')?.click();
+                });
+                document.getElementById('btnSeeAllCandidates')?.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    document.getElementById('navTopFreelancer')?.click();
+                });
+                document.getElementById('btnSeeAllJobs')?.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    document.getElementById('navProjects')?.click();
+                });
+                document.getElementById('btnManageJobsSidebar')?.addEventListener('click', () => {
+                    document.getElementById('navProjects')?.click();
+                });
+                document.getElementById('btnUpgradePackage')?.addEventListener('click', () => {
+                    document.getElementById('navWalletCurrent')?.click();
+                });
+
+                // Gói dịch vụ & Thanh toán toggle
+                document.getElementById('navWalletParent')?.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const submenu = document.getElementById('walletSubmenu');
+                    const chevron = this.querySelector('.submenu-chevron');
+                    if (submenu && chevron) {
+                        if (submenu.style.display === 'none') {
+                            submenu.style.display = 'flex';
+                            chevron.style.transform = 'rotate(180deg)';
+                        } else {
+                            submenu.style.display = 'none';
+                            chevron.style.transform = 'rotate(0deg)';
+                        }
+                    }
+                });
+            });
+
+            // --- Business Wallet & Payment Features Implementation ---
+            // --- Business Wallet & Payment Features Implementation ---
+            async function getWalletData() {
+                try {
+                    const res = await fetch('/Home/GetWalletInfo');
+                    const data = await res.json();
+                    if (data && data.success) {
+                        window.updateRightSidebarPackageWidget(
+                            data.activePackageName,
+                            data.activePackageExpiry,
+                            data.activePackageUsedCount,
+                            data.activePackageMaxCount
+                        );
+                    }
+                    return data;
+                } catch (e) {
+                    console.error('Error fetching wallet info:', e);
+                    return null;
+                }
+            }
+
+            window.updateRightSidebarPackageWidget = function(activePackageName, activePackageExpiry, activePackageUsedCount, activePackageMaxCount) {
+                const pkgCard = document.getElementById('sidebarServicePkgCard');
+                if (!pkgCard) return;
+
+                let contentHtml = '';
+                if (activePackageName === "Gói Premium") {
+                    const progress = Math.min(100, (activePackageUsedCount * 100) / 20);
+                    contentHtml = `
+                        <div class="service-pkg-header">
+                            <span class="service-pkg-name"><i data-lucide="star" style="width:18px;height:18px;color:#f59e0b;fill:#f59e0b;"></i> Gói Premium</span>
+                            <span class="service-pkg-status active" style="background:#d1fae5; color:#065f46; padding:2px 8px; border-radius:12px; font-size:0.75rem; font-weight:600;">Đang hoạt động</span>
+                        </div>
+                        <div class="service-pkg-expiry">Hiệu lực đến: ${activePackageExpiry}</div>
+                        <div class="service-pkg-bullets">
+                            <div class="service-pkg-bullet"><i data-lucide="check" style="width:14px;height:14px;"></i> <span>Đăng tối đa 20 tin tuyển dụng</span></div>
+                            <div class="service-pkg-bullet"><i data-lucide="check" style="width:14px;height:14px;"></i> <span>Hiển thị tin ưu tiên</span></div>
+                            <div class="service-pkg-bullet" style="padding-left: 22px;"><span>Truy cập hồ sơ ứng viên không giới hạn</span></div>
+                            <div class="service-pkg-bullet"><i data-lucide="check" style="width:14px;height:14px;"></i> <span>Hỗ trợ tuyển dụng ưu tiên</span></div>
+                        </div>
+                        <div class="service-pkg-usage">
+                            <span>Đã sử dụng</span>
+                            <span>${activePackageUsedCount}/20 tin</span>
+                        </div>
+                        <div class="service-pkg-progress-bar">
+                            <div class="service-pkg-progress-fill" style="width: ${progress}%;"></div>
+                        </div>
+                    `;
+                } else if (activePackageName === "Gói VIP") {
+                    const progress = Math.min(100, (activePackageUsedCount * 100) / 5);
+                    contentHtml = `
+                        <div class="service-pkg-header">
+                            <span class="service-pkg-name"><i data-lucide="star" style="width:18px;height:18px;color:#f59e0b;fill:#f59e0b;"></i> Gói VIP</span>
+                            <span class="service-pkg-status active" style="background:#fef3c7; color:#92400e; padding:2px 8px; border-radius:12px; font-size:0.75rem; font-weight:600;">Đang hoạt động</span>
+                        </div>
+                        <div class="service-pkg-expiry">Hiệu lực đến: ${activePackageExpiry}</div>
+                        <div class="service-pkg-bullets">
+                            <div class="service-pkg-bullet"><i data-lucide="check" style="width:14px;height:14px;"></i> <span>Đăng tối đa 5 tin tuyển dụng</span></div>
+                            <div class="service-pkg-bullet"><i data-lucide="check" style="width:14px;height:14px;"></i> <span>Hiển thị nhãn VIP nổi bật</span></div>
+                            <div class="service-pkg-bullet"><i data-lucide="check" style="width:14px;height:14px;"></i> <span>Duyệt tin nhanh trong 1 giờ</span></div>
+                        </div>
+                        <div class="service-pkg-usage">
+                            <span>Đã sử dụng</span>
+                            <span>${activePackageUsedCount}/5 tin</span>
+                        </div>
+                        <div class="service-pkg-progress-bar">
+                            <div class="service-pkg-progress-fill" style="width: ${progress}%;"></div>
+                        </div>
+                    `;
+                } else {
+                    const progress = activePackageUsedCount >= 1 ? 100 : 0;
+                    contentHtml = `
+                        <div class="service-pkg-header">
+                            <span class="service-pkg-name"><i data-lucide="briefcase" style="width:18px;height:18px;color:#64748b;"></i> Gói Thường</span>
+                            <span class="service-pkg-status text-muted" style="background:#f1f5f9; padding:2px 8px; border-radius:12px; font-size:0.75rem; font-weight:600;">Mặc định</span>
+                        </div>
+                        <div class="service-pkg-expiry">Hiệu lực: Vĩnh viễn</div>
+                        <div class="service-pkg-bullets">
+                            <div class="service-pkg-bullet"><i data-lucide="check" style="width:14px;height:14px;"></i> <span>Đăng tối đa 1 tin tuyển dụng</span></div>
+                            <div class="service-pkg-bullet"><i data-lucide="check" style="width:14px;height:14px;"></i> <span>Hiển thị chuẩn trên trang chủ</span></div>
+                        </div>
+                        <div class="service-pkg-usage">
+                            <span>Đã sử dụng</span>
+                            <span>${activePackageUsedCount}/1 tin</span>
+                        </div>
+                        <div class="service-pkg-progress-bar">
+                            <div class="service-pkg-progress-fill" style="width: ${progress}%;"></div>
+                        </div>
+                    `;
+                }
+
+                pkgCard.innerHTML = contentHtml;
+                if (window.lucide) lucide.createIcons();
+            }
+
+            window.renderBusinessWalletCurrent = async function() {
+                if (window.depositCountdownInterval) {
+                    clearInterval(window.depositCountdownInterval);
+                }
+                const mainContent = document.getElementById('mainContent');
+                if (!mainContent) return;
+                
+                mainContent.innerHTML = `
+                    <div class="d-flex justify-content-center align-items-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Đang tải...</span>
+                        </div>
+                    </div>
+                `;
+                
+                const walletData = await getWalletData();
+                if (!walletData || !walletData.success) {
+                    mainContent.innerHTML = `
+                        <div class="alert alert-danger" role="alert">
+                            Không thể tải thông tin ví. Vui lòng thử lại sau.
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let currentPkg = walletData.activePackageName || "Gói Thường";
+                let pkgBadge = '<span class="badge bg-secondary">Miễn phí</span>';
+                if (currentPkg === "Gói Premium") {
+                    pkgBadge = '<span class="badge bg-success" style="background:#d1fae5; color:#065f46; padding:4px 8px; border-radius:12px; font-size:0.75rem; font-weight:600;"><i data-lucide="star" style="width:12px;height:12px;margin-right:2px;fill:#f59e0b;color:#f59e0b;"></i> Premium</span>';
+                } else if (currentPkg === "Gói VIP") {
+                    pkgBadge = '<span class="badge bg-warning text-dark"><i data-lucide="star" style="width:12px;height:12px;margin-right:2px;"></i> VIP</span>';
+                }
+                
+                mainContent.innerHTML = `
+                    <div class="page-header mb-4">
+                        <h1 class="page-title"><i data-lucide="package" style="width:24px;height:24px;"></i> Gói dịch vụ hiện tại</h1>
+                        <p class="page-subtitle">Nâng cấp tài khoản để tiếp cận nhiều ứng viên chất lượng hơn</p>
+                    </div>
+                    
+                    <div class="card mb-4 border-0 shadow-sm" style="border-radius: 16px;">
+                        <div class="card-body p-4" style="background: linear-gradient(135deg, #f8fafc, #edf2f7); border-radius: 16px;">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                                <div>
+                                    <div class="text-muted small uppercase fw-bold mb-1">Tài khoản của bạn</div>
+                                    <h4 class="mb-1 fw-bold text-slate-800 d-flex align-items-center gap-2">
+                                        ${currentPkg} ${pkgBadge}
+                                    </h4>
+                                    <p class="text-muted mb-0 small">Sử dụng dịch vụ đăng tin và tuyển dụng tối ưu trên J4S</p>
+                                </div>
+                                <div class="text-end">
+                                    <div class="text-muted small fw-bold mb-1">Số dư khả dụng</div>
+                                    <h3 class="mb-0 fw-extrabold text-indigo-600">${new Intl.NumberFormat('vi-VN').format(walletData.balance)} đ</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h3 class="section-title mb-3" style="font-weight: 700; color: #1e293b;">Bảng giá gói dịch vụ tuyển dụng</h3>
+                    <div class="row g-4">
+                        <!-- Free Package -->
+                        <div class="col-md-4">
+                            <div class="card h-100 border-0 shadow-sm hover-up" style="border-radius: 16px; border: 1px solid #e2e8f0 !important;">
+                                <div class="card-body p-4 d-flex flex-column">
+                                    <div class="mb-3">
+                                        <span class="badge bg-light text-muted fw-semibold px-3 py-2" style="border-radius: 20px;">Gói Thường</span>
+                                    </div>
+                                    <h2 class="fw-extrabold mb-3 text-slate-800">Mặc định <span style="font-size: 1rem; font-weight: normal; color: #64748b;">/ Vĩnh viễn</span></h2>
+                                    <p class="text-muted small mb-4">Phù hợp cho doanh nghiệp nhỏ trải nghiệm ứng dụng.</p>
+                                    <hr class="my-3 text-muted">
+                                    <ul class="list-unstyled flex-grow-1 mb-4" style="line-height: 2;">
+                                        <li class="small"><i data-lucide="check" class="text-success me-2" style="width:16px;height:16px;"></i>Đăng tối đa 1 tin tuyển dụng</li>
+                                        <li class="small"><i data-lucide="check" class="text-success me-2" style="width:16px;height:16px;"></i>Hiển thị chuẩn trên trang chủ</li>
+                                        <li class="small text-muted"><i data-lucide="x" class="text-danger me-2" style="width:16px;height:16px;"></i>Không ưu tiên duyệt bài</li>
+                                        <li class="small text-muted"><i data-lucide="x" class="text-danger me-2" style="width:16px;height:16px;"></i>Không có nhãn nổi bật</li>
+                                    </ul>
+                                    <button class="btn btn-outline-secondary w-100 py-2.5 fw-bold mt-auto" style="border-radius: 10px;" disabled>Đang hoạt động</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- VIP Package -->
+                        <div class="col-md-4">
+                            <div class="card h-100 border-0 shadow-sm hover-up position-relative" style="border-radius: 16px; border: ${currentPkg === 'Gói VIP' ? '2px solid #f59e0b' : '1px solid #e2e8f0'} !important;">
+                                ${currentPkg === 'Gói VIP' ? '<span class="position-absolute top-0 start-50 translate-middle badge bg-warning text-dark px-3 py-1.5 fw-bold" style="border-radius: 20px;">Gói đang dùng</span>' : ''}
+                                <div class="card-body p-4 d-flex flex-column">
+                                    <div class="mb-3">
+                                        <span class="badge bg-warning text-dark fw-semibold px-3 py-2" style="border-radius: 20px;"><i data-lucide="star" style="width:14px;height:14px;margin-right:4px;"></i>Gói VIP</span>
+                                    </div>
+                                    <h2 class="fw-extrabold mb-3 text-warning">30.000 đ <span style="font-size: 1rem; font-weight: normal; color: #64748b;">/ 30 ngày</span></h2>
+                                    <p class="text-muted small mb-4">Gói dịch vụ tăng tương tác, đăng nhiều tin hơn và duyệt tin nhanh chóng.</p>
+                                    <hr class="my-3 text-muted">
+                                    <ul class="list-unstyled flex-grow-1 mb-4" style="line-height: 2;">
+                                        <li class="small"><i data-lucide="check" class="text-success me-2" style="width:16px;height:16px;"></i>Đăng tối đa 5 tin tuyển dụng</li>
+                                        <li class="small"><i data-lucide="check" class="text-success me-2" style="width:16px;height:16px;"></i>Hiển thị nhãn VIP trên bài đăng</li>
+                                        <li class="small"><i data-lucide="check" class="text-success me-2" style="width:16px;height:16px;"></i>Duyệt tin nhanh trong 1 giờ</li>
+                                        <li class="small text-muted"><i data-lucide="x" class="text-danger me-2" style="width:16px;height:16px;"></i>Không ghim tin lên đầu trang</li>
+                                    </ul>
+                                    <button class="btn btn-warning w-100 py-2.5 fw-bold text-dark mt-auto" style="border-radius: 10px;" 
+                                            onclick="purchaseServicePackage('VIP', 30000, ${walletData.balance})" 
+                                            ${currentPkg === 'Gói VIP' ? 'disabled' : ''}>
+                                        ${currentPkg === 'Gói VIP' ? 'Đang hoạt động' : 'Kích hoạt gói VIP'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Premium Package -->
+                        <div class="col-md-4">
+                            <div class="card h-100 border-0 shadow-sm hover-up position-relative" style="border-radius: 16px; border: ${currentPkg === 'Gói Premium' ? '2px solid #6366f1' : '1px solid #e2e8f0'} !important;">
+                                ${currentPkg === 'Gói Premium' ? '<span class="position-absolute top-0 start-50 translate-middle badge bg-indigo text-white px-3 py-1.5 fw-bold" style="border-radius: 20px;">Gói đang dùng</span>' : ''}
+                                <div class="card-body p-4 d-flex flex-column">
+                                    <div class="mb-3 d-flex justify-content-between align-items-center">
+                                        <span class="badge bg-indigo text-white fw-semibold px-3 py-2" style="border-radius: 20px;"><i data-lucide="award" style="width:14px;height:14px;margin-right:4px;"></i>Gói Premium</span>
+                                        <span class="badge bg-danger px-2 py-1 small rounded-pill">Bán chạy nhất</span>
+                                    </div>
+                                    <h2 class="fw-extrabold mb-3 text-indigo-600">99.000 đ <span style="font-size: 1rem; font-weight: normal; color: #64748b;">/ 30 ngày</span></h2>
+                                    <p class="text-muted small mb-4">Gói tối ưu nhất cho doanh nghiệp tuyển dụng lớn, ghim bài hàng đầu.</p>
+                                    <hr class="my-3 text-muted">
+                                    <ul class="list-unstyled flex-grow-1 mb-4" style="line-height: 2;">
+                                        <li class="small"><i data-lucide="check" class="text-success me-2" style="width:16px;height:16px;"></i>Đăng tin tuyển dụng không giới hạn</li>
+                                        <li class="small"><i data-lucide="check" class="text-success me-2" style="width:16px;height:16px;"></i>Hiển thị nhãn Premium nổi bật</li>
+                                        <li class="small"><i data-lucide="check" class="text-success me-2" style="width:16px;height:16px;"></i>Ghim bài đăng lên đầu trang chủ</li>
+                                        <li class="small"><i data-lucide="check" class="text-success me-2" style="width:16px;height:16px;"></i>Truy cập hồ sơ ứng viên không giới hạn</li>
+                                    </ul>
+                                    <button class="btn btn-indigo w-100 py-2.5 fw-bold text-white mt-auto" style="border-radius: 10px;" 
+                                            onclick="purchaseServicePackage('Premium', 99000, ${walletData.balance})" 
+                                            ${currentPkg === 'Gói Premium' ? 'disabled' : ''}>
+                                        ${currentPkg === 'Gói Premium' ? 'Đang hoạt động' : 'Kích hoạt gói Premium'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                if (window.lucide) lucide.createIcons();
+            }
+
+            window.purchaseServicePackage = async function(packageName, price, currentBalance) {
+                if (currentBalance < price) {
+                    showToast('Số dư tài khoản không đủ. Vui lòng nạp thêm tiền!', 'warning');
+                    setTimeout(() => {
+                        document.getElementById('navWalletDeposit')?.click();
+                    }, 1000);
+                    return;
+                }
+                
+                if (!confirm(`Bạn có chắc chắn muốn mua gói dịch vụ ${packageName} với giá ${new Intl.NumberFormat('vi-VN').format(price)} đ không?`)) {
+                    return;
+                }
+                
+                try {
+                    const response = await fetch('/Home/PurchasePackage', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                        },
+                        body: JSON.stringify({ PackageName: packageName })
+                    });
+                    
+                    const data = await response.json();
+                    if (data.success) {
+                        showToast(`Chúc mừng! Bạn đã mua thành công gói ${packageName}!`, 'success');
+                        window.renderBusinessWalletCurrent();
+                    } else {
+                        showToast(data.message || 'Có lỗi xảy ra khi mua gói.', 'error');
+                    }
+                } catch (e) {
+                    console.error('Error purchasing package:', e);
+                    showToast('Lỗi mạng. Vui lòng kiểm tra kết nối.', 'error');
+                }
+            }
+
+            window.renderBusinessWalletDeposit = async function() {
+                if (window.depositCountdownInterval) {
+                    clearInterval(window.depositCountdownInterval);
+                }
+                const mainContent = document.getElementById('mainContent');
+                if (!mainContent) return;
+                
+                mainContent.innerHTML = `
+                    <div class="d-flex justify-content-center align-items-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Đang tải...</span>
+                        </div>
+                    </div>
+                `;
+                
+                const walletData = await getWalletData();
+                if (!walletData || !walletData.success) {
+                    mainContent.innerHTML = `
+                        <div class="alert alert-danger" role="alert">
+                            Không thể tải thông tin ví. Vui lòng thử lại sau.
+                        </div>
+                    `;
+                    return;
+                }
+                
+                mainContent.innerHTML = `
+                    <div class="page-header mb-4">
+                        <h1 class="page-title"><i data-lucide="plus-circle" style="width:24px;height:24px;"></i> Nạp tiền vào ví</h1>
+                        <p class="page-subtitle">Nạp tiền nhanh qua VietQR để nâng cấp dịch vụ tuyển dụng</p>
+                    </div>
+                    
+                    <div class="row g-4">
+                        <!-- Left Panel: Deposit form -->
+                        <div class="col-md-6" id="depositFormCol">
+                            <div class="card border-0 shadow-sm p-4" style="border-radius: 16px;">
+                                <h4 class="fw-bold mb-3" style="color:#0f172a;">Nhập số tiền nạp</h4>
+                                <p class="text-muted small">Số tiền nạp tối thiểu là 50.000 đ và phải là bội số của 50.000 đ.</p>
+                                
+                                <div class="mb-4">
+                                    <div class="input-group input-group-lg" style="border: 2px solid #e2e8f0; border-radius: 12px; overflow: hidden; background: #fff;">
+                                        <input type="number" id="depositAmountInput" class="form-control border-0 px-3 fw-bold text-slate-800" style="font-size: 1.5rem;" placeholder="Nhập số tiền..." min="50000" step="50000" value="200000">
+                                        <span class="input-group-text border-0 bg-transparent fw-bold text-slate-500 pe-3" style="font-size:1.25rem;">đ</span>
+                                    </div>
+                                    <div class="invalid-feedback d-none" id="amountError" style="font-size: 0.85rem; margin-top: 4px;">Số tiền nạp phải là bội số của 50.000 đ.</div>
+                                </div>
+                                
+                                <label class="fw-semibold text-slate-700 small mb-2 d-block">Chọn nhanh số tiền</label>
+                                <div class="row g-2 mb-4">
+                                    <div class="col-4"><button class="btn btn-outline-secondary w-100 py-2.5 fw-bold text-slate-700 small" style="border-radius:10px; border-color:#cbd5e1;" onclick="setDepositAmount(50000)">50k</button></div>
+                                    <div class="col-4"><button class="btn btn-outline-secondary w-100 py-2.5 fw-bold text-slate-700 small" style="border-radius:10px; border-color:#cbd5e1;" onclick="setDepositAmount(100000)">100k</button></div>
+                                    <div class="col-4"><button class="btn btn-outline-secondary w-100 py-2.5 fw-bold text-slate-700 small" style="border-radius:10px; border-color:#cbd5e1;" onclick="setDepositAmount(200000)">200k</button></div>
+                                    <div class="col-4"><button class="btn btn-outline-secondary w-100 py-2.5 fw-bold text-slate-700 small" style="border-radius:10px; border-color:#cbd5e1;" onclick="setDepositAmount(500000)">500k</button></div>
+                                    <div class="col-4"><button class="btn btn-outline-secondary w-100 py-2.5 fw-bold text-slate-700 small" style="border-radius:10px; border-color:#cbd5e1;" onclick="setDepositAmount(1000000)">1M</button></div>
+                                    <div class="col-4"><button class="btn btn-outline-secondary w-100 py-2.5 fw-bold text-slate-700 small" style="border-radius:10px; border-color:#cbd5e1;" onclick="setDepositAmount(2000000)">2M</button></div>
+                                </div>
+                                
+                                <button class="btn btn-indigo w-100 py-3 fw-bold text-white shadow-sm" style="border-radius: 12px; font-size:1.1rem;" onclick="generateDepositQR()">
+                                    <i data-lucide="qr-code" class="me-2" style="width:20px;height:20px;"></i>Tạo mã QR nạp tiền
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Right Panel: Information / Instructions -->
+                        <div class="col-md-6" id="depositInstructionsCol">
+                            <div class="card border-0 shadow-sm p-4 h-100" style="border-radius: 16px; background-color: #f8fafc; border: 1px dashed #cbd5e1 !important;">
+                                <h5 class="fw-bold mb-3 d-flex align-items-center text-slate-800"><i data-lucide="info" class="text-indigo-500 me-2" style="width:20px;height:20px;"></i>Hướng dẫn nạp tiền</h5>
+                                <ul class="list-unstyled mb-0" style="line-height: 1.8; color: #475569;">
+                                    <li class="mb-3 d-flex align-items-start gap-2">
+                                        <span class="badge bg-indigo rounded-circle p-1.5 text-white" style="font-size:0.6rem; width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;">1</span>
+                                        <span class="small">Nhập số tiền mong muốn nạp (bội số của 50k).</span>
+                                    </li>
+                                    <li class="mb-3 d-flex align-items-start gap-2">
+                                        <span class="badge bg-indigo rounded-circle p-1.5 text-white" style="font-size:0.6rem; width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;">2</span>
+                                        <span class="small">Nhấn <strong>Tạo mã QR</strong> để nhận thông tin chuyển khoản và mã QR VietQR.</span>
+                                    </li>
+                                    <li class="mb-3 d-flex align-items-start gap-2">
+                                        <span class="badge bg-indigo rounded-circle p-1.5 text-white" style="font-size:0.6rem; width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;">3</span>
+                                        <span class="small">Mở ứng dụng Mobile Banking của bất kỳ ngân hàng nào và quét mã QR được tạo ra.</span>
+                                    </li>
+                                    <li class="mb-3 d-flex align-items-start gap-2">
+                                        <span class="badge bg-indigo rounded-circle p-1.5 text-white" style="font-size:0.6rem; width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;">4</span>
+                                        <span class="small text-danger fw-semibold">Lưu ý: Nội dung chuyển khoản phải giữ nguyên theo mã giao dịch được cấp để hệ thống tự động cộng tiền.</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                if (window.lucide) lucide.createIcons();
+            }
+
+            window.setDepositAmount = function(amount) {
+                const input = document.getElementById('depositAmountInput');
+                if (input) {
+                    input.value = amount;
+                    document.getElementById('amountError')?.classList.add('d-none');
+                }
+            }
+
+            window.generateDepositQR = async function() {
+                const input = document.getElementById('depositAmountInput');
+                if (!input) return;
+                
+                const amount = parseInt(input.value);
+                const errorEl = document.getElementById('amountError');
+                
+                if (isNaN(amount) || amount <= 0 || amount % 50000 !== 0) {
+                    errorEl?.classList.remove('d-none');
+                    return;
+                }
+                errorEl?.classList.add('d-none');
+                
+                const submitBtn = document.querySelector('[onclick="generateDepositQR()"]');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Đang tạo mã...`;
+                }
+                
+                try {
+                    const response = await fetch('/Home/DepositMoney', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                        },
+                        body: JSON.stringify({ Amount: amount })
+                    });
+                    
+                    const data = await response.json();
+                    if (data.success) {
+                        showQRPanel(data);
+                    } else {
+                        showToast(data.message || 'Tạo mã nạp tiền thất bại.', 'error');
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = `<i data-lucide="qr-code" class="me-2" style="width:20px;height:20px;"></i>Tạo mã QR nạp tiền`;
+                            if (window.lucide) lucide.createIcons();
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error generating deposit QR:', e);
+                    showToast('Không thể kết nối đến máy chủ.', 'error');
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = `<i data-lucide="qr-code" class="me-2" style="width:20px;height:20px;"></i>Tạo mã QR nạp tiền`;
+                        if (window.lucide) lucide.createIcons();
+                    }
+                }
+            }
+
+            function showQRPanel(data) {
+                const leftPanel = document.getElementById('depositFormCol');
+                const rightPanel = document.getElementById('depositInstructionsCol');
+                if (!leftPanel || !rightPanel) return;
+                
+                const qrUrl = `https://img.vietqr.io/image/acb-14875441-compact2.png?amount=${data.amount}&addInfo=${data.transferContent}&accountName=HUYNH%20KHANG`;
+                
+                leftPanel.innerHTML = `
+                    <div class="card border-0 shadow-sm p-4 text-center" style="border-radius: 16px;">
+                        <h4 class="fw-bold mb-3 text-slate-800">Quét mã VietQR để thanh toán</h4>
+                        <div class="bg-light p-3 mx-auto mb-3" style="border-radius: 16px; width: fit-content;">
+                            <img src="${qrUrl}" alt="VietQR Code" class="img-fluid" style="max-height: 250px; border-radius: 8px;">
+                        </div>
+                        <div class="alert alert-warning py-2 mb-3" role="alert" style="font-size: 0.85rem; border-radius:10px;">
+                            <i data-lucide="alert-triangle" class="me-1" style="width:16px;height:16px;vertical-align:text-bottom;"></i>
+                            Vui lòng nhập đúng nội dung chuyển khoản bên dưới.
+                        </div>
+                        
+                        <div class="text-start bg-slate-50 p-3 mb-4 rounded" style="border:1px solid #f1f5f9; background:#f8fafc; border-radius:12px !important;">
+                            <div class="row g-2 mb-2">
+                                <div class="col-5 text-muted small">Ngân hàng:</div>
+                                <div class="col-7 fw-bold text-slate-800">ACB (Á Châu)</div>
+                            </div>
+                            <div class="row g-2 mb-2">
+                                <div class="col-5 text-muted small">Số tài khoản:</div>
+                                <div class="col-7 fw-bold text-slate-800 d-flex justify-content-between">
+                                    <span>14875441</span>
+                                    <button class="btn btn-sm btn-link p-0 text-indigo-600 small fw-bold" onclick="copyTextToClipboard('14875441')">Sao chép</button>
+                                </div>
+                            </div>
+                            <div class="row g-2 mb-2">
+                                <div class="col-5 text-muted small">Chủ tài khoản:</div>
+                                <div class="col-7 fw-bold text-slate-800">HUYNH KHANG</div>
+                            </div>
+                            <div class="row g-2 mb-2">
+                                <div class="col-5 text-muted small">Số tiền:</div>
+                                <div class="col-7 fw-bold text-slate-800">${new Intl.NumberFormat('vi-VN').format(data.amount)} đ</div>
+                            </div>
+                            <div class="row g-2">
+                                <div class="col-5 text-muted small">Nội dung ghi:</div>
+                                <div class="col-7 fw-bold text-danger d-flex justify-content-between">
+                                    <span>${data.transferContent}</span>
+                                    <button class="btn btn-sm btn-link p-0 text-indigo-600 small fw-bold" onclick="copyTextToClipboard('${data.transferContent}')">Sao chép</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                rightPanel.innerHTML = `
+                    <div class="card border-0 shadow-sm p-4 h-100 text-center d-flex flex-column justify-content-center" style="border-radius: 16px; min-height: 400px;">
+                        <div class="mb-4">
+                            <i data-lucide="clock" class="text-indigo-500 animate-spin" style="width:48px;height:48px;animation: pulse 2s infinite;"></i>
+                        </div>
+                        <h4 class="fw-bold text-slate-800 mb-2">Đang chờ thanh toán</h4>
+                        <div class="mb-3">
+                            <span class="fs-5 fw-bold text-danger d-flex align-items-center justify-content-center gap-2">
+                                <i data-lucide="timer" style="width:18px;height:18px;"></i>
+                                Hiệu lực: <span id="depositCountdown">05:00</span>
+                            </span>
+                        </div>
+                        <p class="text-muted small px-3 mb-4">Sau khi bạn chuyển khoản thành công, hãy bấm vào nút xác nhận phía dưới để hệ thống đối soát dữ liệu với ngân hàng ACB và cộng tiền vào ví.</p>
+                        
+                        <div class="px-4">
+                            <button id="verifyDepositBtn" class="btn btn-indigo w-100 py-3 fw-bold text-white shadow-sm mb-3" style="border-radius:12px;" onclick="verifyDeposit(${data.transactionId})">
+                                <i data-lucide="check-circle" class="me-2" style="width:20px;height:20px;vertical-align:text-bottom;"></i>Tôi đã chuyển khoản thành công
+                            </button>
+                            <button class="btn btn-outline-secondary w-100 py-2.5 fw-bold small" style="border-radius:10px;" onclick="cancelDepositFlow()">
+                                Hủy giao dịch này
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                if (window.lucide) lucide.createIcons();
+
+                // Setup 5 minutes countdown (300 seconds)
+                let timeLeft = 300;
+                if (window.depositCountdownInterval) {
+                    clearInterval(window.depositCountdownInterval);
+                }
+                
+                window.depositCountdownInterval = setInterval(() => {
+                    timeLeft--;
+                    const minutes = Math.floor(timeLeft / 60);
+                    const seconds = timeLeft % 60;
+                    
+                    const timerEl = document.getElementById('depositCountdown');
+                    if (timerEl) {
+                        timerEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    }
+                    
+                    if (timeLeft <= 0) {
+                        clearInterval(window.depositCountdownInterval);
+                        expireQRPanel();
+                    }
+                }, 1000);
+            }
+
+            window.cancelDepositFlow = function() {
+                if (window.depositCountdownInterval) {
+                    clearInterval(window.depositCountdownInterval);
+                }
+                window.renderBusinessWalletDeposit();
+            }
+
+            function expireQRPanel() {
+                const leftPanel = document.getElementById('depositFormCol');
+                const rightPanel = document.getElementById('depositInstructionsCol');
+                if (!leftPanel || !rightPanel) return;
+                
+                leftPanel.innerHTML = `
+                    <div class="card border-0 shadow-sm p-4 text-center d-flex flex-column justify-content-center align-items-center" style="border-radius: 16px; min-height: 400px; border: 1px solid #fee2e2 !important; background: #fff5f5;">
+                        <div class="mb-3 text-danger">
+                            <i data-lucide="x-circle" style="width:56px;height:56px;"></i>
+                        </div>
+                        <h4 class="fw-bold text-danger mb-2">Hóa đơn đã hết hạn</h4>
+                        <p class="text-muted small px-4 mb-4">Giao dịch nạp tiền này đã quá thời gian hiệu lực 5 phút và đã tự động hủy. Vui lòng tạo mã mới.</p>
+                        <button class="btn btn-danger py-2.5 px-4 fw-bold text-white" style="border-radius:10px;" onclick="window.renderBusinessWalletDeposit()">
+                            Tạo mã nạp tiền mới
+                        </button>
+                    </div>
+                `;
+                
+                rightPanel.innerHTML = `
+                    <div class="card border-0 shadow-sm p-4 h-100 text-center d-flex flex-column justify-content-center align-items-center" style="border-radius: 16px; min-height: 400px;">
+                        <div class="mb-3 text-muted">
+                            <i data-lucide="shield-alert" style="width:48px;height:48px;"></i>
+                        </div>
+                        <h5 class="fw-bold text-slate-700">Đã hủy hóa đơn</h5>
+                        <p class="text-muted small px-3">Hệ thống đã tự động hủy hóa đơn trên cơ sở dữ liệu. Mọi chuyển khoản sau thời gian này sẽ không được tự động đối soát.</p>
+                    </div>
+                `;
+                
+                if (window.lucide) lucide.createIcons();
+            }
+
+            window.copyTextToClipboard = function(text) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast('Đã sao chép vào clipboard!', 'success');
+                }).catch(err => {
+                    console.error('Could not copy text: ', err);
+                });
+            }
+
+            window.verifyDeposit = async function(transactionId) {
+                const verifyBtn = document.getElementById('verifyDepositBtn');
+                if (verifyBtn) {
+                    verifyBtn.disabled = true;
+                    verifyBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Đang đối soát giao dịch...`;
+                }
+                
+                try {
+                    const response = await fetch('/Home/ConfirmDepositTransfer', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                        },
+                        body: JSON.stringify({ TransactionId: transactionId })
+                    });
+                    
+                    const data = await response.json();
+                    if (data.success) {
+                        if (window.depositCountdownInterval) {
+                            clearInterval(window.depositCountdownInterval);
+                        }
+                        const formattedAmount = new Intl.NumberFormat('vi-VN').format(data.amount);
+                        const formattedBalance = new Intl.NumberFormat('vi-VN').format(data.newBalance);
+                        
+                        showToast(`Bạn đã nạp thành công ${formattedAmount} đ. Số dư hiện tại của bạn: ${formattedBalance} đ.`, 'success');
+                        window.renderBusinessWalletHistory();
+                    } else {
+                        showToast(data.message || 'Chưa nhận được giao dịch. Vui lòng thử lại sau 1 phút.', 'warning');
+                        if (verifyBtn) {
+                            verifyBtn.disabled = false;
+                            verifyBtn.innerHTML = `<i data-lucide="check-circle" class="me-2" style="width:20px;height:20px;vertical-align:text-bottom;"></i>Tôi đã chuyển khoản thành công`;
+                            if (window.lucide) lucide.createIcons();
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error verifying deposit:', e);
+                    showToast('Không thể kết nối đối soát. Vui lòng thử lại.', 'error');
+                    if (verifyBtn) {
+                        verifyBtn.disabled = false;
+                        verifyBtn.innerHTML = `<i data-lucide="check-circle" class="me-2" style="width:20px;height:20px;vertical-align:text-bottom;"></i>Tôi đã chuyển khoản thành công`;
+                        if (window.lucide) lucide.createIcons();
+                    }
+                }
+            }
+
+            window.renderBusinessWalletHistory = async function() {
+                if (window.depositCountdownInterval) {
+                    clearInterval(window.depositCountdownInterval);
+                }
+                const mainContent = document.getElementById('mainContent');
+                if (!mainContent) return;
+                
+                mainContent.innerHTML = `
+                    <div class="d-flex justify-content-center align-items-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Đang tải...</span>
+                        </div>
+                    </div>
+                `;
+                
+                const walletData = await getWalletData();
+                if (!walletData || !walletData.success) {
+                    mainContent.innerHTML = `
+                        <div class="alert alert-danger" role="alert">
+                            Không thể tải thông tin ví. Vui lòng thử lại sau.
+                        </div>
+                    `;
+                    return;
+                }
+                
+                if (walletData.transactions.length === 0) {
+                    mainContent.innerHTML = `
+                        <div class="page-header mb-4">
+                            <h1 class="page-title"><i data-lucide="history" style="width:24px;height:24px;"></i> Lịch sử giao dịch</h1>
+                            <p class="page-subtitle">Xem toàn bộ lịch sử nạp và thanh toán</p>
+                        </div>
+                        <div class="card border-0 shadow-sm p-5 text-center" style="border-radius:16px;">
+                            <p class="text-muted mb-0">Bạn chưa thực hiện bất kỳ giao dịch nào.</p>
+                        </div>
+                    `;
+                    if (window.lucide) lucide.createIcons();
+                    return;
+                }
+                
+                let txRowsHTML = '';
+                walletData.transactions.forEach(t => {
+                    let typeBadge = '';
+                    let amountClass = '';
+                    let amountSign = '';
+                    
+                    if (t.type === 'Deposit') {
+                        typeBadge = '<span class="badge bg-success-subtle text-success px-2.5 py-1.5 small rounded-pill">Nạp tiền</span>';
+                        amountClass = 'text-success';
+                        amountSign = '+';
+                    } else if (t.type === 'Holding') {
+                        typeBadge = '<span class="badge bg-indigo-subtle text-indigo px-2.5 py-1.5 small rounded-pill">Thanh toán gói</span>';
+                        amountClass = 'text-danger';
+                        amountSign = '-';
+                    } else {
+                        typeBadge = `<span class="badge bg-secondary-subtle text-secondary px-2.5 py-1.5 small rounded-pill">${t.type}</span>`;
+                        amountClass = 'text-muted';
+                        amountSign = '';
+                    }
+                    
+                    let statusBadge = '';
+                    if (t.status === 'Success') {
+                        statusBadge = '<span class="badge bg-success px-2.5 py-1.5 small rounded-pill"><i data-lucide="check" class="me-1" style="width:12px;height:12px;"></i>Thành công</span>';
+                    } else if (t.status === 'Pending') {
+                        statusBadge = '<span class="badge bg-warning text-dark px-2.5 py-1.5 small rounded-pill"><i data-lucide="loader" class="me-1 animate-spin" style="width:12px;height:12px;"></i>Đang chờ</span>';
+                    } else {
+                        statusBadge = `<span class="badge bg-danger px-2.5 py-1.5 small rounded-pill">${t.status}</span>`;
+                    }
+                    
+                    txRowsHTML += `
+                        <tr>
+                            <td class="fw-semibold text-slate-700">#${t.transactionCode || t.id}</td>
+                            <td>${typeBadge}</td>
+                            <td class="fw-bold ${amountClass}">${amountSign} ${new Intl.NumberFormat('vi-VN').format(t.amount)} đ</td>
+                            <td class="small text-slate-600" style="max-width:250px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${t.description || ''}">${t.description || '-'}</td>
+                            <td><span class="text-slate-500 small">${t.createdAt}</span></td>
+                            <td>${statusBadge}</td>
+                        </tr>
+                    `;
+                });
+                
+                mainContent.innerHTML = `
+                    <div class="page-header mb-4">
+                        <h1 class="page-title"><i data-lucide="history" style="width:24px;height:24px;"></i> Lịch sử giao dịch</h1>
+                        <p class="page-subtitle">Xem chi tiết lịch sử nạp và thanh toán gói dịch vụ</p>
+                    </div>
+                    
+                    <div class="card border-0 shadow-sm overflow-hidden" style="border-radius:16px;">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0" style="background:#fff;">
+                                <thead class="table-light text-slate-700" style="background:#f8fafc; font-weight: 600;">
+                                    <tr>
+                                        <th scope="col" class="py-3 px-4 border-0">Mã GD</th>
+                                        <th scope="col" class="py-3 border-0">Loại</th>
+                                        <th scope="col" class="py-3 border-0">Số tiền</th>
+                                        <th scope="col" class="py-3 border-0">Mô tả</th>
+                                        <th scope="col" class="py-3 border-0">Thời gian</th>
+                                        <th scope="col" class="py-3 px-4 border-0">Trạng thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${txRowsHTML}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+                
+                if (window.lucide) lucide.createIcons();
+            }
+        </script>
+    }
+
+    @if (User.IsInRole("Admin"))
+    {
+        <script>
+            const adminPendingJobsData = @Html.Raw(Json.Serialize(Model.AdminPendingJobs ?? new List<AdminPendingJobViewModel>()));
+
+            document.addEventListener('DOMContentLoaded', () => {
+                // Initialize Admin Panel
+                initAdminPanel();
+            });
+            
+            async function initAdminPanel() {
+                // Load stats first
+                await updateAdminStats();
+                
+                // Set up navigation
+                const navHome = document.getElementById('adminNavHome');
+                const navUsers = document.getElementById('adminNavUsers');
+                const navJobs = document.getElementById('adminNavJobs');
+                const navTxs = document.getElementById('adminNavTxs');
+                const navItems = [navHome, navUsers, navJobs, navTxs];
+                
+                function clearActive() {
+                    navItems.forEach(item => item?.classList.remove('active'));
+                }
+                
+                navHome?.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    clearActive();
+                    navHome.classList.add('active');
+                    renderAdminHome();
+                });
+                
+                navUsers?.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    clearActive();
+                    navUsers.classList.add('active');
+                    renderAdminUsers();
+                });
+                
+                navJobs?.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    clearActive();
+                    navJobs.classList.add('active');
+                    renderAdminJobs();
+                });
+                
+                navTxs?.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    clearActive();
+                    navTxs.classList.add('active');
+                    renderAdminTxs();
+                });
+                
+                // Render initial home view
+                renderAdminHome();
+            }
+            
+            async function updateAdminStats() {
+                try {
+                    const res = await fetch('/Home/GetAdminStats');
+                    const stats = await res.json();
+                    
+                    document.getElementById('statUsers').textContent = stats.totalUsers;
+                    document.getElementById('statJobs').textContent = stats.totalJobs;
+                    document.getElementById('statContracts').textContent = stats.totalContracts;
+                    document.getElementById('statVolume').textContent = new Intl.NumberFormat('vi-VN').format(stats.systemVolume) + ' đ';
+                } catch (err) {
+                    console.error('Error fetching admin stats:', err);
+                }
+            }
+            
+            function showSpinner(container) {
+                container.innerHTML = `
+                    <div style="display:flex; justify-content:center; align-items:center; min-height:200px; width:100%;">
+                        <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>
+                    </div>`;
+            }
+            
+            async function renderAdminHome() {
+                const title = document.getElementById('adminSectionTitle');
+                const body = document.getElementById('adminSectionBody');
+                title.textContent = "Tổng quan hệ thống";
+                showSpinner(body);
+                
+                await updateAdminStats();
+                
+                body.innerHTML = `
+                    <div class="row w-100 g-4 m-0">
+                        <div class="col-md-6 p-2">
+                            <div class="card border-0 shadow-sm p-4" style="border-radius:12px; background:#fafafa;">
+                                <h3 style="font-size:1rem; font-weight:700; margin-bottom:16px; color:#475569; display:flex; align-items:center; gap:8px;">
+                                    <i data-lucide="shield-alert" style="color:#ef4444; width:18px; height:18px;"></i> Quy tắc bảo mật
+                                </h3>
+                                <p style="font-size:0.9rem; color:#475569;">Admin có quyền kiểm soát tuyệt đối thông tin trên nền tảng J4S. Khi xử lý vi phạm:</p>
+                                <ul style="font-size:0.85rem; color:#64748b; padding-left:20px; line-height:1.8;">
+                                    <li>Chỉ khóa tài khoản khi có dấu hiệu gian lận hoặc báo cáo spam được kiểm chứng.</li>
+                                    <li>Chỉ xóa tin đăng nếu tin vi phạm thuần phong mỹ tục hoặc chứa nội dung sai sự thật.</li>
+                                    <li>Lịch sử giao dịch được ghi lại vĩnh viễn và không thể sửa xóa thủ công.</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col-md-6 p-2">
+                            <div class="card border-0 shadow-sm p-4" style="border-radius:12px; background:#fafafa;">
+                                <h3 style="font-size:1rem; font-weight:700; margin-bottom:16px; color:#475569; display:flex; align-items:center; gap:8px;">
+                                    <i data-lucide="activity" style="color:#10b981; width:18px; height:18px;"></i> Trạng thái hệ thống
+                                </h3>
+                                <div style="display:flex; flex-direction:column; gap:12px; font-size:0.9rem;">
+                                    <div style="display:flex; justify-content:space-between;">
+                                        <span style="color:#64748b;">Kết nối Database</span>
+                                        <span class="badge bg-success" style="padding:4px 8px; border-radius:12px;">BÌNH THƯỜNG</span>
+                                    </div>
+                                    <div style="display:flex; justify-content:space-between;">
+                                        <span style="color:#64748b;">Cổng thanh toán</span>
+                                        <span class="badge bg-success" style="padding:4px 8px; border-radius:12px;">ĐANG HOẠT ĐỘNG</span>
+                                    </div>
+                                    <div style="display:flex; justify-content:space-between;">
+                                        <span style="color:#64748b;">Gửi email tự động</span>
+                                        <span class="badge bg-success" style="padding:4px 8px; border-radius:12px;">ĐANG KẾT NỐI</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                if (window.lucide) lucide.createIcons();
+            }
+            
+            async function renderAdminUsers() {
+                const title = document.getElementById('adminSectionTitle');
+                const body = document.getElementById('adminSectionBody');
+                title.textContent = "Quản lý người dùng";
+                showSpinner(body);
+                
+                try {
+                    const res = await fetch('/Home/GetAdminUsers');
+                    const users = await res.json();
+                    
+                    if (users.length === 0) {
+                        body.innerHTML = '<p class="text-muted text-center py-4">Chưa có người dùng nào trên hệ thống.</p>';
+                        return;
+                    }
+                    
+                    let tableHTML = `
+                        <div class="table-responsive w-100">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Tên hiển thị</th>
+                                        <th>Email</th>
+                                        <th>Số điện thoại</th>
+                                        <th>Vai trò</th>
+                                        <th>Ngày đăng ký</th>
+                                        <th>Trạng thái</th>
+                                        <th>Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                    `;
+                    
+                    users.forEach(u => {
+                        const statusBadge = u.status === 'Active' 
+                            ? '<span class="admin-badge active">Hoạt động</span>' 
+                            : '<span class="admin-badge banned">Đang khóa</span>';
+                        
+                        const roleBadge = u.role === 'Student'
+                            ? '<span class="admin-badge student">Sinh viên</span>'
+                            : u.role === 'Business'
+                                ? '<span class="admin-badge business">Doanh nghiệp</span>'
+                                : '<span class="admin-badge" style="background:#e2e8f0; color:#334155;">Admin</span>';
+                        
+                        const actionBtn = u.role === 'Admin'
+                            ? '<span class="text-muted small">Mặc định</span>'
+                            : u.status === 'Active'
+                                ? `<button class="btn-admin-action ban" onclick="toggleUserStatus(${u.id})">Khóa tài khoản</button>`
+                                : `<button class="btn-admin-action unban" onclick="toggleUserStatus(${u.id})">Mở khóa</button>`;
+                        
+                        tableHTML += `
+                            <tr>
+                                <td class="fw-semibold">${escapeHtml(u.displayName || 'Chưa cập nhật')}</td>
+                                <td>${escapeHtml(u.email)}</td>
+                                <td>${escapeHtml(u.phone || 'N/A')}</td>
+                                <td>${roleBadge}</td>
+                                <td>${u.createdAt}</td>
+                                <td id="user-status-${u.id}">${statusBadge}</td>
+                                <td id="user-action-${u.id}">${actionBtn}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    tableHTML += `
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                    
+                    body.innerHTML = tableHTML;
+                } catch (err) {
+                    body.innerHTML = '<p class="text-danger text-center py-4">Lỗi khi tải dữ liệu người dùng.</p>';
+                    console.error(err);
+                }
+            }
+            
+            async function toggleUserStatus(userId) {
+                if (!confirm("Bạn có chắc chắn muốn thay đổi trạng thái hoạt động của tài khoản này?")) return;
+                
+                try {
+                    const resToggle = await fetch(`/Home/ToggleUserStatus?userId=${userId}`, {
+                        method: 'POST',
+                        headers: {
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                        }
+                    });
+                    const data = await resToggle.json();
+                    
+                    if (data.success) {
+                        showToast("Cập nhật trạng thái thành công!", "success");
+                        renderAdminUsers();
+                        updateAdminStats();
+                    } else {
+                        showToast(data.message || "Lỗi khi cập nhật trạng thái.", "error");
+                    }
+                } catch (err) {
+                    console.error(err);
+                    showToast("Không thể kết nối đến máy chủ.", "error");
+                }
+            }
+            
+            async function renderAdminJobs() {
+                const title = document.getElementById('adminSectionTitle');
+                const body = document.getElementById('adminSectionBody');
+                title.textContent = "Quản lý tin tuyển dụng";
+                showSpinner(body);
+                
+                try {
+                    const res = await fetch('/Home/GetAdminJobs');
+                    const jobs = await res.json();
+                    
+                    let html = `
+                        <h4 class="mb-3 fw-bold" style="color: #0f172a;">Tin tuyển dụng chờ duyệt</h4>
+                    `;
+
+                    if (adminPendingJobsData && adminPendingJobsData.length > 0) {
+                        html += `
+                            <div class="table-responsive w-100 mb-5">
+                                <table class="admin-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Tiêu đề công việc</th>
+                                            <th>Doanh nghiệp đăng</th>
+                                            <th>Ngày tạo</th>
+                                            <th>Thao tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                        `;
+                        adminPendingJobsData.forEach(j => {
+                            html += `
+                                <tr id="pending-job-${j.id}">
+                                    <td class="fw-semibold">${escapeHtml(j.title)}</td>
+                                    <td>${escapeHtml(j.companyName)}</td>
+                                    <td>${j.createdAt}</td>
+                                    <td>
+                                        <button class="btn-admin-action" style="background:#10b981; color:white; border-color:#10b981;" onclick="approveJob(${j.id})">Duyệt</button>
+                                        <button class="btn-admin-action delete" onclick="rejectJob(${j.id})">Từ chối</button>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                        html += `</tbody></table></div>`;
+                    } else {
+                        html += '<p class="text-muted mb-5">Không có tin tuyển dụng nào đang chờ duyệt.</p>';
+                    }
+
+                    html += `<h4 class="mb-3 fw-bold" style="color: #0f172a;">Tất cả tin tuyển dụng</h4>`;
+                    
+                    if (jobs.length === 0) {
+                        html += '<p class="text-muted text-center py-4">Chưa có tin tuyển dụng nào trên hệ thống.</p>';
+                    } else {
+                        html += `
+                            <div class="table-responsive w-100">
+                                <table class="admin-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Tiêu đề công việc</th>
+                                            <th>Doanh nghiệp đăng</th>
+                                            <th>Ngân sách</th>
+                                            <th>Thời hạn</th>
+                                            <th>Ngày tạo</th>
+                                            <th>Trạng thái</th>
+                                            <th>Thao tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                        `;
+                        jobs.forEach(j => {
+                            const statusBadge = j.status === 'Open' 
+                                ? '<span class="admin-badge active">Đang nhận đề xuất</span>' 
+                                : j.status === 'In_Progress'
+                                    ? '<span class="admin-badge student">Đang thực hiện</span>'
+                                    : '<span class="admin-badge" style="background:#e2e8f0; color:#334155;">Đóng</span>';
+                            
+                            html += `
+                                <tr>
+                                    <td class="fw-semibold">${escapeHtml(j.title)}</td>
+                                    <td>${escapeHtml(j.businessName)}</td>
+                                    <td class="text-primary fw-bold">${new Intl.NumberFormat('vi-VN').format(j.budget)} đ</td>
+                                    <td>${j.deadline}</td>
+                                    <td>${j.createdAt}</td>
+                                    <td>${statusBadge}</td>
+                                    <td>
+                                        <button class="btn-admin-action delete" onclick="deleteJobPost(${j.id})">Gỡ tin</button>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                        html += `</tbody></table></div>`;
+                    }
+                    
+                    body.innerHTML = html;
+                } catch (err) {
+                    body.innerHTML = '<p class="text-danger text-center py-4">Lỗi khi tải danh sách tin tuyển dụng.</p>';
+                    console.error(err);
+                }
+            }
+
+            async function approveJob(jobId) {
+                if (!confirm("Bạn có chắc chắn muốn duyệt tin tuyển dụng này?")) return;
+                try {
+                    const res = await fetch(`/Home/ApproveJob?id=${jobId}`, {
+                        method: 'POST',
+                        headers: {
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                        }
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        showToast("Đã duyệt tin thành công!", "success");
+                        // Xóa khỏi mảng local
+                        const idx = adminPendingJobsData.findIndex(x => x.id === jobId);
+                        if (idx > -1) adminPendingJobsData.splice(idx, 1);
+                        renderAdminJobs();
+                    } else {
+                        showToast(data.message || "Lỗi khi duyệt tin", "error");
+                    }
+                } catch (err) {
+                    showToast("Lỗi kết nối", "error");
+                }
+            }
+
+            async function rejectJob(jobId) {
+                if (!confirm("Bạn có chắc chắn muốn từ chối tin tuyển dụng này?")) return;
+                try {
+                    const res = await fetch(`/Home/RejectJob?id=${jobId}`, {
+                        method: 'POST',
+                        headers: {
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                        }
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        showToast("Đã từ chối tin.", "success");
+                        // Xóa khỏi mảng local
+                        const idx = adminPendingJobsData.findIndex(x => x.id === jobId);
+                        if (idx > -1) adminPendingJobsData.splice(idx, 1);
+                        renderAdminJobs();
+                    } else {
+                        showToast(data.message || "Lỗi khi từ chối tin", "error");
+                    }
+                } catch (err) {
+                    showToast("Lỗi kết nối", "error");
+                }
+            }
+
+            
+            async function deleteJobPost(jobId) {
+                if (!confirm("Bạn có chắc chắn muốn gỡ (xóa) tin tuyển dụng này khỏi hệ thống?")) return;
+                
+                try {
+                    const res = await fetch(`/Home/DeleteJobPost?jobId=${jobId}`, {
+                        method: 'POST',
+                        headers: {
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                        }
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        showToast("Đã gỡ tin tuyển dụng thành công!", "success");
+                        renderAdminJobs();
+                        updateAdminStats();
+                    } else {
+                        showToast("Lỗi khi gỡ tin.", "error");
+                    }
+                } catch (err) {
+                    console.error(err);
+                    showToast("Không thể kết nối đến máy chủ.", "error");
+                }
+            }
+            
+            async function renderAdminTxs() {
+                const title = document.getElementById('adminSectionTitle');
+                const body = document.getElementById('adminSectionBody');
+                title.textContent = "Lịch sử giao dịch toàn hệ thống";
+                showSpinner(body);
+                
+                try {
+                    const res = await fetch('/Home/GetAdminTransactions');
+                    const txs = await res.json();
+                    
+                    if (txs.length === 0) {
+                        body.innerHTML = '<p class="text-muted text-center py-4">Chưa có giao dịch nào phát sinh.</p>';
+                        return;
+                    }
+                    
+                    let tableHTML = `
+                        <div class="table-responsive w-100">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Mã GD</th>
+                                        <th>Tài khoản</th>
+                                        <th>Số tiền</th>
+                                        <th>Loại GD</th>
+                                        <th>Nội dung</th>
+                                        <th>Ngày GD</th>
+                                        <th>Trạng thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                    `;
+                    
+                    txs.forEach(t => {
+                        const statusBadge = t.status === 'Success' 
+                            ? '<span class="admin-badge active">Thành công</span>' 
+                            : t.status === 'Pending'
+                                ? '<span class="admin-badge amber">Chờ xử lý</span>'
+                                : '<span class="admin-badge banned">Thất bại</span>';
+                        
+                        let typeText = t.type;
+                        if (t.type === 'Deposit') typeText = 'Nạp tiền';
+                        else if (t.type === 'Withdraw') typeText = 'Rút tiền';
+                        else if (t.type === 'Holding') typeText = 'Tạm giữ';
+                        else if (t.type === 'Release') typeText = 'Hoàn tất GD';
+                        
+                        tableHTML += `
+                            <tr>
+                                <td>GD#${t.id}</td>
+                                <td>${escapeHtml(t.userEmail)}</td>
+                                <td class="fw-bold ${t.type === 'Deposit' || t.type === 'Release' ? 'text-success' : 'text-danger'}">
+                                    ${t.type === 'Deposit' || t.type === 'Release' ? '+' : '-'} ${new Intl.NumberFormat('vi-VN').format(t.amount)} đ
+                                </td>
+                                <td><span class="fw-semibold">${typeText}</span></td>
+                                <td>${escapeHtml(t.description || 'Không có')}</td>
+                                <td>${t.createdAt}</td>
+                                <td>${statusBadge}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    tableHTML += `
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                    
+                    body.innerHTML = tableHTML;
+                } catch (err) {
+                    body.innerHTML = '<p class="text-danger text-center py-4">Lỗi khi tải lịch sử giao dịch.</p>';
+                    console.error(err);
+                }
+            }
+            
+            function escapeHtml(str) {
+                if (!str) return '';
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            }
+        </script>
+    }
+}
+
+<!-- Job Search Modal for Students -->
+<div class="modal fade" id="jobSearchModal" tabindex="-1" aria-labelledby="jobSearchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 20px; overflow: hidden; height: 90vh; background-color: #f8fafc;">
+            <div class="modal-header" style="background-color: #ffffff; border-bottom: 1px solid #e2e8f0; padding: 16px 24px;">
+                <h5 class="modal-title fw-bold" id="jobSearchModalLabel" style="color: #0f172a;">
+                    <i data-lucide="search" style="width:20px;height:20px; margin-right: 8px;"></i>
+                    Tìm việc ngay
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0" id="jobSearchModalBody" style="overflow: hidden;">
+                <!-- Iframe to load Job Search without breaking layout -->
+                <iframe src="/Job?modal=true" style="width: 100%; height: 100%; border: none;"></iframe>
+            </div>
+        </div>
+    </div>
+</div>

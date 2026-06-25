@@ -1,0 +1,331 @@
+@using JobForStudents.Models
+@model JobSearchViewModel
+@{
+    ViewData["Title"] = "Tìm việc làm";
+    if (ViewBag.IsModal == true)
+    {
+        Layout = "_ModalLayout";
+    }
+    else
+    {
+        Layout = "_DashboardLayout";
+    }
+}
+
+<style>
+    .job-search-container {
+        display: flex;
+        gap: 24px;
+        padding: 24px;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding-top: 100px; /* Below nav */
+    }
+    .filters-sidebar {
+        width: 320px;
+        flex-shrink: 0;
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        height: fit-content;
+        position: sticky;
+        top: 100px;
+    }
+    .job-list {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+    .filter-group {
+        margin-bottom: 20px;
+    }
+    .filter-group label {
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-bottom: 8px;
+        display: block;
+        color: #1e293b;
+    }
+    .filter-group select, .filter-group input {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        outline: none;
+        transition: border-color 0.2s;
+    }
+    .filter-group select:focus, .filter-group input:focus {
+        border-color: #0ea5e9;
+    }
+    .btn-apply-filter {
+        width: 100%;
+        padding: 12px;
+        background: #0ea5e9;
+        color: #ffffff;
+        border: none;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: background-color 0.2s;
+    }
+    .btn-apply-filter:hover {
+        background: #0284c7;
+    }
+
+    /* Job Card Styling */
+    .job-card {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+        transition: transform 0.2s, box-shadow 0.2s;
+        border: 1px solid #f1f5f9;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+    .job-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    }
+    .job-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+    .job-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 8px;
+    }
+    .job-company {
+        font-size: 0.9rem;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .job-budget {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #10b981;
+    }
+    .job-tags {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .job-tag {
+        background: #f1f5f9;
+        color: #475569;
+        padding: 6px 12px;
+        border-radius: 99px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    .job-desc {
+        color: #475569;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .job-actions {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 12px;
+        margin-top: 8px;
+    }
+    .btn-apply {
+        background: #0ea5e9;
+        color: #ffffff;
+        padding: 8px 24px;
+        border-radius: 99px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: background 0.2s;
+    }
+    .btn-apply:hover {
+        background: #0284c7;
+        color: #ffffff;
+    }
+    .btn-save {
+        background: #f8fafc;
+        color: #64748b;
+        border: 1px solid #e2e8f0;
+        padding: 8px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .btn-save:hover {
+        background: #f1f5f9;
+        color: #0ea5e9;
+    }
+    .btn-save.saved {
+        color: #ef4444;
+        background: #fef2f2;
+        border-color: #fecaca;
+    }
+</style>
+
+<div class="job-search-container">
+    <form class="filters-sidebar" method="get" action="/Job">
+        @if (ViewBag.IsModal == true)
+        {
+            <input type="hidden" name="modal" value="true" />
+        }
+        <h4 style="font-weight: 700; margin-bottom: 24px; display: flex; align-items: center; gap: 8px;">
+            <i data-lucide="filter" style="width:20px;height:20px;"></i> Lọc kết quả
+        </h4>
+        <div class="filter-group">
+            <label>Từ khóa</label>
+            <input type="text" name="keyword" value="@Model.Keyword" placeholder="Tìm tên việc làm, kỹ năng..." />
+        </div>
+            <div class="filter-group">
+                <label>Danh mục</label>
+                <select name="category">
+                    <option value="">Tất cả danh mục</option>
+                    @if (Model.Category == "IT & Lập trình") { <option value="IT & Lập trình" selected>IT & Lập trình</option> } else { <option value="IT & Lập trình">IT & Lập trình</option> }
+                    @if (Model.Category == "Thiết kế & Đồ họa") { <option value="Thiết kế & Đồ họa" selected>Thiết kế & Đồ họa</option> } else { <option value="Thiết kế & Đồ họa">Thiết kế & Đồ họa</option> }
+                    @if (Model.Category == "Viết lách & Dịch thuật") { <option value="Viết lách & Dịch thuật" selected>Viết lách & Dịch thuật</option> } else { <option value="Viết lách & Dịch thuật">Viết lách & Dịch thuật</option> }
+                    @if (Model.Category == "Sales & Marketing") { <option value="Sales & Marketing" selected>Sales & Marketing</option> } else { <option value="Sales & Marketing">Sales & Marketing</option> }
+                    @if (Model.Category == "Video & Photography") { <option value="Video & Photography" selected>Video & Photography</option> } else { <option value="Video & Photography">Video & Photography</option> }
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Hình thức trả lương</label>
+                <select name="budgetType">
+                    <option value="">Tất cả</option>
+                    @if (Model.BudgetType == BudgetType.Fixed) { <option value="Fixed" selected>Khoán / Cố định</option> } else { <option value="Fixed">Khoán / Cố định</option> }
+                    @if (Model.BudgetType == BudgetType.Hourly) { <option value="Hourly" selected>Theo giờ</option> } else { <option value="Hourly">Theo giờ</option> }
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Yêu cầu kinh nghiệm</label>
+                <select name="expLevel">
+                    <option value="">Tất cả</option>
+                    @if (Model.ExperienceLevel == ExperienceLevel.No_Experience) { <option value="No_Experience" selected>Không yêu cầu</option> } else { <option value="No_Experience">Không yêu cầu</option> }
+                    @if (Model.ExperienceLevel == ExperienceLevel.Mid_Level) { <option value="Mid_Level" selected>Có kinh nghiệm</option> } else { <option value="Mid_Level">Có kinh nghiệm</option> }
+                    @if (Model.ExperienceLevel == ExperienceLevel.Expert) { <option value="Expert" selected>Chuyên gia</option> } else { <option value="Expert">Chuyên gia</option> }
+                </select>
+            </div>
+            <button type="submit" class="btn-apply-filter">Áp dụng bộ lọc</button>
+        </form>
+    </aside>
+
+    <div class="job-list">
+        <h3 style="font-weight: 800; color: #0f172a; margin-bottom: 8px;">Tìm thấy @Model.Jobs.Count việc làm</h3>
+        
+        @if (Model.Jobs.Count == 0)
+        {
+            <div style="background: #ffffff; border-radius: 16px; padding: 48px; text-align: center; color: #64748b;">
+                <i data-lucide="search-x" style="width: 48px; height: 48px; margin-bottom: 16px; color: #cbd5e1;"></i>
+                <h5>Không tìm thấy kết quả phù hợp</h5>
+                <p>Hãy thử thay đổi từ khóa hoặc bộ lọc của bạn.</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var job in Model.Jobs)
+            {
+                var isSaved = Model.SavedJobIds.Contains(job.Id);
+                var saveClass = isSaved ? "saved" : "";
+                var saveFill = isSaved ? "#ef4444" : "none";
+                var expText = job.ExperienceLevelRequired switch {
+                    ExperienceLevel.No_Experience => "Không yêu cầu KN",
+                    ExperienceLevel.Mid_Level => "Có kinh nghiệm",
+                    ExperienceLevel.Expert => "Chuyên gia",
+                    _ => ""
+                };
+                
+                <div class="job-card">
+                    <div class="job-card-header">
+                        <div>
+                            <div class="job-title">@job.Title</div>
+                            <div class="job-company">
+                                <i data-lucide="building-2" style="width:16px;height:16px;"></i> @job.BusinessProfile.CompanyName
+                                <span style="margin: 0 8px;">•</span>
+                                <i data-lucide="map-pin" style="width:16px;height:16px;"></i> @(string.IsNullOrEmpty(job.Location) ? "Làm từ xa" : job.Location)
+                                <span style="margin: 0 8px;">•</span>
+                                <i data-lucide="clock" style="width:16px;height:16px;"></i> Hạn chót: @job.Deadline.ToString("dd/MM/yyyy")
+                            </div>
+                        </div>
+                        <div class="job-budget">
+                            @job.Budget.ToString("N0") VNĐ
+                            <div style="font-size: 0.75rem; color: #64748b; font-weight: 500; text-align: right;">
+                                @(job.BudgetType == BudgetType.Fixed ? "Cố định" : "Theo giờ")
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="job-tags">
+                        <span class="job-tag">@expText</span>
+                        @foreach(var sk in job.JobPostSkills.Take(3))
+                        {
+                            <span class="job-tag">@sk.Skill.Name</span>
+                        }
+                    </div>
+                    
+                    <div class="job-desc">
+                        @job.Description
+                    </div>
+                    
+                    <div class="job-actions">
+                        @if (User.IsInRole("Student"))
+                        {
+                            <button class="btn-save btnToggleSave @saveClass" data-job-id="@job.Id" aria-label="Lưu việc làm">
+                                <i data-lucide="heart" style="width:20px;height:20px;fill:@saveFill"></i>
+                            </button>
+                        }
+                        <a href="/Job/Details/@job.Id" class="btn-apply">Xem chi tiết & Ứng tuyển</a>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('.btnToggleSave').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const jobId = this.getAttribute('data-job-id');
+                const formData = new FormData();
+                formData.append('jobId', jobId);
+
+                fetch('/Job/ToggleSaveJob', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        if (data.saved) {
+                            this.classList.add('saved');
+                            this.querySelector('i').style.fill = '#ef4444';
+                            showToast(data.message, 'success');
+                        } else {
+                            this.classList.remove('saved');
+                            this.querySelector('i').style.fill = 'none';
+                            showToast(data.message, 'success');
+                        }
+                    }
+                })
+                .catch(err => {
+                    showToast('Đã có lỗi xảy ra.', 'error');
+                });
+            });
+        });
+    </script>
+}

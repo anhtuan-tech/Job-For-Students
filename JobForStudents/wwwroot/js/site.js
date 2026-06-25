@@ -8,6 +8,7 @@
 
     // --- State ---
     let allJobs = [];
+    let currentRenderedJobs = [];
     let currentFilter = 'all';
     let currentSidebarMode = 'home';
     let originalMainHTML = '';
@@ -229,7 +230,11 @@
                         updateSectionTitle('Đã ứng tuyển');
                         break;
                     case 'projects':
-                        renderProjectsView();
+                        if (document.querySelector('.dashboard-layout')?.classList.contains('layout-business')) {
+                            renderBusinessJobsView();
+                        } else {
+                            renderProjectsView();
+                        }
                         break;
                     case 'profile':
                         renderProfileView();
@@ -243,8 +248,36 @@
                     case 'wallet':
                         renderWalletView();
                         break;
+                    case 'wallet-current':
+                        if (typeof window.renderBusinessWalletCurrent === 'function') {
+                            window.renderBusinessWalletCurrent();
+                        } else {
+                            restoreHomeView();
+                            renderJobs(allJobs);
+                        }
+                        break;
+                    case 'wallet-deposit':
+                        if (typeof window.renderBusinessWalletDeposit === 'function') {
+                            window.renderBusinessWalletDeposit();
+                        } else {
+                            restoreHomeView();
+                            renderJobs(allJobs);
+                        }
+                        break;
+                    case 'wallet-history':
+                        if (typeof window.renderBusinessWalletHistory === 'function') {
+                            window.renderBusinessWalletHistory();
+                        } else {
+                            restoreHomeView();
+                            renderJobs(allJobs);
+                        }
+                        break;
                     case 'topFreelancer':
-                        renderFeaturedFreelancersView();
+                        if (document.querySelector('.dashboard-layout')?.classList.contains('layout-business')) {
+                            renderBusinessApplicantsView();
+                        } else {
+                            renderFeaturedFreelancersView();
+                        }
                         break;
                     case 'leaderboard':
                         renderLeaderboardView();
@@ -1401,6 +1434,165 @@
         }
     }
 
+    async function renderBusinessJobsView() {
+        mainContent.innerHTML = `
+            <div class="page-header">
+                <h1 class="page-title"><i data-lucide="file-text" style="width:24px;height:24px;"></i> Quản lý tin đăng</h1>
+                <p class="page-subtitle">Theo dõi bài đăng tuyển dụng và số lượng ứng viên ứng tuyển</p>
+            </div>
+            <div class="card border-0 shadow-sm p-4" style="border-radius:12px; background:#fff; border:1px solid #e2e8f0;">
+                <div id="businessJobsList" style="display:flex; flex-direction:column; gap:12px;">
+                    <div class="text-muted text-center py-4">Đang tải tin đăng...</div>
+                </div>
+            </div>`;
+        if (window.lucide) lucide.createIcons();
+
+        try {
+            const res = await fetch('/Home/GetBusinessJobs');
+            const data = await res.json();
+            const list = document.getElementById('businessJobsList');
+            if (!data.success) {
+                list.innerHTML = `<div class="alert alert-danger m-0">${escapeHtml(data.message || 'Không thể tải tin đăng.')}</div>`;
+                return;
+            }
+
+            if (!data.jobs || data.jobs.length === 0) {
+                list.innerHTML = `<div class="empty-state"><div class="empty-icon">📄</div><h3>Chưa có tin đăng</h3><p>Hãy tạo tin tuyển dụng đầu tiên để nhận ứng viên.</p></div>`;
+                return;
+            }
+
+            list.innerHTML = data.jobs.map(job => {
+                const approvalText = job.isApproved ? 'Đã duyệt' : 'Chờ duyệt';
+                const approvalColor = job.isApproved ? '#059669' : '#d97706';
+                const statusText = job.status === 'Open' ? 'Đang mở' : job.status === 'In_Progress' ? 'Đang thực hiện' : job.status === 'Rejected' ? 'Bị từ chối' : job.status;
+                return `
+                    <div style="border:1px solid #f1f5f9; padding:16px; border-radius:10px; display:grid; grid-template-columns:1fr auto; gap:16px; align-items:center;">
+                        <div style="min-width:0;">
+                            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:6px;">
+                                <strong style="font-size:1rem; color:#0f172a;">${escapeHtml(job.title)}</strong>
+                                <span class="admin-badge" style="background:#f8fafc; color:${approvalColor}; border:1px solid #e2e8f0;">${approvalText}</span>
+                                <span class="admin-badge" style="background:#eef2ff; color:#4F46E5; border:1px solid #e0e7ff;">${statusText}</span>
+                            </div>
+                            <div style="font-size:0.82rem; color:#64748b; margin-bottom:8px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${escapeHtml(job.description || '')}</div>
+                            <div style="display:flex; gap:12px; flex-wrap:wrap; font-size:0.78rem; color:#475569;">
+                                <span><strong>${formatVND(job.budget)}</strong></span>
+                                <span>Hạn: ${escapeHtml(job.deadline)}</span>
+                                <span>${job.applicantsCount} ứng viên</span>
+                                <span>${job.viewCount || 0} lượt xem</span>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap;">
+                            <button class="btn-indigo-outline btnViewBusinessApplicants" data-job-id="${job.id}" style="padding:8px 12px; border-radius:8px; font-size:0.82rem;">
+                                <i data-lucide="users" style="width:14px;height:14px;"></i> Xem ứng viên
+                            </button>
+                        </div>
+                    </div>`;
+            }).join('');
+            if (window.lucide) lucide.createIcons();
+
+            document.querySelectorAll('.btnViewBusinessApplicants').forEach(btn => {
+                btn.addEventListener('click', () => renderBusinessApplicantsView(btn.dataset.jobId));
+            });
+        } catch (err) {
+            console.error(err);
+            document.getElementById('businessJobsList').innerHTML = `<div class="alert alert-danger m-0">Không thể kết nối máy chủ.</div>`;
+        }
+    }
+
+    async function renderBusinessApplicantsView(jobId = null) {
+        const url = jobId ? `/Home/GetBusinessApplicants?jobId=${encodeURIComponent(jobId)}` : '/Home/GetBusinessApplicants';
+        mainContent.innerHTML = `
+            <div class="page-header">
+                <h1 class="page-title"><i data-lucide="users" style="width:24px;height:24px;"></i> Ứng viên</h1>
+                <p class="page-subtitle">Duyệt ứng viên đã ứng tuyển và bắt đầu trao đổi</p>
+            </div>
+            <div class="card border-0 shadow-sm p-4" style="border-radius:12px; background:#fff; border:1px solid #e2e8f0;">
+                <div id="businessApplicantsList" style="display:flex; flex-direction:column; gap:12px;">
+                    <div class="text-muted text-center py-4">Đang tải ứng viên...</div>
+                </div>
+            </div>`;
+        if (window.lucide) lucide.createIcons();
+
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
+            const list = document.getElementById('businessApplicantsList');
+            if (!data.success) {
+                list.innerHTML = `<div class="alert alert-danger m-0">${escapeHtml(data.message || 'Không thể tải ứng viên.')}</div>`;
+                return;
+            }
+
+            if (!data.applicants || data.applicants.length === 0) {
+                list.innerHTML = `<div class="empty-state"><div class="empty-icon">👥</div><h3>Chưa có ứng viên</h3><p>Khi sinh viên ứng tuyển, hồ sơ sẽ xuất hiện tại đây.</p></div>`;
+                return;
+            }
+
+            list.innerHTML = data.applicants.map(app => {
+                const initials = (app.fullName || 'UV').split(' ').filter(Boolean).slice(-2).map(x => x[0]).join('').toUpperCase() || 'UV';
+                const statusText = app.status === 'Pending' ? 'Chờ duyệt' : app.status === 'Accepted' ? 'Đã duyệt' : app.status === 'Rejected' ? 'Đã từ chối' : app.status;
+                const statusColor = app.status === 'Accepted' ? '#059669' : app.status === 'Rejected' ? '#dc2626' : '#d97706';
+                return `
+                    <div class="candidate-item" style="border:1px solid #f1f5f9; border-radius:10px; padding:16px; align-items:flex-start;">
+                        <div class="candidate-left" style="align-items:flex-start; min-width:0;">
+                            <div class="candidate-avatar" style="background:${app.avatarUrl ? 'none' : 'linear-gradient(135deg,#4F46E5,#06b6d4)'}; color:white; display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0;">
+                                ${app.avatarUrl ? `<img src="${escapeHtml(app.avatarUrl)}" alt="" />` : initials}
+                            </div>
+                            <div style="min-width:0;">
+                                <div class="candidate-name" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                                    ${escapeHtml(app.fullName || 'Ứng viên')}
+                                    <span class="candidate-badge" style="background:#f8fafc; color:${statusColor}; border:1px solid #e2e8f0;">${statusText}</span>
+                                </div>
+                                <div class="candidate-role">${escapeHtml(app.role || 'Ứng viên')} · ${escapeHtml(app.jobTitle || '')}</div>
+                                <div style="font-size:0.78rem; color:#64748b; margin-top:6px;">${escapeHtml(app.university || '')}${app.major ? ' · ' + escapeHtml(app.major) : ''}</div>
+                                <div style="font-size:0.8rem; color:#334155; margin-top:8px;">${escapeHtml(app.proposal || '')}</div>
+                                <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;">${(app.skills || []).map(s => `<span class="job-tag">${escapeHtml(s)}</span>`).join('')}</div>
+                                <div style="font-size:0.75rem; color:#94a3b8; margin-top:8px;">Ứng tuyển: ${escapeHtml(app.appliedAt || '')} · Giá đề xuất: ${formatVND(app.bidAmount || 0)}</div>
+                            </div>
+                        </div>
+                        <div class="candidate-right" style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+                            ${app.status === 'Pending' ? `
+                                <button class="btn-indigo-solid btnAcceptBid" data-bid-id="${app.bidId}" style="padding:7px 12px; border-radius:8px; font-size:0.78rem;">Duyệt</button>
+                                <button class="btn-indigo-outline btnRejectBid" data-bid-id="${app.bidId}" style="padding:7px 12px; border-radius:8px; font-size:0.78rem; color:#dc2626; border-color:#fecaca;">Từ chối</button>
+                            ` : ''}
+                            <button class="btn-indigo-outline btnChatApplicant" data-student-id="${app.studentId}" style="padding:7px 12px; border-radius:8px; font-size:0.78rem;">
+                                <i data-lucide="message-circle" style="width:14px;height:14px;"></i> Trao đổi
+                            </button>
+                        </div>
+                    </div>`;
+            }).join('');
+            if (window.lucide) lucide.createIcons();
+
+            document.querySelectorAll('.btnAcceptBid').forEach(btn => btn.addEventListener('click', () => updateBidStatus(btn.dataset.bidId, 'accept', jobId)));
+            document.querySelectorAll('.btnRejectBid').forEach(btn => btn.addEventListener('click', () => updateBidStatus(btn.dataset.bidId, 'reject', jobId)));
+            document.querySelectorAll('.btnChatApplicant').forEach(btn => btn.addEventListener('click', () => {
+                window.location.href = `/Message?userId=${encodeURIComponent(btn.dataset.studentId)}`;
+            }));
+        } catch (err) {
+            console.error(err);
+            document.getElementById('businessApplicantsList').innerHTML = `<div class="alert alert-danger m-0">Không thể kết nối máy chủ.</div>`;
+        }
+    }
+
+    async function updateBidStatus(bidId, action, jobId = null) {
+        try {
+            const res = await fetch('/Home/UpdateBidStatus', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bidId: parseInt(bidId, 10), action })
+            });
+            const data = await res.json();
+            if (data.success) {
+                showToast(action === 'accept' ? 'Đã duyệt ứng viên.' : 'Đã từ chối ứng viên.', 'success');
+                await renderBusinessApplicantsView(jobId);
+            } else {
+                showToast(data.message || 'Không thể cập nhật ứng viên.', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            showToast('Lỗi kết nối máy chủ.', 'error');
+        }
+    }
+
     // ============================================
     // RENDER: Tin nhắn
     // ============================================
@@ -1730,6 +1922,7 @@
     function renderJobs(jobs) {
         const container = document.getElementById('jobFeedContainer') || mainContent?.querySelector('#jobFeedContainer');
         if (!container) return;
+        currentRenderedJobs = Array.isArray(jobs) ? jobs : [];
 
         if (!jobs || jobs.length === 0) {
             container.innerHTML = `
@@ -1804,6 +1997,23 @@
             });
             newTitle.style.cursor = 'pointer';
         });
+
+        document.querySelectorAll('.job-card[data-job-id]').forEach(card => {
+            const newCard = card.cloneNode(true);
+            card.parentNode.replaceChild(newCard, card);
+            newCard.addEventListener('click', function (e) {
+                if (e.target.closest('.job-bookmark')) return;
+                openJobModal(this.dataset.jobId);
+            });
+            newCard.style.cursor = 'pointer';
+        });
+
+        document.querySelectorAll('.job-bookmark[data-job-id]').forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                toggleSaveJob(this.dataset.jobId, this);
+            });
+        });
     }
 
     // ============================================
@@ -1849,7 +2059,7 @@
     // JOB APPLICATION MODAL
     // ============================================
     function openJobModal(jobId) {
-        const job = allJobs.find(j => j.id === jobId);
+        const job = currentRenderedJobs.find(j => String(j.id) === String(jobId)) || allJobs.find(j => String(j.id) === String(jobId));
         if (!job) return;
 
         const budgetFormatted = formatVND(job.budget);
@@ -2445,63 +2655,13 @@
     // POST JOB MODAL
     // ============================================
     function bindPostJobButtons() {
-        document.getElementById('btnPostJob')?.addEventListener('click', () => openPostJobModal());
+        document.getElementById('btnPostJobBanner')?.addEventListener('click', () => {
+            document.getElementById('btnPostJob')?.click();
+        });
     }
 
     function openPostJobModal() {
-        const modal = document.createElement('div');
-        modal.className = 'modal-overlay';
-        modal.innerHTML = `
-            <div class="modal-content">
-                <button class="modal-close"><i data-lucide="x" style="width:20px;height:20px;"></i></button>
-                <div class="modal-header"><h2>📝 Đăng việc mới</h2></div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label class="form-label">Tiêu đề công việc</label>
-                        <input type="text" class="form-input" id="postJobTitle" placeholder="VD: Thiết kế poster sự kiện..." />
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Mô tả chi tiết</label>
-                        <textarea class="form-textarea" id="postJobDesc" rows="3" placeholder="Mô tả yêu cầu công việc..."></textarea>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">Danh mục</label>
-                            <select class="form-select" id="postJobCategory">
-                                <option>Thiết kế</option><option>Làm slide</option><option>Dịch thuật</option>
-                                <option>Viết content</option><option>Code web</option><option>Edit video</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Ngân sách (VNĐ)</label>
-                            <input type="number" class="form-input" id="postJobBudget" placeholder="150000" />
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Thời hạn</label>
-                        <input type="date" class="form-input" id="postJobDeadline" />
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn-apply-job" id="btnSubmitJob"><i data-lucide="send" style="width:16px;height:16px;"></i> Đăng việc</button>
-                    <button class="btn-modal-cancel">Hủy</button>
-                </div>
-            </div>`;
-
-        document.body.appendChild(modal);
-        if (window.lucide) lucide.createIcons();
-        requestAnimationFrame(() => modal.classList.add('active'));
-
-        modal.querySelector('.modal-close').addEventListener('click', () => closeModal(modal));
-        modal.querySelector('.btn-modal-cancel').addEventListener('click', () => closeModal(modal));
-        modal.addEventListener('click', e => { if (e.target === modal) closeModal(modal); });
-
-        modal.querySelector('#btnSubmitJob').addEventListener('click', () => {
-            const title = modal.querySelector('#postJobTitle').value.trim();
-            if (!title) { showToast('Vui lòng nhập tiêu đề công việc.', 'warning'); return; }
-            closeModal(modal);
-            showToast('✅ Đã đăng việc "' + title + '" thành công!', 'success');
-        });
+        // Disabled
     }
 
     // ============================================
@@ -2552,3 +2712,50 @@
     }
 
 })();
+
+document.addEventListener('DOMContentLoaded', () => {
+    const btnSubmitJob = document.getElementById('btnSubmitJob');
+    if (btnSubmitJob) {
+        btnSubmitJob.addEventListener('click', async () => {
+            const form = document.getElementById('postJobForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+            const formData = new FormData(form);
+            try {
+                const response = await fetch('/Home/PostJob', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                    }
+                });
+                
+                if (!response.ok) {
+                    const text = await response.text();
+                    console.error("Server returned error:", response.status, text);
+                    showToast('Lỗi từ máy chủ: ' + response.status + '. Vui lòng xem F12 Console.', 'error');
+                    return;
+                }
+
+                const data = await response.json();
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    const modalEl = document.getElementById('postJobModal');
+                    if (modalEl) {
+                        const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                        modal.hide();
+                        form.reset();
+                    }
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    showToast(data.message || 'Lỗi khi đăng bài', 'error');
+                }
+            } catch (err) {
+                console.error("Lỗi fetch:", err);
+                showToast('Lỗi kết nối hoặc lỗi xử lý dữ liệu', 'error');
+            }
+        });
+    }
+});

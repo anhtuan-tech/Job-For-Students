@@ -19,8 +19,11 @@ public class JobPost
     public DateTime Deadline { get; set; }
     public JobStatus Status { get; set; } = JobStatus.Open;
     public bool IsDeleted { get; set; }
+    public bool IsApproved { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    
+    public int ViewCount { get; set; } = 0;
 
     // Navigation properties
     public virtual BusinessProfile BusinessProfile { get; set; } = null!;

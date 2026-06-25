@@ -12,6 +12,7 @@ public class Review
     public string Comment { get; set; } = null!;
     public int? ParentReviewId { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public bool IsReported { get; set; } = false;
 
     // Navigation properties
     public virtual JobContract JobContract { get; set; } = null!;
