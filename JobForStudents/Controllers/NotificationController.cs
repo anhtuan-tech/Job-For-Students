@@ -85,6 +85,21 @@ public class NotificationController : Controller
         return Ok(new { success = true });
     }
 
+    [HttpPost]
+    public async Task<IActionResult> DeleteNotification(int id)
+    {
+        var currentUserId = GetCurrentUserId();
+        if (currentUserId == null) return Unauthorized();
+
+        var notif = await _context.Notifications.FirstOrDefaultAsync(n => n.Id == id && n.UserId == currentUserId.Value);
+        if (notif == null) return Ok(new { success = false, message = "Không tìm thấy thông báo." });
+
+        _context.Notifications.Remove(notif);
+        await _context.SaveChangesAsync();
+
+        return Ok(new { success = true });
+    }
+
     private static string GetTimeAgo(DateTime dateTime)
     {
         var span = DateTime.UtcNow - dateTime;

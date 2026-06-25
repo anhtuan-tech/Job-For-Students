@@ -47,7 +47,8 @@ public enum BidStatus
 {
     Pending,
     Accepted,
-    Rejected
+    Rejected,
+    Hired
 }
 
 public enum ContractStatus
@@ -89,3 +90,32 @@ public enum SubscriptionStatus
     Expired,
     Cancelled
 }
+
+public enum SupportCategory
+{
+    JobPosting,
+    PaymentWallet,
+    Account,
+    Other
+}
+
+public enum SupportRequestStatus
+{
+    Pending,
+    InProgress,
+    Resolved
+}
+
+public enum FeedbackType
+{
+    Suggestion,
+    BugReport
+}
+
+public enum FeedbackStatus
+{
+    Received,
+    InProgress,
+    Resolved
+}
+

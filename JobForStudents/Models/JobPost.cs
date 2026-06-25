@@ -9,6 +9,7 @@ public class JobPost
     public int BusinessId { get; set; }
     public string Title { get; set; } = null!;
     public string Description { get; set; } = null!;
+    public string? Category { get; set; }
     public string? Requirements { get; set; }
     public string? Benefits { get; set; }
     public BudgetType BudgetType { get; set; } = BudgetType.Fixed;
@@ -22,7 +23,7 @@ public class JobPost
     public bool IsApproved { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-    
+
     public int ViewCount { get; set; } = 0;
 
     // Navigation properties

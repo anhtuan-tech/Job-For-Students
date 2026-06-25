@@ -30,6 +30,9 @@ public class AppDbContext : DbContext
     public DbSet<ServicePlan> ServicePlans { get; set; } = null!;
     public DbSet<BusinessSubscription> BusinessSubscriptions { get; set; } = null!;
     public DbSet<SavedCandidate> SavedCandidates { get; set; } = null!;
+    public DbSet<SupportRequest> SupportRequests { get; set; } = null!;
+    public DbSet<Feedback> Feedbacks { get; set; } = null!;
+    public DbSet<JobTemplate> JobTemplates { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -68,7 +71,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<StudentSkill>(entity =>
         {
             entity.HasKey(ss => new { ss.StudentId, ss.SkillId });
-            
+
             entity.Property(ss => ss.SkillLevel).HasConversion<string>();
 
             entity.HasOne(ss => ss.StudentProfile)
@@ -297,9 +300,35 @@ public class AppDbContext : DbContext
                   .OnDelete(DeleteBehavior.Restrict);
         });
 
+        // SupportRequest FK & Conversions
+        modelBuilder.Entity<SupportRequest>(entity =>
+        {
+            entity.Property(sr => sr.Category).HasConversion<string>();
+            entity.Property(sr => sr.Status).HasConversion<string>();
+
+            entity.HasOne(sr => sr.User)
+                  .WithMany()
+                  .HasForeignKey(sr => sr.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Feedback FK & Conversions
+        modelBuilder.Entity<Feedback>(entity =>
+        {
+            entity.Property(f => f.Type).HasConversion<string>();
+            entity.Property(f => f.Status).HasConversion<string>();
+
+            entity.HasOne(f => f.User)
+                  .WithMany()
+                  .HasForeignKey(f => f.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // SavedCandidate Composite-like unique constraint & FKs
         modelBuilder.Entity<SavedCandidate>(entity =>
         {
             entity.HasKey(sc => new { sc.BusinessId, sc.StudentId });
+            entity.HasIndex(sc => new { sc.BusinessId, sc.StudentId }).IsUnique();
 
             entity.HasOne(sc => sc.BusinessProfile)
                   .WithMany(bp => bp.SavedCandidates)
@@ -311,7 +340,14 @@ public class AppDbContext : DbContext
                   .HasForeignKey(sc => sc.StudentId)
                   .OnDelete(DeleteBehavior.Cascade);
         });
+
+        // JobTemplate FK
+        modelBuilder.Entity<JobTemplate>(entity =>
+        {
+            entity.HasOne(jt => jt.BusinessProfile)
+                  .WithMany()
+                  .HasForeignKey(jt => jt.BusinessId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
     }
 }
-
-

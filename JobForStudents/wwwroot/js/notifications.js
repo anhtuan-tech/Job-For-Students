@@ -43,14 +43,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const dot = isUnread ? '<div style="width:8px;height:8px;background-color:#0ea5e9;border-radius:50%;margin-right:12px;flex-shrink:0;"></div>' : '<div style="width:8px;height:8px;margin-right:12px;flex-shrink:0;"></div>';
 
             const itemHTML = `
-                <a href="#" class="notification-item" data-id="${n.id}" style="display:flex; padding: 12px 16px; border-bottom: 1px solid #f1f5f9; text-decoration: none; color: #1e293b; align-items: center; transition: background-color 0.2s; ${bgClass}">
+                <div class="notification-item" data-id="${n.id}" style="display:flex; gap:12px; padding: 12px 16px; border-bottom: 1px solid #f1f5f9; color: #1e293b; align-items: flex-start; transition: background-color 0.2s; ${bgClass}">
                     ${dot}
-                    <div style="flex-grow:1;">
+                    <div style="flex-grow:1; min-width:0;">
                         <div style="font-size: 0.85rem; ${fwClass} margin-bottom: 4px;">${n.title}</div>
                         <div style="font-size: 0.8rem; color: #64748b; line-height: 1.4;">${n.message}</div>
                         <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 4px;">${n.timeAgo}</div>
                     </div>
-                </a>
+                    <button type="button" class="notification-delete-btn" data-id="${n.id}" aria-label="Xóa thông báo" style="border:none; background:transparent; color:#94a3b8; padding:4px; margin-top:-2px; border-radius:9999px; flex-shrink:0;">
+                        <i data-lucide="trash-2" style="width:14px;height:14px;"></i>
+                    </button>
+                </div>
             `;
             notificationList.insertAdjacentHTML('beforeend', itemHTML);
         });
@@ -58,9 +61,19 @@ document.addEventListener('DOMContentLoaded', () => {
         // Add click listeners to mark individual as read
         document.querySelectorAll('.notification-item').forEach(item => {
             item.addEventListener('click', (e) => {
-                e.preventDefault();
+                if (e.target.closest('.notification-delete-btn')) return;
                 const id = item.getAttribute('data-id');
                 fetch(`/Notification/MarkAsRead?id=${id}`, { method: 'POST' })
+                    .then(() => fetchNotifications());
+            });
+        });
+
+        document.querySelectorAll('.notification-delete-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const id = btn.getAttribute('data-id');
+                fetch(`/Notification/DeleteNotification?id=${id}`, { method: 'POST' })
                     .then(() => fetchNotifications());
             });
         });
