@@ -1,0 +1,277 @@
+@model JobForStudents.Models.BusinessJobsPageViewModel
+@{
+    ViewData["Title"] = $"{Model.CompanyName} - Trang tuyển dụng";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+    var initials = string.Join("", Model.CompanyName.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(w => w[0])).ToUpperInvariant();
+    if (initials.Length > 2) initials = initials[..2];
+    var coverStyle = !string.IsNullOrWhiteSpace(Model.CoverImageUrl)
+        ? $"background-image: linear-gradient(90deg, rgba(2, 6, 23, .72), rgba(14, 165, 233, .28)), url('{Model.CoverImageUrl}');"
+        : "background: linear-gradient(135deg, #0f766e, #0284c7 55%, #f59e0b);";
+}
+
+<div class="public-business-page">
+    <header class="public-business-hero" style="@coverStyle">
+        <nav class="public-business-nav">
+            <a href="/" class="public-brand">
+                <span class="public-brand-mark"><i data-lucide="graduation-cap"></i></span>
+                <span>J4S</span>
+            </a>
+            <button class="btn-copy-public-link" id="copyBusinessPageLink">
+                <i data-lucide="copy"></i>
+                Sao chép liên kết
+            </button>
+        </nav>
+
+        <div class="public-business-hero-content">
+            <div class="public-business-logo">
+                @if (!string.IsNullOrWhiteSpace(Model.LogoUrl))
+                {
+                    <img src="@Model.LogoUrl" alt="@Model.CompanyName" />
+                }
+                else
+                {
+                    <span>@initials</span>
+                }
+            </div>
+            <div class="public-business-heading">
+                <div class="public-business-kicker">
+                    <span>@(Model.Industry ?? "Doanh nghiệp tuyển dụng")</span>
+                    @if (Model.IsVerified)
+                    {
+                        <span class="verified-pill"><i data-lucide="badge-check"></i> Đã xác thực</span>
+                    }
+                </div>
+                <h1>@Model.CompanyName</h1>
+                <p>@(string.IsNullOrWhiteSpace(Model.Description) ? "Doanh nghiệp đang tuyển cộng tác viên và sinh viên phù hợp cho các vị trí đang mở trên J4S." : Model.Description)</p>
+                <div class="public-business-actions">
+                    @if (!string.IsNullOrWhiteSpace(Model.WebsiteUrl))
+                    {
+                        <a class="btn-public-primary" href="@Model.WebsiteUrl" target="_blank" rel="noopener">
+                            <i data-lucide="globe"></i>
+                            Website
+                        </a>
+                    }
+                    <a class="btn-public-secondary" href="#openJobs">
+                        <i data-lucide="briefcase"></i>
+                        Xem vị trí đang tuyển
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="public-business-main">
+        <section class="public-business-stats" aria-label="Tổng quan doanh nghiệp">
+            <div class="public-stat">
+                <strong>@Model.OpenJobsCount</strong>
+                <span>Tin đang mở</span>
+            </div>
+            <div class="public-stat">
+                <strong>@Model.AverageRating.ToString("0.0")</strong>
+                <span>Điểm đánh giá</span>
+            </div>
+            <div class="public-stat">
+                <strong>@Model.ReviewsCount</strong>
+                <span>Lượt đánh giá</span>
+            </div>
+            <div class="public-stat">
+                <strong>@(Model.CompanySize ?? "Chưa cập nhật")</strong>
+                <span>Quy mô</span>
+            </div>
+        </section>
+
+        <section class="public-business-grid">
+            <aside class="public-company-panel">
+                <h2>Thông tin doanh nghiệp</h2>
+                <div class="public-info-list">
+                    <div><i data-lucide="map-pin"></i><span>@(Model.Address ?? "Chưa cập nhật địa chỉ")</span></div>
+                    <div><i data-lucide="mail"></i><span>@Model.Email</span></div>
+                    <div><i data-lucide="phone"></i><span>@Model.Phone</span></div>
+                    <div><i data-lucide="factory"></i><span>@(Model.Industry ?? "Chưa cập nhật lĩnh vực")</span></div>
+                </div>
+            </aside>
+
+            <section class="public-jobs-section" id="openJobs">
+                <div class="public-section-heading">
+                    <div>
+                        <h2>Vị trí đang tuyển</h2>
+                        <p>Danh sách tin tuyển dụng đang mở của @Model.CompanyName.</p>
+                    </div>
+                </div>
+
+                @if (Model.OpenJobs.Count == 0)
+                {
+                    <div class="public-empty-state">
+                        <i data-lucide="briefcase-business"></i>
+                        <p>Doanh nghiệp hiện chưa có tin tuyển dụng đang mở.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="public-job-list">
+                        @foreach (var job in Model.OpenJobs)
+                        {
+                            <article class="public-job-card">
+                                <div>
+                                    <div class="public-job-topline">
+                                        <span>@job.Location</span>
+                                        <span>Hạn: @job.Deadline</span>
+                                    </div>
+                                    <h3>@job.Title</h3>
+                                    <p>@job.Description</p>
+                                    <div class="public-job-tags">
+                                        @foreach (var skill in job.Skills)
+                                        {
+                                            <span>@skill</span>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="public-job-meta">
+                                    <strong>@string.Format("{0:N0} đ", job.Budget)</strong>
+                                    <span>@job.BudgetType · @job.ExperienceLevel</span>
+                                    <span>@job.Quantity vị trí</span>
+                                </div>
+                            </article>
+                        }
+                    </div>
+                }
+            </section>
+        </section>
+
+        <section class="public-reviews-section">
+            <div class="public-section-heading">
+                <div>
+                    <h2>Đánh giá doanh nghiệp</h2>
+                    <p>Cảm nhận từ các freelancer từng làm việc với doanh nghiệp.</p>
+                </div>
+            </div>
+
+            @if (Model.Reviews.Count == 0)
+            {
+                <div class="public-empty-state">
+                    <i data-lucide="star"></i>
+                    <p>Chưa có đánh giá nào cho doanh nghiệp này.</p>
+                </div>
+            }
+            else
+            {
+                <div class="public-review-list">
+                    @foreach (var review in Model.Reviews)
+                    {
+                        var reviewerInitials = string.Join("", review.ReviewerName.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(w => w[0])).ToUpperInvariant();
+                        if (reviewerInitials.Length > 2) reviewerInitials = reviewerInitials[..2];
+                        <article class="public-review-card">
+                            <div class="public-review-avatar">
+                                @if (!string.IsNullOrWhiteSpace(review.ReviewerAvatar))
+                                {
+                                    <img src="@review.ReviewerAvatar" alt="@review.ReviewerName" />
+                                }
+                                else
+                                {
+                                    <span>@reviewerInitials</span>
+                                }
+                            </div>
+                            <div>
+                                <div class="public-review-head">
+                                    <strong>@review.ReviewerName</strong>
+                                    <span>@review.CreatedAt</span>
+                                </div>
+                                <div class="public-review-stars">@string.Concat(Enumerable.Repeat("★", review.Rating))@string.Concat(Enumerable.Repeat("☆", 5 - review.Rating))</div>
+                                <p>@review.Comment</p>
+                            </div>
+                        </article>
+                    }
+                </div>
+            }
+        </section>
+    </main>
+</div>
+
+<style>
+    .public-business-page { min-height: 100vh; background: #f8fafc; color: #0f172a; }
+    .public-business-hero { min-height: 430px; background-size: cover; background-position: center; color: #fff; padding: 24px clamp(18px, 4vw, 56px) 48px; display: flex; flex-direction: column; justify-content: space-between; }
+    .public-business-nav { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .public-brand { color: #fff; text-decoration: none; display: inline-flex; align-items: center; gap: 10px; font-weight: 900; font-size: 20px; }
+    .public-brand-mark { width: 36px; height: 36px; border-radius: 8px; background: rgba(255, 255, 255, .18); display: inline-flex; align-items: center; justify-content: center; }
+    .public-brand svg, .btn-copy-public-link svg, .public-business-actions svg, .verified-pill svg, .public-info-list svg { width: 16px; height: 16px; }
+    .btn-copy-public-link, .btn-public-primary, .btn-public-secondary { border: 0; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-weight: 800; min-height: 40px; padding: 0 14px; text-decoration: none; }
+    .btn-copy-public-link { background: rgba(255, 255, 255, .92); color: #0369a1; }
+    .public-business-hero-content { display: flex; align-items: flex-end; gap: 24px; max-width: 1120px; width: 100%; }
+    .public-business-logo { width: 112px; height: 112px; border-radius: 16px; background: #fff; color: #0284c7; display: flex; align-items: center; justify-content: center; font-size: 34px; font-weight: 900; overflow: hidden; flex: 0 0 auto; box-shadow: 0 24px 60px rgba(15, 23, 42, .28); }
+    .public-business-logo img { width: 100%; height: 100%; object-fit: cover; }
+    .public-business-heading { max-width: 780px; }
+    .public-business-kicker { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; font-weight: 800; margin-bottom: 10px; }
+    .verified-pill { background: rgba(16, 185, 129, .22); color: #d1fae5; border: 1px solid rgba(209, 250, 229, .42); border-radius: 999px; padding: 5px 10px; display: inline-flex; align-items: center; gap: 6px; }
+    .public-business-heading h1 { font-size: clamp(34px, 6vw, 64px); line-height: 1; margin: 0 0 14px; font-weight: 900; letter-spacing: 0; }
+    .public-business-heading p { font-size: 16px; line-height: 1.7; margin: 0; max-width: 700px; color: rgba(255, 255, 255, .9); }
+    .public-business-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+    .btn-public-primary { background: #fff; color: #0369a1; }
+    .btn-public-secondary { background: rgba(255, 255, 255, .16); color: #fff; border: 1px solid rgba(255, 255, 255, .34); }
+    .public-business-main { width: min(1180px, calc(100% - 32px)); margin: -34px auto 64px; }
+    .public-business-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 22px; }
+    .public-stat, .public-company-panel, .public-job-card, .public-review-card, .public-empty-state { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 12px 28px rgba(15, 23, 42, .06); }
+    .public-stat { padding: 18px; display: flex; flex-direction: column; gap: 4px; }
+    .public-stat strong { font-size: 26px; font-weight: 900; color: #0369a1; }
+    .public-stat span { font-size: 13px; color: #64748b; font-weight: 700; }
+    .public-business-grid { display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: 22px; align-items: start; }
+    .public-company-panel { padding: 22px; position: sticky; top: 18px; }
+    .public-company-panel h2, .public-section-heading h2 { margin: 0; font-size: 20px; font-weight: 900; }
+    .public-info-list { display: grid; gap: 14px; margin-top: 18px; }
+    .public-info-list div { display: flex; gap: 10px; align-items: flex-start; color: #475569; line-height: 1.5; font-weight: 600; overflow-wrap: anywhere; }
+    .public-info-list svg { color: #0f766e; flex: 0 0 auto; margin-top: 3px; }
+    .public-section-heading { display: flex; justify-content: space-between; align-items: end; margin-bottom: 14px; }
+    .public-section-heading p { margin: 6px 0 0; color: #64748b; font-weight: 600; }
+    .public-job-list, .public-review-list { display: grid; gap: 14px; }
+    .public-job-card { padding: 20px; display: grid; grid-template-columns: minmax(0, 1fr) 170px; gap: 18px; }
+    .public-job-topline { display: flex; flex-wrap: wrap; gap: 10px; color: #0f766e; font-weight: 800; font-size: 12px; margin-bottom: 8px; }
+    .public-job-card h3 { margin: 0 0 8px; font-size: 19px; font-weight: 900; }
+    .public-job-card p { margin: 0; color: #475569; line-height: 1.6; }
+    .public-job-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .public-job-tags span { background: #e0f2fe; color: #0369a1; border-radius: 999px; padding: 5px 10px; font-size: 12px; font-weight: 800; }
+    .public-job-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 7px; text-align: right; color: #64748b; font-weight: 700; }
+    .public-job-meta strong { color: #f59e0b; font-size: 20px; }
+    .public-reviews-section { margin-top: 34px; }
+    .public-review-card { padding: 18px; display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 14px; }
+    .public-review-avatar { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #0ea5e9, #14b8a6); color: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; font-weight: 900; }
+    .public-review-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .public-review-head { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; }
+    .public-review-head span { color: #94a3b8; font-weight: 700; }
+    .public-review-stars { color: #f59e0b; margin: 4px 0; }
+    .public-review-card p { margin: 0; color: #475569; line-height: 1.6; }
+    .public-empty-state { padding: 36px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 10px; color: #64748b; font-weight: 700; }
+    .public-empty-state svg { width: 32px; height: 32px; color: #0ea5e9; }
+    @@media (max-width: 860px) {
+        .public-business-hero-content { align-items: flex-start; flex-direction: column; }
+        .public-business-stats, .public-business-grid, .public-job-card { grid-template-columns: 1fr; }
+        .public-company-panel { position: static; }
+        .public-job-meta { align-items: flex-start; text-align: left; }
+    }
+    @@media (max-width: 560px) {
+        .public-business-hero { min-height: 520px; }
+        .public-business-nav { align-items: flex-start; flex-direction: column; }
+        .btn-copy-public-link { width: 100%; }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        if (window.lucide) lucide.createIcons();
+
+        const copyBtn = document.getElementById('copyBusinessPageLink');
+        copyBtn?.addEventListener('click', async function () {
+            const link = window.location.href;
+            try {
+                await navigator.clipboard.writeText(link);
+                if (window.showToast) showToast('Đã sao chép liên kết trang tuyển dụng.', 'success');
+            } catch {
+                const input = document.createElement('input');
+                input.value = link;
+                document.body.appendChild(input);
+                input.select();
+                document.execCommand('copy');
+                input.remove();
+                if (window.showToast) showToast('Đã sao chép liên kết trang tuyển dụng.', 'success');
+            }
+        });
+    });
+</script>
