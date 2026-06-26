@@ -1825,6 +1825,10 @@
             e.preventDefault();
             window.renderBusinessWalletDeposit();
             });
+            document.getElementById('navBusinessReviews')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.renderBusinessReviewsView?.();
+            });
 
             // Gói dịch vụ & Thanh toán toggle
             document.getElementById('navWalletParent')?.addEventListener('click', function(e) {

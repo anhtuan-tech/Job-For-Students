@@ -6705,4 +6705,5 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     window.openReviewModal = openReviewModal;
+    window.renderBusinessReviewsView = renderBusinessReviewsView;
 })();
