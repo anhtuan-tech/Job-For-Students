@@ -15,18 +15,14 @@
     let originalBannerHTML = '';
     let originalCategoriesHTML = '';
     let pendingChatUserId = null;
+    let reviewsFilter = 'all';
 
     let profileState = {
         avatar: '',
         cover: '',
-        bio: 'Sinh viên năm 3 ngành Thiết kế Đồ họa tại ĐH FPT HCM. Đam mê sáng tạo, chuyên thiết kế poster, slide thuyết trình và dịch thuật Anh-Việt. Luôn giao bài đúng hạn và sẵn sàng chỉnh sửa theo yêu cầu.',
-        skills: ['Photoshop', 'Illustrator', 'Figma', 'PowerPoint', 'Canva', 'Dịch thuật EN-VI', 'Viết content', 'HTML/CSS'],
-        portfolio: [
-            { title: '🎨 Poster TEDx', link: '#' },
-            { title: '📊 Slide Marketing', link: '#' },
-            { title: '🌐 Landing Page', link: '#' },
-            { title: '📝 Content Blog', link: '#' }
-        ],
+        bio: '',
+        skills: [],
+        portfolio: [],
         cvName: '',
         cvUrl: ''
     };
@@ -437,9 +433,7 @@
                     case 'leaderboard':
                         renderLeaderboardView();
                         break;
-                    case 'blog':
-                        renderBlogView();
-                        break;
+
                     default:
                         restoreHomeView();
                         renderJobs(allJobs);
@@ -3814,51 +3808,269 @@
     // RENDER: Đánh giá
     // ============================================
     function renderReviewsView() {
-        const avgRating = (mockReviews.reduce((s, r) => s + r.rating, 0) / mockReviews.length).toFixed(1);
         mainContent.innerHTML = `
-            <div class="page-header">
-                <h1 class="page-title"><i data-lucide="star" style="width:24px;height:24px;"></i> Đánh giá của tôi</h1>
-                <p class="page-subtitle">Xem các đánh giá từ khách hàng</p>
+            <div style="display: flex; align-items: center; justify-content: center; min-height: 250px; flex-direction: column; gap: 16px;">
+                <div class="spinner-border text-info" role="status" style="width: 2rem; height: 2rem;"></div>
+                <span style="color: var(--text-secondary); font-weight: 500; font-family: 'Inter', sans-serif;">Đang tải danh sách đánh giá...</span>
             </div>
-            <div class="reviews-summary">
-                <div class="review-score-big">
-                    <div class="score-number">${avgRating}</div>
-                    <div class="score-stars">${'★'.repeat(Math.round(avgRating))}${'☆'.repeat(5 - Math.round(avgRating))}</div>
-                    <div class="score-count">${mockReviews.length} đánh giá</div>
-                </div>
-                <div class="rating-bars">
-                    ${[5, 4, 3, 2, 1].map(star => {
-            const count = mockReviews.filter(r => r.rating === star).length;
-            const pct = (count / mockReviews.length * 100);
-            return `<div class="rating-bar-row">
-                            <span class="bar-label">${star} ★</span>
-                            <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
-                            <span class="bar-count">${count}</span>
-                        </div>`;
-        }).join('')}
-                </div>
-            </div>
-            <div class="reviews-list">
-                ${mockReviews.map(r => `
-                    <div class="review-card">
-                        <div class="review-header">
-                            <div class="reviewer-info">
-                                <div class="reviewer-avatar">${r.reviewer[0]}${r.reviewer.split(' ').pop()[0]}</div>
-                                <div>
-                                    <div class="reviewer-name">${escapeHtml(r.reviewer)}</div>
-                                    <div class="review-project">${escapeHtml(r.project)}</div>
-                                </div>
-                            </div>
-                            <div class="review-meta">
-                                <div class="review-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</div>
-                                <div class="review-date">${r.date}</div>
-                            </div>
-                        </div>
-                        <p class="review-comment">"${escapeHtml(r.comment)}"</p>
+        `;
+
+        fetch('/Review/GetMyReviews')
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    showToast(data.message || 'Lỗi khi tải đánh giá.', 'error');
+                    mainContent.innerHTML = `<div class="alert alert-danger m-4">${escapeHtml(data.message)}</div>`;
+                    return;
+                }
+
+                const dbReviews = data.reviews || [];
+                const totalReviews = dbReviews.length;
+                const avgRating = totalReviews > 0 
+                    ? (dbReviews.reduce((s, r) => s + r.rating, 0) / totalReviews).toFixed(1)
+                    : "0.0";
+                const roundedAvg = Math.round(Number(avgRating));
+
+                // Filter reviews
+                let filteredReviews = dbReviews;
+                if (reviewsFilter === '5') {
+                    filteredReviews = dbReviews.filter(r => r.rating === 5);
+                } else if (reviewsFilter === '4') {
+                    filteredReviews = dbReviews.filter(r => r.rating === 4);
+                } else if (reviewsFilter === 'low') {
+                    filteredReviews = dbReviews.filter(r => r.rating <= 3);
+                }
+
+                const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
+
+                mainContent.innerHTML = `
+                    <div class="page-header animate-in">
+                        <h1 class="page-title"><i data-lucide="star" style="width:24px;height:24px;color:#F59E0B;"></i> Đánh giá của tôi</h1>
+                        <p class="page-subtitle">Quản lý các nhận xét từ khách hàng và phản hồi của bạn</p>
                     </div>
-                `).join('')}
-            </div>`;
-        if (window.lucide) lucide.createIcons();
+                    
+                    <div class="reviews-summary animate-in">
+                        <div class="review-score-big">
+                            <div class="score-number">${avgRating}</div>
+                            <div class="score-stars">
+                                ${'★'.repeat(roundedAvg)}${'☆'.repeat(5 - roundedAvg)}
+                            </div>
+                            <div class="score-count">${totalReviews} đánh giá từ khách hàng</div>
+                        </div>
+                        <div class="rating-bars">
+                            ${[5, 4, 3, 2, 1].map(star => {
+                                const count = dbReviews.filter(r => r.rating === star).length;
+                                const pct = totalReviews > 0 ? (count / totalReviews * 100) : 0;
+                                return `
+                                    <div class="rating-bar-row">
+                                        <span class="bar-label">${star} ★</span>
+                                        <div class="bar-track"><div class="bar-fill" style="width:${pct}%;"></div></div>
+                                        <span class="bar-count">${count}</span>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Filter Tabs -->
+                    <div class="reviews-filter-tabs animate-in">
+                        <button class="review-tab-btn ${reviewsFilter === 'all' ? 'active' : ''}" data-filter="all">Tất cả (${dbReviews.length})</button>
+                        <button class="review-tab-btn ${reviewsFilter === '5' ? 'active' : ''}" data-filter="5">5 ★ (${dbReviews.filter(r => r.rating === 5).length})</button>
+                        <button class="review-tab-btn ${reviewsFilter === '4' ? 'active' : ''}" data-filter="4">4 ★ (${dbReviews.filter(r => r.rating === 4).length})</button>
+                        <button class="review-tab-btn ${reviewsFilter === 'low' ? 'active' : ''}" data-filter="low">Dưới 4 ★ (${dbReviews.filter(r => r.rating <= 3).length})</button>
+                    </div>
+
+                    <div class="reviews-list animate-in">
+                        ${filteredReviews.length === 0 ? `
+                            <div class="empty-state">
+                                <div class="empty-icon">⭐</div>
+                                <h3>Không tìm thấy đánh giá nào</h3>
+                                <p>Không có đánh giá nào phù hợp với bộ lọc đã chọn.</p>
+                            </div>
+                        ` : filteredReviews.map((r, i) => {
+                            const avatarColor = colors[i % colors.length];
+                            const initials = (r.reviewer || "KH").split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                            return `
+                                <div class="review-card ${r.isReported ? 'reported-dimmed' : ''}" data-id="${r.id}">
+                                    <div class="review-header">
+                                        <div class="reviewer-info">
+                                            <div class="reviewer-avatar" style="background: linear-gradient(135deg, ${avatarColor}, ${avatarColor}aa)">${initials}</div>
+                                            <div>
+                                                <div class="reviewer-name">${escapeHtml(r.reviewer)}</div>
+                                                <div class="review-project"><i data-lucide="briefcase" style="width:12px;height:12px;display:inline-align:middle;margin-right:4px;"></i> ${escapeHtml(r.project)}</div>
+                                            </div>
+                                        </div>
+                                        <div class="review-meta">
+                                            <div class="review-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</div>
+                                            <div class="review-date">${r.date}</div>
+                                        </div>
+                                    </div>
+                                    <p class="review-comment">"${escapeHtml(r.comment)}"</p>
+                                    
+                                    ${r.reply ? `
+                                        <div class="review-reply-box">
+                                            <div class="reply-header">
+                                                <div style="display:flex; align-items:center; gap:6px;">
+                                                    <div class="reply-avatar">SV</div>
+                                                    <strong>Phản hồi của bạn (Freelancer)</strong>
+                                                </div>
+                                            </div>
+                                            <p class="reply-content">${escapeHtml(r.reply)}</p>
+                                        </div>
+                                    ` : `
+                                        <div class="review-actions" id="actions-${r.id}">
+                                            ${r.isReported ? `
+                                                <span class="report-badge pending"><i data-lucide="alert-triangle" style="width:14px;height:14px;"></i> Đang xem xét báo cáo không phù hợp</span>
+                                            ` : `
+                                                <button class="btn-review-reply" data-id="${r.id}"><i data-lucide="message-square" style="width:14px;height:14px;"></i> Phản hồi</button>
+                                                <button class="btn-review-report" data-id="${r.id}"><i data-lucide="flag" style="width:14px;height:14px;"></i> Báo cáo không phù hợp</button>
+                                            `}
+                                        </div>
+                                        
+                                        <!-- Reply Form Container -->
+                                        <div class="reply-form-wrapper" id="replyForm-${r.id}" style="display:none; margin-top:12px;">
+                                            <textarea placeholder="Nhập nội dung phản hồi của bạn tới khách hàng..." class="form-control reply-textarea" id="replyText-${r.id}"></textarea>
+                                            <div style="display:flex; gap:8px; margin-top:8px; justify-content:flex-end;">
+                                                <button class="btn-reply-cancel" data-id="${r.id}">Hủy</button>
+                                                <button class="btn-reply-submit" data-id="${r.id}">Gửi phản hồi</button>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Report Form Container -->
+                                        <div class="report-form-wrapper" id="reportForm-${r.id}" style="display:none; margin-top:12px;">
+                                            <div style="background:#FFFBEB; border:1px solid #FDE68A; padding:12px; border-radius:8px;">
+                                                <div style="font-weight:700; color:#92400E; margin-bottom:8px; font-size:13px;">Chọn lý do báo cáo đánh giá này không phù hợp:</div>
+                                                <div style="display:flex; flex-direction:column; gap:6px; font-size:13px; color:#4B5563;">
+                                                    <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="radio" name="reportReason-${r.id}" value="Thông tin sai sự thật" checked> Đánh giá không đúng sự thật, bôi nhọ danh dự</label>
+                                                    <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="radio" name="reportReason-${r.id}" value="Ngôn từ thô tục"> Có chứa từ ngữ thiếu văn hóa, kích động</label>
+                                                    <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="radio" name="reportReason-${r.id}" value="Spam/Quảng cáo"> Spam quảng cáo hoặc không liên quan đến công việc</label>
+                                                </div>
+                                                <div style="display:flex; gap:8px; margin-top:12px; justify-content:flex-end;">
+                                                    <button class="btn-report-cancel" data-id="${r.id}">Hủy</button>
+                                                    <button class="btn-report-submit" data-id="${r.id}">Báo cáo vi phạm</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `}
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>`;
+
+                if (window.lucide) lucide.createIcons();
+
+                // Attach event listeners for tabs
+                document.querySelectorAll('.review-tab-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        reviewsFilter = btn.getAttribute('data-filter');
+                        renderReviewsView();
+                    });
+                });
+
+                // Attach reply click handler
+                document.querySelectorAll('.btn-review-reply').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const id = btn.getAttribute('data-id');
+                        document.getElementById(`replyForm-${id}`).style.display = 'block';
+                        document.getElementById(`actions-${id}`).style.display = 'none';
+                    });
+                });
+
+                // Attach cancel reply handler
+                document.querySelectorAll('.btn-reply-cancel').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const id = btn.getAttribute('data-id');
+                        document.getElementById(`replyForm-${id}`).style.display = 'none';
+                        document.getElementById(`actions-${id}`).style.display = 'flex';
+                    });
+                });
+
+                // Attach submit reply handler
+                document.querySelectorAll('.btn-reply-submit').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const id = Number(btn.getAttribute('data-id'));
+                        const text = document.getElementById(`replyText-${id}`).value.trim();
+                        if (!text) {
+                            showToast('Vui lòng nhập nội dung phản hồi!', 'warning');
+                            return;
+                        }
+
+                        const formData = new FormData();
+                        formData.append('parentReviewId', id);
+                        formData.append('comment', text);
+
+                        fetch('/Review/Reply', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(res => res.json())
+                        .then(resData => {
+                            if (resData.success) {
+                                showToast('✅ Gửi phản hồi thành công!', 'success');
+                                renderReviewsView();
+                            } else {
+                                showToast(resData.message || 'Lỗi khi gửi phản hồi.', 'error');
+                            }
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            showToast('Không thể kết nối đến máy chủ.', 'error');
+                        });
+                    });
+                });
+
+                // Attach report click handler
+                document.querySelectorAll('.btn-review-report').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const id = btn.getAttribute('data-id');
+                        document.getElementById(`reportForm-${id}`).style.display = 'block';
+                        document.getElementById(`actions-${id}`).style.display = 'none';
+                    });
+                });
+
+                // Attach cancel report handler
+                document.querySelectorAll('.btn-report-cancel').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const id = btn.getAttribute('data-id');
+                        document.getElementById(`reportForm-${id}`).style.display = 'none';
+                        document.getElementById(`actions-${id}`).style.display = 'flex';
+                    });
+                });
+
+                // Attach submit report handler
+                document.querySelectorAll('.btn-report-submit').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const id = Number(btn.getAttribute('data-id'));
+                        const selectedReason = document.querySelector(`input[name="reportReason-${id}"]:checked`)?.value || "Lý do khác";
+
+                        const formData = new FormData();
+                        formData.append('id', id);
+                        formData.append('reason', selectedReason);
+
+                        fetch('/Review/Report', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(res => res.json())
+                        .then(resData => {
+                            if (resData.success) {
+                                showToast('🚩 Đã gửi báo cáo đánh giá! Ban quản trị sẽ xem xét trong 24h.', 'success');
+                                renderReviewsView();
+                            } else {
+                                showToast(resData.message || 'Lỗi khi gửi báo cáo.', 'error');
+                            }
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            showToast('Không thể kết nối đến máy chủ.', 'error');
+                        });
+                    });
+                });
+            })
+            .catch(err => {
+                console.error(err);
+                showToast('Lỗi khi tải thông tin đánh giá.', 'error');
+            });
     }
 
     // ============================================
@@ -3983,39 +4195,6 @@
         if (window.lucide) lucide.createIcons();
     }
 
-    // ============================================
-    // RENDER: Blog & Hướng dẫn
-    // ============================================
-    function renderBlogView() {
-        const colors = ['#6366F1', '#EC4899', '#14B8A6', '#F59E0B', '#EF4444'];
-        mainContent.innerHTML = `
-            <div class="page-header">
-                <h1 class="page-title"><i data-lucide="book-open" style="width:24px;height:24px;"></i> Blog & Hướng dẫn</h1>
-                <p class="page-subtitle">Kiến thức và mẹo hữu ích cho freelancer</p>
-            </div>
-            <div class="blog-grid">
-                ${mockBlogPosts.map((b, i) => `
-                    <div class="blog-card" data-blog-id="${b.id}">
-                        <div class="blog-thumbnail" style="background:linear-gradient(135deg, ${colors[i % colors.length]}, ${colors[(i + 1) % colors.length]}33)">
-                            <span class="blog-category-tag">${escapeHtml(b.category)}</span>
-                        </div>
-                        <div class="blog-content">
-                            <h3 class="blog-title">${escapeHtml(b.title)}</h3>
-                            <p class="blog-excerpt">${escapeHtml(b.excerpt)}</p>
-                            <div class="blog-meta">
-                                <span><i data-lucide="calendar" style="width:12px;height:12px;"></i> ${b.date}</span>
-                                <span><i data-lucide="clock" style="width:12px;height:12px;"></i> ${b.readTime}</span>
-                                <span><i data-lucide="eye" style="width:12px;height:12px;"></i> ${b.views.toLocaleString()}</span>
-                            </div>
-                        </div>
-                    </div>
-                `).join('')}
-            </div>`;
-        if (window.lucide) lucide.createIcons();
-        document.querySelectorAll('.blog-card').forEach(card => {
-            card.addEventListener('click', () => showToast('📖 Đang mở bài viết...', 'info'));
-        });
-    }
 
     // ============================================
     // RENDER JOBS — Dynamic DOM rebuild
@@ -4219,6 +4398,125 @@
             applyBtn.addEventListener('click', function () { applyJob(job.id, this, modal); });
         }
     }
+
+    const tipData = {
+        'tip-proposal': {
+            title: 'Viết Proposal chinh phục khách hàng',
+            category: 'Kỹ năng',
+            categoryColor: '#2563eb',
+            icon: '✍️',
+            content: `
+                <p style="margin-bottom:14px; color:#475569; line-height:1.7;">Một bản Proposal (Đề xuất công việc) ấn tượng là chìa khóa mở ra cơ hội làm việc với các nhà tuyển dụng chất lượng. Đối với sinh viên, khi kinh nghiệm chưa nhiều, Proposal chính là nơi tốt nhất để bạn thể hiện sự nhiệt huyết và năng lực giải quyết vấn đề.</p>
+                <div style="background:#eff6ff; border-left:4px solid #2563eb; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
+                    <p style="font-weight:700; color:#1e40af; margin:0 0 6px 0;">📌 1. Đi thẳng vào vấn đề của khách hàng</p>
+                    <p style="color:#475569; margin:0; line-height:1.6;">Thay vì giới thiệu bản thân dài dòng, hãy tóm tắt yêu cầu của khách hàng và chỉ ra bạn đang hiểu họ cần gì. Ví dụ: <em>"Tôi thấy bạn đang cần thiết kế bộ slide với phong cách tối giản và hiện đại..."</em></p>
+                </div>
+                <div style="background:#f0fdf4; border-left:4px solid #16a34a; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
+                    <p style="font-weight:700; color:#15803d; margin:0 0 6px 0;">🎯 2. Đưa ra giải pháp cụ thể</p>
+                    <p style="color:#475569; margin:0; line-height:1.6;">Hãy nêu rõ bạn sẽ giải quyết công việc đó như thế nào, dùng công cụ gì và quy trình làm việc ra sao. Điều này chứng minh bạn là người làm việc có kế hoạch.</p>
+                </div>
+                <div style="background:#fdf4ff; border-left:4px solid #9333ea; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
+                    <p style="font-weight:700; color:#7e22ce; margin:0 0 6px 0;">🖼️ 3. Đính kèm Portfolio tương tự</p>
+                    <p style="color:#475569; margin:0; line-height:1.6;">Trăm nghe không bằng một thấy. Hãy gửi link hoặc đính kèm 2-3 dự án tốt nhất liên quan trực tiếp đến lĩnh vực mà họ đang tuyển dụng.</p>
+                </div>
+                <div style="background:#fff7ed; border-left:4px solid #ea580c; border-radius:8px; padding:14px 16px; margin-bottom:0;">
+                    <p style="font-weight:700; color:#c2410c; margin:0 0 6px 0;">💰 4. Đề xuất giá và thời hạn rõ ràng</p>
+                    <p style="color:#475569; margin:0; line-height:1.6;">Đừng ngại đề xuất mức giá và thời gian hoàn thành cụ thể. Khách hàng luôn thích sự minh bạch ngay từ đầu để dễ đưa ra quyết định.</p>
+                </div>`
+        },
+        'tip-time': {
+            title: 'Quản lý thời gian: Học & Làm Freelance',
+            category: 'Năng suất',
+            categoryColor: '#10b981',
+            icon: '⏰',
+            content: `
+                <p style="margin-bottom:14px; color:#475569; line-height:1.7;">Làm freelance khi còn đi học giúp sinh viên tích lũy kinh nghiệm và thu nhập, nhưng nếu không quản lý thời gian tốt, rất dễ bị quá tải và ảnh hưởng đến học tập.</p>
+                <div style="background:#ecfdf5; border-left:4px solid #10b981; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
+                    <p style="font-weight:700; color:#065f46; margin:0 0 8px 0;">🧩 1. Ma trận Eisenhower — Phân loại công việc</p>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                        <div style="background:#fff; border:1px solid #d1fae5; border-radius:8px; padding:10px;">
+                            <p style="color:#065f46; font-weight:700; font-size:12px; margin:0 0 4px;">🔴 Khẩn & Quan trọng</p>
+                            <p style="color:#475569; font-size:12px; margin:0;">Làm ngay (bài kiểm tra, deadline gấp)</p>
+                        </div>
+                        <div style="background:#fff; border:1px solid #d1fae5; border-radius:8px; padding:10px;">
+                            <p style="color:#065f46; font-weight:700; font-size:12px; margin:0 0 4px;">🟡 Quan trọng, không khẩn</p>
+                            <p style="color:#475569; font-size:12px; margin:0;">Lên lịch (học kỹ năng, làm portfolio)</p>
+                        </div>
+                        <div style="background:#fff; border:1px solid #d1fae5; border-radius:8px; padding:10px;">
+                            <p style="color:#065f46; font-weight:700; font-size:12px; margin:0 0 4px;">🟠 Khẩn nhưng ít quan trọng</p>
+                            <p style="color:#475569; font-size:12px; margin:0;">Ủy thác hoặc tối ưu (email cơ bản)</p>
+                        </div>
+                        <div style="background:#fff; border:1px solid #d1fae5; border-radius:8px; padding:10px;">
+                            <p style="color:#065f46; font-weight:700; font-size:12px; margin:0 0 4px;">⚪ Không khẩn & không quan trọng</p>
+                            <p style="color:#475569; font-size:12px; margin:0;">Loại bỏ (lướt mạng vô ích)</p>
+                        </div>
+                    </div>
+                </div>
+                <div style="background:#f0fdf4; border-left:4px solid #16a34a; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
+                    <p style="font-weight:700; color:#15803d; margin:0 0 6px 0;">🍅 2. Kỹ thuật Pomodoro</p>
+                    <p style="color:#475569; margin:0; line-height:1.6;">Làm việc <strong>25 phút</strong> tập trung → nghỉ <strong>5 phút</strong>. Lặp lại 4 lần rồi nghỉ dài 15-30 phút. Bộ não không bị quá tải và luôn duy trì năng suất cao.</p>
+                </div>
+                <div style="background:#eff6ff; border-left:4px solid #2563eb; border-radius:8px; padding:14px 16px;">
+                    <p style="font-weight:700; color:#1e40af; margin:0 0 6px 0;">🛠️ 3. Công cụ hỗ trợ quản lý</p>
+                    <p style="color:#475569; margin:0; line-height:1.6;">Tận dụng <strong>Trello</strong>, <strong>Notion</strong> hoặc <strong>Google Calendar</strong> để sắp xếp lịch học và deadline công việc. Nhìn thấy toàn bộ kế hoạch trực quan giúp bạn không bỏ sót gì.</p>
+                </div>`
+        },
+        'tip-portfolio': {
+            title: 'Xây dựng Portfolio từ con số 0',
+            category: 'Portfolio',
+            categoryColor: '#db2777',
+            icon: '💼',
+            content: `
+                <p style="margin-bottom:14px; color:#475569; line-height:1.7;">Với sinh viên, rào cản lớn nhất khi bắt đầu freelance là thiếu dự án thực tế. Nhưng đừng lo — nhà tuyển dụng quan tâm đến <strong>năng lực</strong> của bạn nhiều hơn là việc dự án đó có thực sự tồn tại hay không.</p>
+                <div style="background:#fdf2f8; border-left:4px solid #db2777; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
+                    <p style="font-weight:700; color:#9d174d; margin:0 0 6px 0;">💡 1. Tạo dự án cá nhân (Concept Projects)</p>
+                    <p style="color:#475569; margin:0; line-height:1.6;">Chọn một thương hiệu nổi tiếng và tự thiết kế lại poster, slide, hoặc giao diện theo ý bạn. Nói rõ đây là "Personal Concept" — điều đó chứng minh bạn chủ động học hỏi.</p>
+                </div>
+                <div style="background:#fffbeb; border-left:4px solid #f59e0b; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
+                    <p style="font-weight:700; color:#92400e; margin:0 0 6px 0;">🎓 2. Tận dụng hoạt động ngoại khóa & CLB</p>
+                    <p style="color:#475569; margin:0; line-height:1.6;">Nhận thiết kế tờ rơi, banner, viết bài hay quản lý fanpage cho các câu lạc bộ trường đại học. Đây là nguồn dự án thực tế vô cùng giá trị và được đánh giá cao.</p>
+                </div>
+                <div style="background:#eff6ff; border-left:4px solid #2563eb; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
+                    <p style="font-weight:700; color:#1e40af; margin:0 0 6px 0;">📝 3. Trình bày theo dạng Case Study</p>
+                    <p style="color:#475569; margin:0; line-height:1.6;">Đừng chỉ đưa ra sản phẩm cuối cùng. Hãy kể câu chuyện: <em>Bài toán là gì? → Bạn đã làm gì? → Kết quả ra sao?</em> Đây là phong cách trình bày được các nhà tuyển dụng chuyên nghiệp ưa thích nhất.</p>
+                </div>
+                <div style="background:#f0fdf4; border-left:4px solid #16a34a; border-radius:8px; padding:14px 16px;">
+                    <p style="font-weight:700; color:#15803d; margin:0 0 6px 0;">🌐 4. Chia sẻ portfolio lên mạng xã hội</p>
+                    <p style="color:#475569; margin:0; line-height:1.6;">Đăng các dự án lên <strong>Behance</strong>, <strong>LinkedIn</strong> hoặc <strong>Instagram</strong> với đầy đủ thông tin. Portfolio online giúp khách hàng tìm đến bạn ngay cả khi bạn không chủ động tìm việc.</p>
+                </div>`
+        }
+    };
+
+    window.openTipModal = function(tipId) {
+        const tip = tipData[tipId];
+        if (!tip) return;
+
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal-content animate-in" style="max-width:620px; max-height:88vh; overflow-y:auto; border-radius:20px; padding:0; position:relative;">
+                <div style="background:linear-gradient(135deg, ${tip.categoryColor}18, ${tip.categoryColor}08); padding:28px 28px 20px; border-bottom:1px solid #f1f5f9; border-radius:20px 20px 0 0;">
+                    <button class="modal-close" style="position:absolute; top:16px; right:16px; background:rgba(0,0,0,0.06); border:none; cursor:pointer; border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; color:#64748b; font-size:18px;">×</button>
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+                        <span style="font-size:28px;">${tip.icon}</span>
+                        <span style="background:${tip.categoryColor}20; color:${tip.categoryColor}; padding:3px 12px; border-radius:20px; font-size:12px; font-weight:700; letter-spacing:0.04em;">${tip.category}</span>
+                    </div>
+                    <h2 style="font-size:1.25rem; font-weight:800; color:#0f172a; margin:0; line-height:1.4; font-family:'Inter', sans-serif;">${tip.title}</h2>
+                </div>
+                <div style="padding:24px 28px 8px; font-family:'Inter', sans-serif;">
+                    ${tip.content}
+                </div>
+                <div style="padding:16px 28px 24px; display:flex; justify-content:flex-end;">
+                    <button class="btn-modal-cancel" style="background:#f1f5f9; border:none; padding:10px 24px; border-radius:10px; font-weight:600; cursor:pointer; color:#475569; font-size:14px; transition:background 0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">Đóng</button>
+                </div>
+            </div>`;
+        document.body.appendChild(modal);
+        if (window.lucide) lucide.createIcons();
+        requestAnimationFrame(() => modal.classList.add('active'));
+        modal.querySelector('.modal-close').addEventListener('click', () => closeModal(modal));
+        modal.querySelector('.btn-modal-cancel').addEventListener('click', () => closeModal(modal));
+        modal.addEventListener('click', e => { if (e.target === modal) closeModal(modal); });
+    };
 
     function closeModal(modal) {
         modal.classList.remove('active');

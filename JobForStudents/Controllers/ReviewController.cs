@@ -79,4 +79,85 @@ public class ReviewController : Controller
 
         return Json(new { success = true, message = "Đã gửi phản hồi thành công." });
     }
+
+    [HttpGet]
+    public async Task<IActionResult> GetMyReviews()
+    {
+        try
+        {
+            var currentUserId = GetCurrentUserId();
+            if (currentUserId == null) return Unauthorized(new { success = false, message = "Vui lòng đăng nhập." });
+
+            var reviewsRaw = await _context.Reviews
+                .Include(r => r.JobContract)
+                    .ThenInclude(jc => jc.JobPost)
+                .Include(r => r.Reviewer)
+                    .ThenInclude(u => u.BusinessProfile)
+                .Include(r => r.Reviewer)
+                    .ThenInclude(u => u.StudentProfile)
+                .Include(r => r.Replies)
+                .Where(r => r.JobContract.StudentId == currentUserId.Value && r.ReviewerId != currentUserId.Value && r.ParentReviewId == null)
+                .OrderByDescending(r => r.CreatedAt)
+                .ToListAsync();
+
+            var reviews = reviewsRaw.Select(r => new
+            {
+                id = r.Id,
+                reviewer = r.Reviewer != null 
+                    ? (r.Reviewer.BusinessProfile != null 
+                        ? r.Reviewer.BusinessProfile.CompanyName 
+                        : (r.Reviewer.StudentProfile != null ? r.Reviewer.StudentProfile.FullName : "Người dùng ẩn")) 
+                    : "Người dùng ẩn",
+                project = r.JobContract != null && r.JobContract.JobPost != null ? r.JobContract.JobPost.Title : "Dự án không xác định",
+                rating = r.Rating,
+                date = r.CreatedAt.ToString("dd/MM/yyyy"),
+                comment = r.Comment ?? "",
+                reply = r.Replies != null && r.Replies.Any() 
+                    ? (r.Replies.OrderBy(rep => rep.CreatedAt).Select(rep => rep.Comment).FirstOrDefault() ?? "") 
+                    : "",
+                isReported = r.IsReported
+            }).ToList();
+
+            return Json(new { success = true, reviews = reviews });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, message = "Database Error: " + ex.Message + (ex.InnerException != null ? " | " + ex.InnerException.Message : "") });
+        }
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Report([FromForm] int id, [FromForm] string reason)
+    {
+        var currentUserId = GetCurrentUserId();
+        if (currentUserId == null) return Unauthorized(new { success = false, message = "Vui lòng đăng nhập." });
+
+        var review = await _context.Reviews
+            .Include(r => r.JobContract)
+            .FirstOrDefaultAsync(r => r.Id == id);
+
+        if (review == null) return NotFound(new { success = false, message = "Không tìm thấy đánh giá." });
+
+        if (review.JobContract.StudentId != currentUserId.Value)
+        {
+            return Forbid();
+        }
+
+        review.IsReported = true;
+        
+        var adminNotify = new Notification
+        {
+            UserId = 11, // Admin user ID from seed (admin@j4s.com)
+            Title = "Báo cáo đánh giá không phù hợp",
+            Message = $"Sinh viên ID {currentUserId.Value} đã báo cáo đánh giá #{id} với lý do: {reason}",
+            Type = NotificationType.System,
+            IsRead = false,
+            CreatedAt = DateTime.UtcNow
+        };
+        _context.Notifications.Add(adminNotify);
+
+        await _context.SaveChangesAsync();
+
+        return Json(new { success = true, message = "Đã gửi báo cáo đánh giá thành công." });
+    }
 }

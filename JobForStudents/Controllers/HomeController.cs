@@ -75,13 +75,16 @@ public class HomeController : Controller
             Title = j.Title,
             Description = j.Description,
             // Use the category of the first skill or a default category
-            Category = j.JobPostSkills.FirstOrDefault()?.Skill.Category ?? "Khác",
+            Category = j.Category ?? (j.JobPostSkills.FirstOrDefault()?.Skill.Category ?? "Khác"),
             Tags = j.JobPostSkills.Select(jps => jps.Skill.Name).ToList(),
             Budget = j.Budget,
             Deadline = j.Deadline.ToString("dd/MM/yyyy"),
             ApplicantsCount = _context.JobBids.Count(b => b.JobPostId == j.Id),
             IsSaved = savedJobIds.Contains(j.Id),
-            IsApplied = appliedJobIds.Contains(j.Id)
+            IsApplied = appliedJobIds.Contains(j.Id),
+            BudgetType = j.BudgetType.ToString(),
+            ExperienceLevel = j.ExperienceLevelRequired.ToString(),
+            CreatedAt = j.CreatedAt
         }).ToList();
 
         // 4. AI Freelancer Recommendation (Dashboard widget for Businesses)
@@ -412,7 +415,7 @@ public class HomeController : Controller
             Id = j.Id.ToString(),
             Title = j.Title,
             Description = j.Description,
-            Category = j.JobPostSkills.FirstOrDefault()?.Skill.Category ?? "Khác",
+            Category = j.Category ?? (j.JobPostSkills.FirstOrDefault()?.Skill.Category ?? "Khác"),
             Tags = j.JobPostSkills.Select(jps => jps.Skill.Name).ToList(),
             Budget = j.Budget,
             Deadline = j.Deadline.ToString("dd/MM/yyyy"),
@@ -463,13 +466,16 @@ public class HomeController : Controller
             Id = j.Id.ToString(),
             Title = j.Title,
             Description = j.Description,
-            Category = j.JobPostSkills.FirstOrDefault()?.Skill.Category ?? "Khác",
+            Category = j.Category ?? (j.JobPostSkills.FirstOrDefault()?.Skill.Category ?? "Khác"),
             Tags = j.JobPostSkills.Select(jps => jps.Skill.Name).ToList(),
             Budget = j.Budget,
             Deadline = j.Deadline.ToString("dd/MM/yyyy"),
             ApplicantsCount = _context.JobBids.Count(b => b.JobPostId == j.Id),
             IsSaved = savedJobIds.Contains(j.Id),
-            IsApplied = appliedJobIds.Contains(j.Id)
+            IsApplied = appliedJobIds.Contains(j.Id),
+            BudgetType = j.BudgetType.ToString(),
+            ExperienceLevel = j.ExperienceLevelRequired.ToString(),
+            CreatedAt = j.CreatedAt
         }).ToList();
 
         return Json(jobsList);
@@ -599,6 +605,69 @@ public class HomeController : Controller
             applicantsCount = applicantsCount,
             jobId = request.JobId
         });
+    }
+
+    // GET: /Home/GetStudentAppliedJobs — Requires Student role
+    [Authorize(Roles = "Student")]
+    [HttpGet]
+    public async Task<IActionResult> GetStudentAppliedJobs()
+    {
+        var currentUserId = GetCurrentUserId();
+        if (!currentUserId.HasValue)
+        {
+            return Json(new { success = false, message = "Vui lòng đăng nhập." });
+        }
+
+        var bids = await _context.JobBids
+            .Include(b => b.JobPost)
+                .ThenInclude(jp => jp.BusinessProfile)
+            .Where(b => b.StudentId == currentUserId.Value)
+            .OrderByDescending(b => b.CreatedAt)
+            .Select(b => new
+            {
+                bidId = b.Id,
+                jobId = b.JobPostId,
+                jobTitle = b.JobPost.Title,
+                companyName = b.JobPost.BusinessProfile != null ? b.JobPost.BusinessProfile.CompanyName : "Unknown",
+                status = b.Status.ToString(), // "Pending", "Accepted", "Rejected", "Hired"
+                appliedAt = b.CreatedAt.ToString("dd/MM/yyyy HH:mm"),
+                bidAmount = b.BidAmount,
+                proposal = b.Proposal ?? "",
+                estimatedDays = b.EstimatedDays
+            })
+            .ToListAsync();
+
+        return Json(new { success = true, bids = bids });
+    }
+
+    // GET: /Home/GetStudentActiveContracts — Requires Student role
+    [Authorize(Roles = "Student")]
+    [HttpGet]
+    public async Task<IActionResult> GetStudentActiveContracts()
+    {
+        var currentUserId = GetCurrentUserId();
+        if (!currentUserId.HasValue)
+        {
+            return Json(new { success = false, message = "Vui lòng đăng nhập." });
+        }
+
+        var contracts = await _context.JobContracts
+            .Include(c => c.JobPost)
+                .ThenInclude(jp => jp.BusinessProfile)
+            .Where(c => c.StudentId == currentUserId.Value && c.Status == ContractStatus.Active)
+            .OrderByDescending(c => c.CreatedAt)
+            .Select(c => new
+            {
+                id = c.Id,
+                title = c.JobPost.Title,
+                client = c.BusinessProfile != null ? c.BusinessProfile.CompanyName : "Unknown",
+                status = "Đang thực hiện",
+                deadline = c.JobPost.Deadline.ToString("dd/MM/yyyy"),
+                budget = (double)c.FinalPrice
+            })
+            .ToListAsync();
+
+        return Json(new { success = true, contracts = contracts });
     }
 
     [Authorize(Roles = "Business")]
@@ -754,6 +823,15 @@ public class HomeController : Controller
         if (action == "accept")
         {
             bid.Status = BidStatus.Accepted;
+            _context.Notifications.Add(new Notification
+            {
+                UserId = bid.StudentId,
+                Title = "Hồ sơ ứng tuyển được chấp nhận",
+                Message = $"Hồ sơ ứng tuyển của bạn cho công việc \"{bid.JobPost.Title}\" đã được chấp nhận.",
+                Type = NotificationType.JobStatus,
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow
+            });
         }
         else if (action == "hire")
         {
@@ -776,6 +854,16 @@ public class HomeController : Controller
                 });
             }
 
+            _context.Notifications.Add(new Notification
+            {
+                UserId = bid.StudentId,
+                Title = "Bạn đã được tuyển dụng",
+                Message = $"Chúc mừng! Bạn đã được chọn để làm việc cho dự án \"{bid.JobPost.Title}\".",
+                Type = NotificationType.JobStatus,
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow
+            });
+
             // Tự động từ chối các ứng viên khác (chưa bị từ chối) của cùng job này
             var otherBids = await _context.JobBids
                 .Where(b => b.JobPostId == bid.JobPostId && b.Id != bid.Id && b.Status != BidStatus.Rejected)
@@ -784,11 +872,29 @@ public class HomeController : Controller
             foreach (var other in otherBids)
             {
                 other.Status = BidStatus.Rejected;
+                _context.Notifications.Add(new Notification
+                {
+                    UserId = other.StudentId,
+                    Title = "Kết quả ứng tuyển công việc",
+                    Message = $"Hồ sơ ứng tuyển của bạn cho công việc \"{bid.JobPost.Title}\" không được chọn.",
+                    Type = NotificationType.JobStatus,
+                    IsRead = false,
+                    CreatedAt = DateTime.UtcNow
+                });
             }
         }
         else if (action == "reject")
         {
             bid.Status = BidStatus.Rejected;
+            _context.Notifications.Add(new Notification
+            {
+                UserId = bid.StudentId,
+                Title = "Kết quả ứng tuyển công việc",
+                Message = $"Đề xuất ứng tuyển của bạn cho công việc \"{bid.JobPost.Title}\" đã bị từ chối.",
+                Type = NotificationType.JobStatus,
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow
+            });
         }
         else
         {
@@ -1029,7 +1135,8 @@ public class HomeController : Controller
             // Calculate Completion Rate from JobContracts
             var totalContracts = await _context.JobContracts.CountAsync(c => c.StudentId == currentUserId.Value);
             var completedContracts = await _context.JobContracts.CountAsync(c => c.StudentId == currentUserId.Value && c.Status == ContractStatus.Completed);
-            var completionRate = totalContracts > 0 ? (int)Math.Round((double)completedContracts / totalContracts * 100) : 100;
+            var completionRate = totalContracts > 0 ? (int)Math.Round((double)completedContracts / totalContracts * 100) : 0;
+            var level = 1 + (completedContracts / 2); // Level calculation: +1 level per 2 completed jobs
 
             // Retrieve Customer Reviews written for the student
             var reviews = await _context.Reviews
@@ -1085,6 +1192,7 @@ public class HomeController : Controller
                 }).ToList(),
                 completedJobsCount = completedContracts,
                 completionRate = completionRate,
+                level = level,
                 reviews = reviews,
                 balance = user.Wallet?.Balance ?? 0m
             });
@@ -1686,7 +1794,7 @@ public class HomeController : Controller
                 statusText = GetJobStatusText(j.Status),
                 applicantsCount = j.JobBids.Count,
                 skills = j.JobPostSkills.Select(jps => jps.Skill.Name).ToList(),
-                category = j.JobPostSkills.FirstOrDefault()?.Skill.Category ?? "Khác",
+                category = j.Category ?? (j.JobPostSkills.FirstOrDefault()?.Skill.Category ?? "Khác"),
                 createdAt = j.CreatedAt.ToString("dd/MM/yyyy")
             }).ToList()
         });
@@ -1782,10 +1890,11 @@ public class HomeController : Controller
         job.Quantity = Math.Max(1, request.Quantity);
         job.Deadline = deadline;
         job.Status = request.SaveAsDraft ? JobStatus.Draft : JobStatus.Open;
+        job.Category = request.Category?.Trim();
         job.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
-        await SyncJobSkills(job.Id, request.Category, request.Skills);
+        await SyncJobSkills(job.Id, request.Category ?? "Khác", request.Skills);
 
         if (shouldConsumeJobPost && activeSubscription != null)
         {

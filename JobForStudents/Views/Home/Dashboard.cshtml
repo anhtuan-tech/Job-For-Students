@@ -998,7 +998,7 @@
 </style>
 
 <!-- Hidden JSON data for JavaScript -->
-<script type="application/json" id="initialJobsData">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Jobs, new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }))</script>
+<script type="application/json" id="initialJobsData">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Jobs, new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping }))</script>
 
 <!-- ============================================
      1. THANH ĐIỀU HƯỚNG TRÊN CÙNG (TOP NAV)
@@ -1241,7 +1241,7 @@
                     <span class="item-icon"><i data-lucide="home" style="width:18px;height:18px;"></i></span>
                     Trang chủ
                 </a>
-                <a href="#" data-bs-toggle="modal" data-bs-target="#jobSearchModal" class="sidebar-item" id="navFindJob">
+                <a href="#" class="sidebar-item" data-nav="findJobs" id="navFindJob">
                     <span class="item-icon"><i data-lucide="search" style="width:18px;height:18px;"></i></span>
                     Tìm việc
                 </a>
@@ -1296,22 +1296,10 @@
                     <span class="item-icon"><i data-lucide="star" style="width:18px;height:18px;"></i></span>
                     Đánh giá
                 </a>
-                <a href="#" class="sidebar-item" data-nav="wallet" id="navWallet">
-                    <span class="item-icon"><i data-lucide="wallet" style="width:18px;height:18px;"></i></span>
-                    Ví tiền
-                </a>
             </div>
 
 
-            <!-- Nhóm: KHÁM PHÁ -->
-            <div class="sidebar-group">
-                <div class="sidebar-label">Khám phá</div>
 
-                <a href="#" class="sidebar-item" data-nav="blog" id="navBlog">
-                    <span class="item-icon"><i data-lucide="book-open" style="width:18px;height:18px;"></i></span>
-                    Blog & Hướng dẫn
-                </a>
-            </div>
 
             <!-- Nút Đăng việc mới -->
 
@@ -1628,16 +1616,15 @@
             <main class="main-content" id="mainContent">
 
                 <!-- === Banner chào mừng === -->
-                <section class="welcome-banner" id="welcomeBanner">
+                <section class="welcome-banner" id="welcomeBanner" style="margin-bottom: 24px;">
                     <div class="banner-text">
-                        <h1>Kết nối kỹ năng sinh viên<br />Với công việc bạn cần</h1>
-                        <p>Việc nhỏ hôm nay – Thu nhập mỗi ngày</p>
+                        <h1>Chào mừng bạn đến với J4S!</h1>
+                        <p>Tìm kiếm công việc freelance linh hoạt phù hợp với lịch học của bạn.</p>
                         <div class="banner-actions">
-                            <button class="btn-primary-main" id="btnFindJobNow" data-bs-toggle="modal" data-bs-target="#jobSearchModal">
+                            <button class="btn-primary-main" id="btnFindJobNow" style="background:#2563eb; border:none; padding:12px 24px; border-radius:30px; font-weight:600; color:white; display:inline-flex; align-items:center; gap:8px;">
                                 <i data-lucide="search" style="width:16px;height:16px;"></i>
                                 Tìm việc ngay
                             </button>
-
                         </div>
                     </div>
                     <div class="banner-illustration">
@@ -1645,312 +1632,187 @@
                     </div>
                 </section>
 
-                <!-- === Danh mục phổ biến === -->
-                <section id="popularCategories">
-                    <div class="section-header">
-                        <h2 class="section-title">Danh mục phổ biến</h2>
-                        <a href="#" class="section-link">
-                            Xem tất cả <i data-lucide="chevron-right" style="width:14px;height:14px;"></i>
-                        </a>
+                <!-- === Tổng quan hoạt động === -->
+                <section style="margin-bottom: 28px;">
+                    <div class="section-header" style="margin-bottom: 16px;">
+                        <h2 class="section-title" style="font-size: 1.25rem; font-weight: 800; color: #0f172a;">Hoạt động của bạn</h2>
                     </div>
-                    <div class="categories-grid">
-                        <!-- Thiết kế -->
-                        <div class="category-card animate-in" data-category="Thiết kế">
-                            <div class="category-icon">
-                                <i data-lucide="palette" style="width:24px;height:24px;"></i>
+                    <div class="stats-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+                        <!-- Đã ứng tuyển -->
+                        <div class="stat-card" style="background: #ffffff; border: 1px solid #e2e8f0; padding: 20px; border-radius: 16px; display: flex; align-items: center; gap: 14px;">
+                            <div style="background: #eff6ff; color: #2563eb; width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center;"><i data-lucide="send" style="width: 22px; height: 22px;"></i></div>
+                            <div>
+                                <div style="font-size: 1.5rem; font-weight: 800; color: #0f172a; line-height: 1.2;">@Model.StudentAppliedJobs.Count</div>
+                                <div style="font-size: 0.8rem; font-weight: 600; color: #64748b;">Đã ứng tuyển</div>
                             </div>
-                            <div class="category-name">Thiết kế</div>
-                            <div class="category-count">(1200+)</div>
                         </div>
-                        <!-- Làm slide -->
-                        <div class="category-card animate-in" data-category="Làm slide">
-                            <div class="category-icon">
-                                <i data-lucide="presentation" style="width:24px;height:24px;"></i>
+                        <!-- Hợp đồng hoạt động -->
+                        <div class="stat-card" style="background: #ffffff; border: 1px solid #e2e8f0; padding: 20px; border-radius: 16px; display: flex; align-items: center; gap: 14px;">
+                            <div style="background: #ecfdf5; color: #10b981; width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center;"><i data-lucide="file-check" style="width: 22px; height: 22px;"></i></div>
+                            <div>
+                                <div style="font-size: 1.5rem; font-weight: 800; color: #0f172a; line-height: 1.2;">@Model.StudentActiveContracts.Count</div>
+                                <div style="font-size: 0.8rem; font-weight: 600; color: #64748b;">Đang thực hiện</div>
                             </div>
-                            <div class="category-name">Làm slide</div>
-                            <div class="category-count">(860+)</div>
                         </div>
-                        <!-- Dịch thuật -->
-                        <div class="category-card animate-in" data-category="Dịch thuật">
-                            <div class="category-icon">
-                                <i data-lucide="languages" style="width:24px;height:24px;"></i>
+                        <!-- Công việc đã lưu -->
+                        <div class="stat-card" style="background: #ffffff; border: 1px solid #e2e8f0; padding: 20px; border-radius: 16px; display: flex; align-items: center; gap: 14px;">
+                            <div style="background: #fffbeb; color: #f59e0b; width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center;"><i data-lucide="bookmark" style="width: 22px; height: 22px;"></i></div>
+                            <div>
+                                <div style="font-size: 1.5rem; font-weight: 800; color: #0f172a; line-height: 1.2;">@Model.Jobs.Count(j => j.IsSaved)</div>
+                                <div style="font-size: 0.8rem; font-weight: 600; color: #64748b;">Việc làm đã lưu</div>
                             </div>
-                            <div class="category-name">Dịch thuật</div>
-                            <div class="category-count">(640+)</div>
                         </div>
-                        <!-- Viết content -->
-                        <div class="category-card animate-in" data-category="Viết content">
-                            <div class="category-icon">
-                                <i data-lucide="pen-tool" style="width:24px;height:24px;"></i>
+                        <!-- Đã hoàn thành -->
+                        <div class="stat-card" style="background: #ffffff; border: 1px solid #e2e8f0; padding: 20px; border-radius: 16px; display: flex; align-items: center; gap: 14px;">
+                            <div style="background: #faf5ff; color: #a855f7; width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center;"><i data-lucide="award" style="width: 22px; height: 22px;"></i></div>
+                            <div>
+                                <div style="font-size: 1.5rem; font-weight: 800; color: #0f172a; line-height: 1.2;">@Model.CompletedJobsCount</div>
+                                <div style="font-size: 0.8rem; font-weight: 600; color: #64748b;">Đã hoàn thành</div>
                             </div>
-                            <div class="category-name">Viết content</div>
-                            <div class="category-count">(530+)</div>
-                        </div>
-                        <!-- Code web -->
-                        <div class="category-card animate-in" data-category="Code web">
-                            <div class="category-icon">
-                                <i data-lucide="code-2" style="width:24px;height:24px;"></i>
-                            </div>
-                            <div class="category-name">Code web</div>
-                            <div class="category-count">(460+)</div>
-                        </div>
-                        <!-- Edit video -->
-                        <div class="category-card animate-in" data-category="Edit video">
-                            <div class="category-icon">
-                                <i data-lucide="video" style="width:24px;height:24px;"></i>
-                            </div>
-                            <div class="category-name">Edit video</div>
-                            <div class="category-count">(380+)</div>
                         </div>
                     </div>
                 </section>
 
-                <!-- === Danh sách việc làm mới nhất === -->
-                <section id="latestJobs">
-                    <div class="jobs-header">
-                        <h2 class="section-title">Việc làm mới nhất</h2>
-                        <div class="jobs-filters">
-                            <select class="filter-select" id="filterCategory">
-                                <option>Tất cả danh mục</option>
-                                <option>Thiết kế</option>
-                                <option>Dịch thuật</option>
-                                <option>Làm slide</option>
-                                <option>Viết content</option>
-                                <option>Code web</option>
-                                <option>Edit video</option>
-                            </select>
-                            <select class="filter-select" id="filterSort">
-                                <option>Mới nhất</option>
-                                <option>Giá cao nhất</option>
-                                <option>Sắp hết hạn</option>
-                            </select>
+                <!-- === Danh mục phổ biến === -->
+                <section id="popularCategories" style="margin-bottom: 28px;">
+                    <div class="section-header" style="margin-bottom: 16px;">
+                        <h2 class="section-title" style="font-size: 1.25rem; font-weight: 800; color: #0f172a;">Lĩnh vực phổ biến</h2>
+                    </div>
+                    <div class="categories-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px;">
+                        <!-- IT & Lập trình -->
+                        <div class="category-card animate-in" data-category="IT & Lập trình" style="cursor: pointer; padding: 18px; border-radius: 16px; border: 1px solid #e2e8f0; background: #ffffff; text-align: center; transition: all 0.2s;">
+                            <div class="category-icon" style="background: #eff6ff; color: #2563eb; width: 48px; height: 48px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+                                <i data-lucide="code-2" style="width:24px;height:24px;"></i>
+                            </div>
+                            <div class="category-name" style="font-size: 0.85rem; font-weight: 700; color: #1e293b;">IT & Lập trình</div>
+                        </div>
+                        <!-- Thiết kế & Đồ họa -->
+                        <div class="category-card animate-in" data-category="Thiết kế & Đồ họa" style="cursor: pointer; padding: 18px; border-radius: 16px; border: 1px solid #e2e8f0; background: #ffffff; text-align: center; transition: all 0.2s;">
+                            <div class="category-icon" style="background: #ecfdf5; color: #10b981; width: 48px; height: 48px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+                                <i data-lucide="palette" style="width:24px;height:24px;"></i>
+                            </div>
+                            <div class="category-name" style="font-size: 0.85rem; font-weight: 700; color: #1e293b;">Thiết kế & Đồ họa</div>
+                        </div>
+                        <!-- Viết lách & Dịch thuật -->
+                        <div class="category-card animate-in" data-category="Viết lách & Dịch thuật" style="cursor: pointer; padding: 18px; border-radius: 16px; border: 1px solid #e2e8f0; background: #ffffff; text-align: center; transition: all 0.2s;">
+                            <div class="category-icon" style="background: #fffbeb; color: #f59e0b; width: 48px; height: 48px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+                                <i data-lucide="languages" style="width:24px;height:24px;"></i>
+                            </div>
+                            <div class="category-name" style="font-size: 0.85rem; font-weight: 700; color: #1e293b;">Viết lách & Dịch thuật</div>
+                        </div>
+                        <!-- Sales & Marketing -->
+                        <div class="category-card animate-in" data-category="Sales & Marketing" style="cursor: pointer; padding: 18px; border-radius: 16px; border: 1px solid #e2e8f0; background: #ffffff; text-align: center; transition: all 0.2s;">
+                            <div class="category-icon" style="background: #fdf2f8; color: #db2777; width: 48px; height: 48px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+                                <i data-lucide="megaphone" style="width:24px;height:24px;"></i>
+                            </div>
+                            <div class="category-name" style="font-size: 0.85rem; font-weight: 700; color: #1e293b;">Sales & Marketing</div>
+                        </div>
+                        <!-- Video & Photography -->
+                        <div class="category-card animate-in" data-category="Video & Photography" style="cursor: pointer; padding: 18px; border-radius: 16px; border: 1px solid #e2e8f0; background: #ffffff; text-align: center; transition: all 0.2s;">
+                            <div class="category-icon" style="background: #faf5ff; color: #9333ea; width: 48px; height: 48px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+                                <i data-lucide="video" style="width:24px;height:24px;"></i>
+                            </div>
+                            <div class="category-name" style="font-size: 0.85rem; font-weight: 700; color: #1e293b;">Video & Photography</div>
                         </div>
                     </div>
+                </section>
 
-                    <!-- Dynamic Job Feed Container -->
-                    <div id="jobFeedContainer">
+                <!-- === Dự án nổi bật (Featured Jobs Grid) === -->
+                <section id="featuredJobs" style="margin-bottom: 28px;">
+                    <div class="section-header" style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
+                        <h2 class="section-title" style="font-size: 1.25rem; font-weight: 800; color: #0f172a;">🔥 Dự án nổi bật trong tuần</h2>
+                        <a href="#" onclick="document.getElementById('navFindJob').click(); return false;" style="font-size: 0.85rem; font-weight: 600; color: #2563eb; text-decoration: none;">Xem tất cả <i data-lucide="chevron-right" style="width:14px;height:14px;vertical-align:middle;"></i></a>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
                         @{
                             var iconMap = new Dictionary<string, (string cls, string icon)>
                             {
-                                ["Design"] = ("design", "image"),
-                                ["Translation"] = ("translate", "file-text"),
-                                ["Slides"] = ("slide", "monitor"),
-                                ["Content"] = ("content", "pen-tool"),
-                                ["Code"] = ("code", "code-2"),
-                                ["Video"] = ("video", "video")
+                                ["IT & Lập trình"] = ("#eff6ff", "code-2"),
+                                ["Thiết kế & Đồ họa"] = ("#ecfdf5", "palette"),
+                                ["Viết lách & Dịch thuật"] = ("#fffbeb", "languages"),
+                                ["Sales & Marketing"] = ("#fdf2f8", "megaphone"),
+                                ["Video & Photography"] = ("#faf5ff", "video")
+                            };
+                            
+                            var colorMap = new Dictionary<string, string>
+                            {
+                                ["IT & Lập trình"] = "#2563eb",
+                                ["Thiết kế & Đồ họa"] = "#10b981",
+                                ["Viết lách & Dịch thuật"] = "#f59e0b",
+                                ["Sales & Marketing"] = "#db2777",
+                                ["Video & Photography"] = "#9333ea"
                             };
                         }
-                        @foreach (var job in Model.Jobs)
+                        @foreach (var job in Model.Jobs.Take(3))
                         {
-                            var info = iconMap.GetValueOrDefault(job.Category, ("design", "briefcase"));
+                            var info = iconMap.GetValueOrDefault(job.Category, ("#f1f5f9", "briefcase"));
+                            var iconColor = colorMap.GetValueOrDefault(job.Category, "#64748b");
                             var budgetFormatted = string.Format("{0:N0} đ", job.Budget);
-                            var savedClass = job.IsSaved ? "saved" : "";
-                            var bookmarkIcon = job.IsSaved ? "bookmark-check" : "bookmark";
-                            <div class="job-card animate-in" data-job-id="@job.Id">
-                                <div class="job-icon @info.Item1">
-                                    <i data-lucide="@info.Item2" style="width:22px;height:22px;"></i>
+                            
+                            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; transition: all 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.01); cursor: pointer;" onmouseover="this.style.transform='translateY(-4px)'; this.style.borderColor='#cbd5e1'; this.style.boxShadow='0 10px 25px rgba(0,0,0,0.05)';" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='#e2e8f0'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.01)';">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+                                    <div style="background: @info.Item1; color: @iconColor; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                                        <i data-lucide="@info.Item2" style="width: 22px; height: 22px;"></i>
+                                    </div>
+                                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; color: #475569; font-size: 0.7rem; font-weight: 700; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px;">@job.Category</div>
                                 </div>
-                                <div class="job-info">
-                                    <h3 class="job-title" data-job-id="@job.Id">@job.Title</h3>
-                                    <p class="job-desc">@job.Description</p>
-                                    <div class="job-tags">
-                                        @foreach (var tag in job.Tags)
-                                        {
-                                            <span class="job-tag">@tag</span>
-                                        }
+                                <h3 style="font-size: 1.05rem; font-weight: 800; color: #1e293b; margin-bottom: 8px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 42px;">@job.Title</h3>
+                                <div style="font-size: 1.25rem; font-weight: 800; color: #10b981; margin-bottom: 16px;">@budgetFormatted</div>
+                                <div style="margin-top: auto; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; padding-top: 14px;">
+                                    <div style="font-size: 0.8rem; color: #64748b; font-weight: 600; display: flex; align-items: center; gap: 4px;">
+                                        <i data-lucide="clock" style="width: 14px; height: 14px;"></i> @job.Deadline
+                                    </div>
+                                    <div style="font-size: 0.8rem; color: #64748b; font-weight: 600; display: flex; align-items: center; gap: 4px;">
+                                        <i data-lucide="users" style="width: 14px; height: 14px;"></i> @job.ApplicantsCount
                                     </div>
                                 </div>
-                                <div class="job-meta">
-                                    <span class="job-price">@budgetFormatted</span>
-                                    <span class="job-deadline">@job.Deadline</span>
-                                    <span class="job-proposals">@job.ApplicantsCount đề xuất@(job.IsApplied ? " " : "")@if (job.IsApplied) {
-                                        <span class="applied-badge">Đã ứng tuyển</span>
-                                    }
-                                </span>
                             </div>
-                            <button class="job-bookmark @savedClass" data-job-id="@job.Id" aria-label="Lưu việc">
-                                <i data-lucide="@bookmarkIcon" style="width:18px;height:18px;"></i>
-                            </button>
-                        </div>
-                    }
-                </div>
+                        }
+                    </div>
+                </section>
 
-                <!-- Nút Xem thêm -->
-                <button class="view-more-btn" id="btnViewMore">
-                    Xem thêm việc làm
-                    <i data-lucide="chevron-down" style="width:16px;height:16px;"></i>
-                </button>
-            </section>
-        </main>
+            </main>
 
         <!-- ============================================
-                 4B. CỘT PHẢI - THÔNG TIN MẶC ĐỊNH / FREELANCER
+                 4B. CỘT PHẢI - TRANG TRÍ (BÍ KÍP)
                  ============================================ -->
         <aside class="right-sidebar" id="rightSidebar">
-            @if (User.IsInRole("Student"))
-            {
-                <!-- === Đã ứng tuyển === -->
-                <div class="widget-card" id="studentAppliedJobs">
-                    <div class="widget-header">
-                        <h3 class="widget-title">
-                            <span class="ai-icon"><i data-lucide="send" style="width:18px;height:18px;"></i></span>
-                            Đã ứng tuyển
-                        </h3>
-                    </div>
-                    @if (Model.StudentAppliedJobs.Count == 0)
-                    {
-                        <div style="padding: 16px; text-align: center; color: #64748b; font-size: 0.85rem;">Chưa có việc làm nào</div>
-                    }
-                    else
-                    {
-                        @foreach (var bid in Model.StudentAppliedJobs)
-                        {
-                            var statusColor = bid.Status == "Pending" ? "#eab308" : (bid.Status == "Accepted" ? "#10b981" : "#ef4444");
-                            var statusText = bid.Status == "Pending" ? "Đang xét duyệt" : (bid.Status == "Accepted" ? "Được nhận" : "Từ chối");
-                            <div style="padding: 12px; border-bottom: 1px solid #f1f5f9;">
-                                <div style="font-weight: 600; font-size: 0.9rem; color: #1e293b; margin-bottom: 4px;">@bid.JobTitle</div>
-                                <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 6px;">@bid.CompanyName - @bid.AppliedAt</div>
-                                <div style="font-size: 0.75rem; font-weight: 600; color: @statusColor;">Trạng thái: @statusText</div>
-                            </div>
-                        }
-                        <a href="#" style="display: block; text-align: center; font-size: 0.85rem; color: #0ea5e9; margin-top: 12px; text-decoration: none; font-weight: 600;">Xem tất cả</a>
-                    }
-                </div>
-
-                <!-- === Dự án đang làm === -->
-                <div class="widget-card" id="studentActiveContracts" style="margin-top: 24px;">
-                    <div class="widget-header">
-                        <h3 class="widget-title">
-                            <span class="ai-icon"><i data-lucide="folder-open" style="width:18px;height:18px;"></i></span>
-                            Dự án đang làm
-                        </h3>
-                    </div>
-                    @if (Model.StudentActiveContracts.Count == 0)
-                    {
-                        <div style="padding: 16px; text-align: center; color: #64748b; font-size: 0.85rem;">Chưa có dự án nào</div>
-                    }
-                    else
-                    {
-                        @foreach (var contract in Model.StudentActiveContracts)
-                        {
-                            <div style="padding: 12px; border-bottom: 1px solid #f1f5f9;">
-                                <div style="font-weight: 600; font-size: 0.9rem; color: #1e293b; margin-bottom: 4px;">@contract.JobTitle</div>
-                                <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 6px;">@contract.CompanyName</div>
-                                <div style="font-size: 0.8rem; color: #ef4444; font-weight: 600; margin-bottom: 8px;"><i data-lucide="clock" style="width:12px;height:12px;margin-bottom:-2px;"></i> Deadline: @contract.Deadline</div>
-                                <div style="display: flex; gap: 8px;">
-                                    <button class="btn btn-sm btn-outline-primary" style="flex:1; font-size: 0.75rem; border-radius: 8px;" onclick="window.location.href='/Message?userId=@contract.BusinessUserId'">Trao đổi</button>
-                                    <button class="btn btn-sm btn-primary" style="flex:1; font-size: 0.75rem; border-radius: 8px;">Gửi SP</button>
-                                </div>
-                            </div>
-                        }
-                    }
-                </div>
-            }
-
-            <!-- === Box 1: Gợi ý dành cho bạn bởi AI === -->
-            <div class="widget-card" id="aiSuggestions">
-                <div class="widget-header">
-                    <h3 class="widget-title">
-                        <span class="ai-icon">✨</span>
-                        Gợi ý dành cho bạn bởi AI
+            <!-- === Cẩm nang & Kỹ năng Freelancer === -->
+            <div class="widget-card" style="border: none; box-shadow: none; background: transparent;">
+                <div class="widget-header" style="margin-bottom: 16px;">
+                    <h3 class="widget-title" style="font-size: 1.15rem; font-weight: 800; color: #0f172a;">
+                        <span class="ai-icon">💡</span>
+                        Bí kíp Freelancer
                     </h3>
                 </div>
-
-                @for (int i = 0; i < Model.TopFreelancers.Count; i++)
-                {
-                    var freelancer = Model.TopFreelancers[i];
-                    var isStar = i == 0;
-                    var gradient = avatarGradients[i % avatarGradients.Length];
-                    var initials = string.Join("", freelancer.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(w => w[0]));
-                    if (initials.Length > 2) initials = initials[..2];
-
-                    <div class="freelancer-item @(isStar ? "star" : "")">
-                        <div class="freelancer-avatar" style="background: @gradient;">
-                            @if (!string.IsNullOrEmpty(freelancer.Avatar))
-                            {
-                                <img src="@freelancer.Avatar" alt="@freelancer.Name" />
-                            }
-                            else
-                            {
-                                @initials
-                            }
-                        </div>
-                        <div class="freelancer-info">
-                            <div class="freelancer-name">@freelancer.Name</div>
-                            <div class="freelancer-role">@freelancer.Skill</div>
-                            <div class="freelancer-rating">
-                                <span class="star">★</span> @freelancer.Rating.ToString("F1") (@freelancer.ReviewsCount)
-                            </div>
-                        </div>
-                        <div class="freelancer-action">
-                            <span class="match-badge">@freelancer.MatchPercentage</span>
-                            <button class="btn-view-profile">Xem hồ sơ</button>
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+                    <!-- Card 1 -->
+                    <div data-tip-id="tip-proposal" onclick="openTipModal('tip-proposal')" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.01); transition: transform 0.2s; cursor: pointer;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <div style="height: 100px; background: linear-gradient(135deg, #eff6ff, #dbeafe); display: flex; align-items: center; justify-content: center; color: #2563eb;"><i data-lucide="pen-tool" style="width: 32px; height: 32px;"></i></div>
+                        <div style="padding: 16px;">
+                            <h3 style="font-size: 0.95rem; font-weight: 700; color: #1e293b; margin: 0 0 8px 0; line-height: 1.4;">Viết Proposal chinh phục khách hàng</h3>
+                            <p style="font-size: 0.8rem; color: #64748b; margin: 0; line-height: 1.5;">Học cách giới thiệu bản thân khiến nhà tuyển dụng không thể từ chối.</p>
                         </div>
                     </div>
-                }
-
-                <a href="#" class="section-link" style="justify-content:flex-end; margin-top:12px;">
-                    Xem tất cả gợi ý <i data-lucide="chevron-right" style="width:14px;height:14px;"></i>
-                </a>
+                    <!-- Card 2 -->
+                    <div data-tip-id="tip-time" onclick="openTipModal('tip-time')" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.01); transition: transform 0.2s; cursor: pointer;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <div style="height: 100px; background: linear-gradient(135deg, #ecfdf5, #d1fae5); display: flex; align-items: center; justify-content: center; color: #10b981;"><i data-lucide="clock" style="width: 32px; height: 32px;"></i></div>
+                        <div style="padding: 16px;">
+                            <h3 style="font-size: 0.95rem; font-weight: 700; color: #1e293b; margin: 0 0 8px 0; line-height: 1.4;">Quản lý thời gian: Học &amp; Làm Freelance</h3>
+                            <p style="font-size: 0.8rem; color: #64748b; margin: 0; line-height: 1.5;">Phương pháp lập kế hoạch khoa học giúp bạn hoàn thành deadline.</p>
+                        </div>
+                    </div>
+                    <!-- Card 3 -->
+                    <div data-tip-id="tip-portfolio" onclick="openTipModal('tip-portfolio')" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.01); transition: transform 0.2s; cursor: pointer;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <div style="height: 100px; background: linear-gradient(135deg, #fdf2f8, #fbcfe8); display: flex; align-items: center; justify-content: center; color: #db2777;"><i data-lucide="briefcase" style="width: 32px; height: 32px;"></i></div>
+                        <div style="padding: 16px;">
+                            <h3 style="font-size: 0.95rem; font-weight: 700; color: #1e293b; margin: 0 0 8px 0; line-height: 1.4;">Xây dựng Portfolio từ con số 0</h3>
+                            <p style="font-size: 0.8rem; color: #64748b; margin: 0; line-height: 1.5;">Cách tận dụng bài tập trên trường để làm Portfolio hút mắt.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
-
-            @if (false)
-            {
-                <!-- === Box 2: Tổng quan thu nhập === -->
-                <div class="income-widget" id="incomeOverview">
-                    <div class="income-header">
-                        <h3>Tổng quan thu nhập</h3>
-                        <a href="#" class="widget-link">Xem chi tiết →</a>
-                    </div>
-
-                    <div class="income-stats">
-                        <div class="income-stat-item">
-                            <div class="label">Thu nhập tháng này</div>
-                            <div class="value">@string.Format("{0:N0} đ", Model.TotalEarnings)</div>
-                            <div class="change">+12% so với tháng trước</div>
-                        </div>
-                        <div class="income-stat-item" style="text-align:right;">
-                            <div class="label">Đã hoàn thành</div>
-                            <div class="value compact">@Model.CompletedJobsCount dự án</div>
-                            <div class="change-note">+2 dự án</div>
-                        </div>
-                    </div>
-
-                    <div class="income-actions">
-                        <button class="income-action-btn" id="btnDeposit">
-                            <span class="action-icon"><i data-lucide="download" style="width:20px;height:20px;"></i></span>
-                            <span class="action-label">Nạp tiền</span>
-                        </button>
-                        <button class="income-action-btn" id="btnWithdraw">
-                            <span class="action-icon"><i data-lucide="upload" style="width:20px;height:20px;"></i></span>
-                            <span class="action-label">Rút tiền</span>
-                        </button>
-                        <button class="income-action-btn" id="btnHistory">
-                            <span class="action-icon"><i data-lucide="clock" style="width:20px;height:20px;"></i></span>
-                            <span class="action-label">Lịch sử GD</span>
-                        </button>
-                        <button class="income-action-btn" id="btnPromo">
-                            <span class="action-icon"><i data-lucide="gift" style="width:20px;height:20px;"></i></span>
-                            <span class="action-label">Ưu đãi</span>
-                        </button>
-                    </div>
-                </div>
-
-
-                <!-- === Box 3: Banner bảng xếp hạng === -->
-                <div class="leaderboard-banner" id="leaderboardBanner">
-                    <div class="leaderboard-content">
-                        <h3>Tham gia bảng xếp hạng</h3>
-                        <p>Nhận thưởng hấp dẫn mỗi tháng!</p>
-                        <button class="btn-leaderboard" id="btnLeaderboard">
-                            Xem ngay
-                            <i data-lucide="arrow-right" style="width:14px;height:14px;"></i>
-                        </button>
-                    </div>
-                    <img src="~/images/golden_trophy.png" alt="Cúp vàng bảng xếp hạng" class="leaderboard-trophy-img" />
-                </div>
-            }
-
         </aside>
     }
 </div>
@@ -1990,12 +1852,11 @@
                             <label for="jobCategory" class="form-label fw-semibold text-secondary">Danh mục <span class="text-danger">*</span></label>
                             <select class="form-select" id="jobCategory" name="category" required>
                                 <option value="" disabled selected>Chọn danh mục</option>
-                                <option value="Thiết kế">Thiết kế</option>
                                 <option value="IT & Lập trình">IT & Lập trình</option>
-                                <option value="Marketing">Marketing</option>
+                                <option value="Thiết kế & Đồ họa">Thiết kế & Đồ họa</option>
                                 <option value="Viết lách & Dịch thuật">Viết lách & Dịch thuật</option>
-                                <option value="Video & Animation">Video & Animation</option>
-                                <option value="Khác">Khác</option>
+                                <option value="Sales & Marketing">Sales & Marketing</option>
+                                <option value="Video & Photography">Video & Photography</option>
                             </select>
                         </div>
 
@@ -3670,21 +3531,3 @@
     }
 }
 
-<!-- Job Search Modal for Students -->
-<div class="modal fade" id="jobSearchModal" tabindex="-1" aria-labelledby="jobSearchModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content" style="border-radius: 20px; overflow: hidden; height: 90vh; background-color: #f8fafc;">
-            <div class="modal-header" style="background-color: #ffffff; border-bottom: 1px solid #e2e8f0; padding: 16px 24px;">
-                <h5 class="modal-title fw-bold" id="jobSearchModalLabel" style="color: #0f172a;">
-                    <i data-lucide="search" style="width:20px;height:20px; margin-right: 8px;"></i>
-                    Tìm việc ngay
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-0" id="jobSearchModalBody" style="overflow: hidden;">
-                <!-- Iframe to load Job Search without breaking layout -->
-                <iframe src="/Job?modal=true" style="width: 100%; height: 100%; border: none;"></iframe>
-            </div>
-        </div>
-    </div>
-</div>
