@@ -160,4 +160,101 @@ public class ReviewController : Controller
 
         return Json(new { success = true, message = "Đã gửi báo cáo đánh giá thành công." });
     }
+
+    [Authorize(Roles = "Business")]
+    [HttpGet]
+    public async Task<IActionResult> GetBusinessCompletedContracts()
+    {
+        var currentUserId = GetCurrentUserId();
+        if (currentUserId == null) return Unauthorized(new { success = false, message = "Vui lòng đăng nhập." });
+
+        var contracts = await _context.JobContracts
+            .Include(c => c.JobPost)
+            .Include(c => c.StudentProfile)
+            .Include(c => c.Reviews)
+            .Where(c => c.BusinessId == currentUserId.Value && c.Status == ContractStatus.Completed)
+            .OrderByDescending(c => c.CompletedAt)
+            .ToListAsync();
+
+        var result = contracts.Select(c => {
+            var review = c.Reviews.FirstOrDefault(r => r.ReviewerId == currentUserId.Value && r.ParentReviewId == null);
+            var canEdit = false;
+            if (review != null)
+            {
+                canEdit = (DateTime.UtcNow - review.CreatedAt).TotalHours <= 24;
+            }
+            return new {
+                contractId = c.Id,
+                jobTitle = c.JobPost.Title,
+                studentId = c.StudentId,
+                studentName = c.StudentProfile.FullName,
+                studentAvatar = c.StudentProfile.AvatarUrl ?? "",
+                completedAt = c.CompletedAt?.ToString("dd/MM/yyyy HH:mm") ?? "",
+                hasReview = review != null,
+                review = review == null ? null : new {
+                    id = review.Id,
+                    rating = review.Rating,
+                    comment = review.Comment,
+                    createdAt = review.CreatedAt.ToString("dd/MM/yyyy HH:mm"),
+                    canEdit = canEdit
+                }
+            };
+        }).ToList();
+
+        return Json(new { success = true, contracts = result });
+    }
+
+    [Authorize(Roles = "Business")]
+    [HttpPost]
+    public async Task<IActionResult> SaveBusinessReview([FromForm] int contractId, [FromForm] int rating, [FromForm] string comment)
+    {
+        var currentUserId = GetCurrentUserId();
+        if (currentUserId == null) return Unauthorized(new { success = false, message = "Vui lòng đăng nhập." });
+
+        if (rating < 1 || rating > 5)
+        {
+            return BadRequest(new { success = false, message = "Đánh giá sao phải từ 1 đến 5." });
+        }
+
+        var contract = await _context.JobContracts
+            .Include(c => c.Reviews)
+            .FirstOrDefaultAsync(c => c.Id == contractId && c.BusinessId == currentUserId.Value && c.Status == ContractStatus.Completed);
+
+        if (contract == null)
+        {
+            return NotFound(new { success = false, message = "Không tìm thấy hợp đồng đã hoàn thành." });
+        }
+
+        var existingReview = contract.Reviews.FirstOrDefault(r => r.ReviewerId == currentUserId.Value && r.ParentReviewId == null);
+
+        if (existingReview != null)
+        {
+            // Edit existing review, check 24 hours constraint
+            if ((DateTime.UtcNow - existingReview.CreatedAt).TotalHours > 24)
+            {
+                return BadRequest(new { success = false, message = "Đã quá 24 giờ kể từ khi gửi đánh giá, bạn không thể chỉnh sửa nữa." });
+            }
+
+            existingReview.Rating = rating;
+            existingReview.Comment = comment;
+            _context.Reviews.Update(existingReview);
+        }
+        else
+        {
+            // Create new review
+            var review = new Review
+            {
+                ContractId = contract.Id,
+                ReviewerId = currentUserId.Value,
+                Rating = rating,
+                Comment = comment,
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.Reviews.Add(review);
+        }
+
+        await _context.SaveChangesAsync();
+
+        return Json(new { success = true, message = "Lưu đánh giá thành công." });
+    }
 }

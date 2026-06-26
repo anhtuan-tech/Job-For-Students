@@ -87,6 +87,8 @@
         const isBusiness = isBusinessAccount();
         if (isBusiness) {
             setupBusinessDashboardShell();
+            renderBusinessRightSidebarLoading();
+            loadBusinessHomeData();
         }
 
         // Save original main content for restoration
@@ -207,6 +209,10 @@
                         <span class="item-icon"><i data-lucide="wallet" style="width:18px;height:18px;"></i></span>
                         Ví doanh nghiệp
                     </a>
+                    <a href="#" class="sidebar-item" data-nav="reviews-business" id="navBusinessReviews">
+                        <span class="item-icon"><i data-lucide="star" style="width:18px;height:18px;"></i></span>
+                        Đánh giá sinh viên
+                    </a>
                     <a href="#" class="sidebar-item" data-nav="notifications" id="navNotifications">
                         <span class="item-icon"><i data-lucide="bell" style="width:18px;height:18px;"></i></span>
                         Thông báo
@@ -288,7 +294,10 @@
                         }
                         break;
                     case 'notifications':
-                        renderBusinessNotificationsView();
+                        renderNotificationsView();
+                        break;
+                    case 'reviews-business':
+                        renderBusinessReviewsView();
                         break;
                     case 'messages':
                         renderMessagesView();
@@ -461,6 +470,9 @@
                         break;
                     case 'reviews':
                         renderReviewsView();
+                        break;
+                    case 'notifications':
+                        renderNotificationsView();
                         break;
                     case 'wallet':
                         renderWalletView();
@@ -1222,7 +1234,11 @@
                             <button class="btn-sm btn-outline" data-action="extend">Gia hạn</button>
                             <button class="btn-sm btn-outline" data-action="${job.status === 'Paused' || job.status === 'Draft' ? 'open' : 'pause'}">${job.status === 'Draft' ? 'Đăng ngay' : (job.status === 'Paused' ? 'Mở lại' : 'Tạm dừng')}</button>
                             <button class="btn-sm btn-outline" data-action="close">Đóng tin</button>
-                            <button class="btn-sm btn-outline" data-action="applicants">Xem ứng viên</button>
+                            ${job.status === 'In_Progress' && job.contracts && job.contracts.length > 0 ? (
+                job.contracts[0].businessCompleted ?
+                    `<button class="btn-sm btn-secondary" disabled>Chờ SV hoàn thành</button>` :
+                    `<button class="btn-sm btn-success" data-action="complete-contract" data-contract-id="${job.contracts[0].id}">Hoàn thành</button>`
+            ) : ''}
                             <button class="btn-sm btn-ghost" data-action="delete" style="color:var(--danger);">Xóa</button>
                         </div>
                     </article>
@@ -1516,20 +1532,24 @@
         if (window.lucide) lucide.createIcons();
     }
 
-    function renderBusinessNotificationsView() {
+    function renderNotificationsView() {
+        const subtitle = isBusinessAccount()
+            ? "Theo dõi ứng viên mới, thanh toán, tin sắp hết hạn và thông báo hệ thống."
+            : "Theo dõi cập nhật dự án, tin tuyển dụng, tin nhắn mới và thông báo hệ thống.";
+
         mainContent.innerHTML = `
             <div class="page-header animate-in">
                 <h1 class="page-title"><i data-lucide="bell" style="width:24px;height:24px;"></i> Thông báo</h1>
-                <p class="page-subtitle">Theo dõi ứng viên mới, thanh toán, tin sắp hết hạn và thông báo hệ thống.</p>
+                <p class="page-subtitle">${subtitle}</p>
             </div>
-            <div class="profile-card-modern" id="businessNotificationsPanel" style="padding:18px;">
+            <div class="profile-card-modern" id="notificationsPanel" style="padding:18px;">
                 <div class="business-loading-row"><span class="spinner-border spinner-border-sm"></span> Đang tải thông báo...</div>
             </div>`;
 
         fetch('/Home/GetNotifications')
             .then(res => res.json())
             .then(notifications => {
-                const panel = document.getElementById('businessNotificationsPanel');
+                const panel = document.getElementById('notificationsPanel');
                 if (!panel) return;
                 const items = Array.isArray(notifications) ? notifications : [];
                 panel.innerHTML = items.length ? items.map(n => `
@@ -1776,6 +1796,10 @@
                     if (action === 'close') changeBusinessJobStatus(jobId, 'Closed');
                     if (action === 'delete') deleteBusinessJob(jobId);
                     if (action === 'applicants') openJobApplicantsModal(jobId);
+                    if (action === 'complete-contract') {
+                        const contractId = Number(btn.dataset.contractId);
+                        completeContractFromBusiness(contractId);
+                    }
                 });
             });
         });
@@ -1842,6 +1866,31 @@
                 showToast('Không thể xóa tin.', 'error');
             }
         }, 'Xác nhận xóa');
+    }
+
+    function completeContractFromBusiness(contractId) {
+        showConfirmModal('Bạn có chắc chắn muốn xác nhận hoàn thành dự án này không? Trạng thái dự án chỉ chính thức chuyển sang "Hoàn thành" (Đóng) khi cả sinh viên và bạn đều xác nhận.', () => {
+            const formData = new FormData();
+            formData.append('contractId', contractId);
+            fetch('/Home/CompleteContractBusiness', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                }
+            })
+                .then(res => res.json())
+                .then(data => {
+                    showToast(data.message || 'Đã gửi xác nhận hoàn thành.', data.success ? 'success' : 'error');
+                    if (data.success) {
+                        loadBusinessJobs();
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    showToast('Lỗi kết nối máy chủ.', 'error');
+                });
+        }, 'Xác nhận hoàn thành');
     }
 
     function updateApplicantStatus(bidId, action, onSuccess) {
@@ -2337,6 +2386,7 @@
                     showToast(data.message || 'Đã xử lý thanh toán gói dịch vụ.', data.success ? 'success' : 'error');
                     if (data.success) {
                         loadServicePackages();
+                        loadBusinessHomeData();
                         if (typeof window.getWalletData === 'function') {
                             window.getWalletData();
                         }
@@ -2356,6 +2406,7 @@
                     showToast(data.message || 'Đã gia hạn gói dịch vụ.', data.success ? 'success' : 'error');
                     if (data.success) {
                         loadServicePackages();
+                        loadBusinessHomeData();
                         if (typeof window.getWalletData === 'function') {
                             window.getWalletData();
                         }
@@ -2656,8 +2707,8 @@
     function renderProjectsView() {
         mainContent.innerHTML = `
             <div class="page-header animate-in">
-                <h1 class="page-title"><i data-lucide="folder-open" style="width:24px;height:24px;"></i> Dự án đang làm</h1>
-                <p class="page-subtitle">Quản lý các dự án bạn đang thực hiện</p>
+                <h1 class="page-title"><i data-lucide="folder-open" style="width:24px;height:24px;"></i> Dự án của mình</h1>
+                <p class="page-subtitle">Quản lý các dự án bạn đang thực hiện và đã hoàn thành</p>
             </div>
             <div class="projects-list" id="studentProjectsList">
                 <div style="padding:18px;color:var(--text-muted);font-weight:700;"><span class="spinner-border spinner-border-sm" style="margin-right:8px;"></span> Đang tải danh sách dự án...</div>
@@ -2681,7 +2732,7 @@
 
                 const contracts = data.contracts || [];
                 if (!contracts.length) {
-                    list.innerHTML = '<div class="service-payment-empty" style="text-align:center; padding:40px; color:var(--text-muted); font-weight:600;">Chưa có dự án nào đang thực hiện.</div>';
+                    list.innerHTML = '<div class="service-payment-empty" style="text-align:center; padding:40px; color:var(--text-muted); font-weight:600;">Chưa có dự án nào.</div>';
                     return;
                 }
 
@@ -2689,7 +2740,7 @@
                     <div class="project-card animate-in" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:20px; margin-bottom:16px; box-shadow:0 4px 15px rgba(0,0,0,0.01);">
                         <div class="project-header" style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; gap: 12px;">
                             <h3 style="margin:0; font-size:1.1rem; font-weight:800; color:#0f172a;">${escapeHtml(p.title)}</h3>
-                            <span class="project-status" style="${p.contractStatus === 'Submitted' ? 'background:#fef3c7; color:#d97706;' : 'background:#ecfdf5; color:#059669;'} padding:4px 12px; border-radius:999px; font-size:0.75rem; font-weight:700;">${escapeHtml(p.status)}</span>
+                            <span class="project-status" style="${p.contractStatus === 'Completed' ? 'background:#e0f2fe; color:#0369a1;' : (p.contractStatus === 'Submitted' ? 'background:#fef3c7; color:#d97706;' : 'background:#ecfdf5; color:#059669;')} padding:4px 12px; border-radius:999px; font-size:0.75rem; font-weight:700;">${escapeHtml(p.status)}</span>
                         </div>
                         <div class="project-client" style="color:#475569; font-size:0.88rem; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
                             <i data-lucide="building" style="width:16px;height:16px;color:#64748b;"></i>
@@ -2701,11 +2752,15 @@
                             </span>
                             <span class="project-budget" style="font-size:1.1rem; font-weight:900; color:#0f766e;">${formatVND(p.budget)}</span>
                         </div>
-                        <div class="project-actions" style="margin-top:16px; display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;">
+                        <div class="project-actions" style="margin-top:16px; display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; align-items:center;">
                             <button class="btn-sm btn-outline chat-client-btn" data-client-id="${p.clientId}" style="display:flex; align-items:center; gap:6px; font-weight:600; padding:6px 14px;">
                                 <i data-lucide="message-square" style="width:14px;height:14px;"></i> Trao đổi với khách hàng
                             </button>
-                            ${p.studentCompleted ? `
+                            ${p.contractStatus === 'Completed' ? `
+                                <span style="color:#0369a1; font-weight:700; display:inline-flex; align-items:center; gap:6px; font-size:0.9rem; padding:6px 14px; background:#e0f2fe; border-radius:8px;">
+                                    <i data-lucide="check-circle" style="width:16px;height:16px;"></i> Dự án đã kết thúc
+                                </span>
+                            ` : (p.studentCompleted ? `
                                 <button class="btn-sm" disabled style="display:flex; align-items:center; gap:6px; font-weight:600; padding:6px 14px; background:#d1fae5; color:#065f46; border:none; border-radius:8px; cursor:not-allowed; opacity:0.85;">
                                     <i data-lucide="clock" style="width:14px;height:14px;"></i> ${p.businessCompleted ? 'Cả hai đã xác nhận' : 'Chờ doanh nghiệp xác nhận'}
                                 </button>
@@ -2713,7 +2768,7 @@
                                 <button class="btn-sm complete-project-btn" data-contract-id="${p.id}" style="display:flex; align-items:center; gap:6px; font-weight:700; padding:6px 16px; background:linear-gradient(135deg,#10b981,#059669); color:#fff; border:none; border-radius:8px; cursor:pointer; box-shadow:0 2px 8px rgba(16,185,129,0.25);">
                                     <i data-lucide="check-circle" style="width:14px;height:14px;"></i> ${p.businessCompleted ? 'Xác nhận hoàn thành (DN đã xác nhận)' : 'Hoàn thành'}
                                 </button>
-                            `}
+                            `)}
                         </div>
                     </div>
                 `).join('');
@@ -6448,4 +6503,206 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-});
+
+    function renderBusinessReviewsView() {
+        mainContent.innerHTML = `
+            <div class="page-header animate-in">
+                <h1 class="page-title"><i data-lucide="star" style="width:24px;height:24px;"></i> Đánh giá sinh viên</h1>
+                <p class="page-subtitle">Đánh giá sinh viên sau khi dự án đã hoàn thành. Cho phép chỉnh sửa trong vòng 24 giờ sau khi đánh giá.</p>
+            </div>
+            <div class="profile-card-modern" id="businessReviewsPanel" style="padding:18px;">
+                <div class="business-loading-row"><span class="spinner-border spinner-border-sm"></span> Đang tải danh sách dự án...</div>
+            </div>`;
+
+        if (window.lucide) lucide.createIcons();
+        loadBusinessCompletedReviews();
+    }
+
+    function loadBusinessCompletedReviews() {
+        fetch('/Review/GetBusinessCompletedContracts')
+            .then(res => res.json())
+            .then(data => {
+                const panel = document.getElementById('businessReviewsPanel');
+                if (!panel) return;
+                if (!data.success) {
+                    panel.innerHTML = `<div class="business-empty-row">${escapeHtml(data.message || 'Lỗi khi tải dữ liệu.')}</div>`;
+                    return;
+                }
+                const contracts = data.contracts || [];
+                panel.innerHTML = contracts.length ? `
+                    <div style="display:flex; flex-direction:column; gap:16px;">
+                        ${contracts.map(c => {
+                    let actionHTML = '';
+                    if (c.hasReview) {
+                        if (c.review.canEdit) {
+                            actionHTML = `<button class="btn btn-sm btn-outline-primary rounded-pill px-3 btn-edit-review" data-contract-id="${c.contractId}"><i data-lucide="edit-3" style="width:14px;height:14px;margin-right:4px;"></i> Chỉnh sửa</button>`;
+                        } else {
+                            actionHTML = `<span class="text-muted small d-inline-flex align-items-center gap-1"><i data-lucide="lock" style="width:14px;height:14px;"></i> Đã khóa (Quá 24h)</span>`;
+                        }
+                    } else {
+                        actionHTML = `<button class="btn btn-sm btn-primary rounded-pill px-3 btn-write-review" style="background:#0ea5e9; border:none;" data-contract-id="${c.contractId}"><i data-lucide="star" style="width:14px;height:14px;margin-right:4px;"></i> Viết đánh giá</button>`;
+                    }
+
+                    return `
+                                <div class="review-modern-item" style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; background:#fff; display:flex; justify-content:space-between; align-items:flex-start; gap:16px;">
+                                    <div style="display:flex; gap:16px; align-items:flex-start;">
+                                        <div class="user-avatar" style="width:48px; height:48px; border-radius:50%; overflow:hidden; background:#e2e8f0; flex-shrink:0;">
+                                            ${c.studentAvatar ? `<img src="${c.studentAvatar}" style="width:100%; height:100%; object-fit:cover;" />` : `<span style="display:flex; width:100%; height:100%; align-items:center; justify-content:center; font-weight:700; color:#475569;">${c.studentName.substring(0, 2).toUpperCase()}</span>`}
+                                        </div>
+                                        <div>
+                                            <h5 style="margin:0 0 4px 0; font-size:1rem; font-weight:700; color:#1e293b;">${escapeHtml(c.studentName)}</h5>
+                                            <p style="margin:0 0 6px 0; font-size:0.85rem; color:#64748b;">Dự án: <strong>${escapeHtml(c.jobTitle)}</strong></p>
+                                            <small class="text-muted" style="font-size:0.75rem;">Hoàn thành lúc: ${escapeHtml(c.completedAt)}</small>
+                                            
+                                            ${c.hasReview && c.review ? `
+                                                <div style="margin-top:10px; border-top:1px solid #f1f5f9; padding-top:8px;">
+                                                    <div style="color:#fbbf24; font-size:0.95rem; margin-bottom:4px;">
+                                                        ${'★'.repeat(c.review.rating || 0)}${'☆'.repeat(5 - (c.review.rating || 0))}
+                                                        <span class="text-muted small" style="margin-left:4px; font-weight:600;">(${c.review.rating || 0}/5)</span>
+                                                    </div>
+                                                    <p style="margin:0; font-size:0.9rem; color:#334155; font-style:italic;">"${escapeHtml(c.review.comment || '')}"</p>
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                    <div style="flex-shrink:0;">
+                                        ${actionHTML}
+                                    </div>
+                                </div>
+                            `;
+                }).join('')}
+                    </div>
+                ` : '<div class="business-empty-row">Chưa có dự án nào hoàn thành để đánh giá.</div>';
+
+                // Programmatically bind events to write/edit buttons
+                panel.querySelectorAll('.btn-write-review, .btn-edit-review').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        const contractId = parseInt(this.dataset.contractId);
+                        const c = contracts.find(item => item.contractId === contractId);
+                        if (c) {
+                            openReviewModal(
+                                c.contractId,
+                                c.studentName,
+                                c.review ? c.review.rating : 5,
+                                c.review ? c.review.comment : ''
+                            );
+                        }
+                    });
+                });
+
+                if (window.lucide) lucide.createIcons();
+            })
+            .catch(err => {
+                console.error(err);
+                const panel = document.getElementById('businessReviewsPanel');
+                if (panel) panel.innerHTML = '<div class="business-empty-row">Có lỗi khi tải danh sách.</div>';
+            });
+    }
+
+    function openReviewModal(contractId, studentName, currentRating = 5, currentComment = '') {
+        document.getElementById('j4sReviewModal')?.remove();
+        const modalHTML = `
+            <div class="modal fade" id="j4sReviewModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+                <div class="modal-dialog modal-dialog-centered" style="max-width: 450px;">
+                    <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+                        <div class="modal-header border-0 pb-0" style="padding: 20px 20px 0 20px;">
+                            <h5 class="modal-title fw-bold text-slate-800" id="reviewModalTitle">${currentComment ? 'Chỉnh sửa đánh giá' : 'Viết đánh giá cho sinh viên'}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body p-4">
+                            <div class="text-center mb-3">
+                                <p class="text-slate-600 font-semibold mb-1">Sinh viên: <strong>${escapeHtml(studentName)}</strong></p>
+                                <div class="review-stars-input d-flex justify-content-center gap-2 my-2" style="font-size: 2rem; cursor: pointer; color: #cbd5e1;">
+                                    <span data-star="1">★</span>
+                                    <span data-star="2">★</span>
+                                    <span data-star="3">★</span>
+                                    <span data-star="4">★</span>
+                                    <span data-star="5">★</span>
+                                </div>
+                                <input type="hidden" id="reviewRatingInput" value="${currentRating || 5}" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-slate-700 fw-bold small">Nhận xét của bạn</label>
+                                <textarea id="reviewCommentInput" class="form-control" rows="4" style="border-radius:10px; font-size:0.9rem;" placeholder="Nhập phản hồi, thái độ làm việc, chất lượng dự án của sinh viên...">${escapeHtml(currentComment)}</textarea>
+                            </div>
+                            <div class="d-flex gap-2 justify-content-end">
+                                <button type="button" class="btn btn-light rounded-pill px-4 py-2 fw-semibold text-slate-600 small" style="border: 1px solid #e2e8f0; font-size: 0.85rem;" data-bs-dismiss="modal">Hủy</button>
+                                <button type="button" id="btnSubmitReview" class="btn btn-primary rounded-pill px-4 py-2 fw-bold small" style="background: #0ea5e9; border: none; font-size: 0.85rem;">Gửi đánh giá</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        const modalEl = document.getElementById('j4sReviewModal');
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+
+        const stars = modalEl.querySelectorAll('.review-stars-input span');
+        const ratingInput = document.getElementById('reviewRatingInput');
+
+        function highlightStars(val) {
+            stars.forEach(star => {
+                const sVal = parseInt(star.dataset.star);
+                if (sVal <= val) {
+                    star.style.color = '#fbbf24';
+                } else {
+                    star.style.color = '#cbd5e1';
+                }
+            });
+        }
+
+        highlightStars(parseInt(ratingInput.value));
+
+        stars.forEach(star => {
+            star.addEventListener('click', () => {
+                const val = parseInt(star.dataset.star);
+                ratingInput.value = val;
+                highlightStars(val);
+            });
+            star.addEventListener('mouseover', () => {
+                highlightStars(parseInt(star.dataset.star));
+            });
+            star.addEventListener('mouseout', () => {
+                highlightStars(parseInt(ratingInput.value));
+            });
+        });
+
+        document.getElementById('btnSubmitReview').addEventListener('click', () => {
+            const rating = parseInt(ratingInput.value);
+            const comment = document.getElementById('reviewCommentInput').value.trim();
+            if (!comment) {
+                showToast('Vui lòng nhập nhận xét.', 'warning');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('contractId', contractId);
+            formData.append('rating', rating);
+            formData.append('comment', comment);
+
+            fetch('/Review/SaveBusinessReview', {
+                method: 'POST',
+                body: formData
+            })
+                .then(r => r.json())
+                .then(data => {
+                    showToast(data.message || 'Đã gửi đánh giá thành công.', data.success ? 'success' : 'error');
+                    if (data.success) {
+                        modal.hide();
+                        modalEl.addEventListener('hidden.bs.modal', () => {
+                            modalEl.remove();
+                            loadBusinessCompletedReviews();
+                        }, { once: true });
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    showToast('Có lỗi xảy ra khi lưu đánh giá.', 'error');
+                });
+        });
+    }
+
+    window.openReviewModal = openReviewModal;
+})();

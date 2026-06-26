@@ -1204,85 +1204,12 @@
              2A. SIDEBAR DÀNH CHO DOANH NGHIỆP
              ============================================ -->
         <aside class="sidebar" id="sidebar">
-            <div class="sidebar-group">
-                <div class="sidebar-label" style="text-transform: uppercase; font-weight: 700; color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.5px; margin-bottom: 8px;">Nhà tuyển dụng</div>
-                <a href="#" class="sidebar-item active" data-nav="home" id="navHome">
-                    <span class="item-icon"><i data-lucide="home" style="width:18px;height:18px;"></i></span>
-                    Trang chủ
-                </a>
-                <a href="#" class="sidebar-item" data-nav="projects" id="navProjects">
-                    <span class="item-icon"><i data-lucide="file-text" style="width:18px;height:18px;"></i></span>
-                    Quản lý tin đăng
-                </a>
-                <a href="#" class="sidebar-item" data-nav="approveCandidates" id="navApproveCandidates">
-                    <span class="item-icon"><i data-lucide="user-check" style="width:18px;height:18px;"></i></span>
-                    Duyệt ứng viên
-                </a>
-                <a href="#" class="sidebar-item" data-nav="topFreelancer" id="navTopFreelancer">
-                    <span class="item-icon"><i data-lucide="users" style="width:18px;height:18px;"></i></span>
-                    Ứng viên
-                </a>
-                <div class="sidebar-item-dropdown" id="walletDropdownWrapper">
-                    <a href="#" class="sidebar-item" id="navWalletParent" style="display:flex; align-items:center; justify-content:space-between;">
-                        <div style="display:flex; align-items:center; gap:12px;">
-                            <span class="item-icon"><i data-lucide="credit-card" style="width:18px;height:18px;"></i></span>
-                            <span>Gói dịch vụ & Thanh toán</span>
-                        </div>
-                        <i data-lucide="chevron-down" class="submenu-chevron" style="width:14px; height:14px; transition: transform 0.2s;"></i>
-                    </a>
-                    <div class="sidebar-submenu" id="walletSubmenu" style="display:none; flex-direction:column; gap:4px; padding-left:16px; border-left:1.5px solid #e2e8f0; margin-left:20px; margin-top:4px;">
-                        <a href="#" class="sidebar-item" data-nav="wallet-current" id="navWalletCurrent" style="font-size:0.85rem; padding:8px 12px;">
-                            <span class="item-icon"><i data-lucide="package" style="width:14px;height:14px;"></i></span>
-                            Gói dịch vụ hiện tại
-                        </a>
-                        <a href="#" class="sidebar-item" data-nav="wallet-deposit" id="navWalletDeposit" style="font-size:0.85rem; padding:8px 12px;">
-                            <span class="item-icon"><i data-lucide="plus-circle" style="width:14px;height:14px;"></i></span>
-                            Nạp tiền vào tài khoản
-                        </a>
-                        <a href="#" class="sidebar-item" data-nav="wallet-history" id="navWalletHistory" style="font-size:0.85rem; padding:8px 12px;">
-                            <span class="item-icon"><i data-lucide="history" style="width:14px;height:14px;"></i></span>
-                            Lịch sử giao dịch
-                        </a>
-                    </div>
-                </div>
-                <a href="#" class="sidebar-item" data-nav="wallet-business" id="navBusinessWallet">
-                    <span class="item-icon"><i data-lucide="wallet" style="width:18px;height:18px;"></i></span>
-                    Ví doanh nghiệp
-                </a>
-                <a href="#" class="sidebar-item" data-nav="notifications" id="navNotifications" style="position: relative;">
-                    <span class="item-icon"><i data-lucide="bell" style="width:18px;height:18px;"></i></span>
-                    Thông báo
-                    @{
-                        int unreadNotifications = 0;
-                    }
-                    @if (unreadNotifications > 0)
-                    {
-                        <span class="sidebar-badge" style="background: #ef4444; color: white; border-radius: 9999px; padding: 2px 6px; font-size: 0.7rem; font-weight: bold; position: absolute; right: 16px; top: 50%; transform: translateY(-50%);">@unreadNotifications</span>
-                    }
-                </a>
-                <a href="#" class="sidebar-item" data-nav="messages" id="navMessages" style="position: relative;">
-                    <span class="item-icon"><i data-lucide="message-square" style="width:18px;height:18px;"></i></span>
-                    Tin nhắn
-                </a>
-            </div>
-
-            <div class="sidebar-group">
-                <div class="sidebar-label">Hỗ trợ</div>
-                <a href="#" class="sidebar-item" data-nav="help" id="navHelp">
-                    <span class="item-icon"><i data-lucide="help-circle" style="width:18px;height:18px;"></i></span>
-                    Trung tâm hỗ trợ
-                </a>
-                <a href="#" class="sidebar-item" data-nav="feedback" id="navFeedback">
-                    <span class="item-icon"><i data-lucide="message-square" style="width:18px;height:18px;"></i></span>
-                    Phản hồi & Báo lỗi
-                </a>
-            </div>
-
-            <div class="sidebar-bottom">
-                <button class="btn-post-job" id="btnPostJob" data-bs-toggle="modal" data-bs-target="#postJobModal" style="background: #4F46E5; color: white; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                    <i data-lucide="plus" style="width:18px;height:18px;"></i>
-                    Đăng tin tuyển dụng
-                </button>
+            <div class="placeholder-glow" style="padding: 24px; display: flex; flex-direction: column; gap: 16px;">
+                <div class="placeholder col-8" style="height: 20px; border-radius: 4px; margin-bottom: 8px; background-color: #cbd5e1;"></div>
+                <div class="placeholder col-12" style="height: 40px; border-radius: 8px; background-color: #cbd5e1;"></div>
+                <div class="placeholder col-12" style="height: 40px; border-radius: 8px; background-color: #cbd5e1;"></div>
+                <div class="placeholder col-12" style="height: 40px; border-radius: 8px; background-color: #cbd5e1;"></div>
+                <div class="placeholder col-12" style="height: 40px; border-radius: 8px; background-color: #cbd5e1;"></div>
             </div>
         </aside>
     }
@@ -1313,7 +1240,7 @@
                 </a>
                 <a href="#" class="sidebar-item" data-nav="projects" id="navProjects">
                     <span class="item-icon"><i data-lucide="folder-open" style="width:18px;height:18px;"></i></span>
-                    Dự án đang làm
+                    Dự án của mình
                 </a>
             </div>
 
@@ -1339,6 +1266,10 @@
                         Tìm hồ sơ ứng viên
                     </a>
                 }
+                <a href="#" class="sidebar-item" data-nav="notifications" id="navNotifications">
+                    <span class="item-icon"><i data-lucide="bell" style="width:18px;height:18px;"></i></span>
+                    Thông báo
+                </a>
                 <a href="#" class="sidebar-item" data-nav="profile" id="navProfile">
                     <span class="item-icon"><i data-lucide="user" style="width:18px;height:18px;"></i></span>
                     Hồ sơ của tôi
@@ -1435,238 +1366,24 @@
                  3A. CỘT GIỮA - NỘI DUNG DOANH NGHIỆP
                  ============================================ -->
             <main class="main-content" id="mainContent">
-                <!-- Welcome Banner -->
-                <section class="welcome-box-business">
-                    <div class="welcome-text-side">
-                        <span class="welcome-subtitle">Chào mừng trở lại,</span>
-                        <h1 class="welcome-title">@Model.CurrentUserName 👋</h1>
-                        <p class="welcome-desc">Quản lý tuyển dụng hiệu quả – Tìm đúng người, đúng vị trí</p>
-                        <div class="welcome-actions-business">
-                            <button class="btn-indigo-solid" id="btnPostJobBusiness"><i data-lucide="plus" style="width:18px;height:18px;"></i> Đăng tin tuyển dụng</button>
-                            <button class="btn-indigo-outline" id="btnSearchCandidatesBusiness"><i data-lucide="search" style="width:18px;height:18px;"></i> Tìm hồ sơ ứng viên</button>
-                        </div>
+                <div class="placeholder-glow" style="display: flex; flex-direction: column; gap: 24px;">
+                    <div class="placeholder col-12" style="height: 220px; border-radius: 18px; background-color: #cbd5e1;"></div>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                        <div class="placeholder col-12" style="height: 108px; border-radius: 18px; background-color: #cbd5e1;"></div>
+                        <div class="placeholder col-12" style="height: 108px; border-radius: 18px; background-color: #cbd5e1;"></div>
+                        <div class="placeholder col-12" style="height: 108px; border-radius: 18px; background-color: #cbd5e1;"></div>
                     </div>
-                    <div class="welcome-illustration-business">
-                        <img src="~/images/business_illustration.png" alt="Recruitment Illustration" />
-                    </div>
-                </section>
-
-                <!-- Stat Cards Row -->
-                <section class="business-stats-grid">
-                    <div class="business-stat-card">
-                        <div class="business-stat-icon blue">
-                            <i data-lucide="file-text" style="width:24px;height:24px;"></i>
-                        </div>
-                        <div>
-                            <div class="business-stat-val">@Model.BusinessActiveJobsCount</div>
-                            <div class="business-stat-label">Tin đang hiển thị</div>
-                            <div class="business-stat-sub" style="color: #ef4444; font-weight: 600;">@Model.BusinessRecentJobsSoonExpiringCount tin sắp hết hạn</div>
-                        </div>
-                    </div>
-                    <div class="business-stat-card">
-                        <div class="business-stat-icon teal">
-                            <i data-lucide="users" style="width:24px;height:24px;"></i>
-                        </div>
-                        <div>
-                            <div class="business-stat-val">@Model.BusinessNewApplicantsCount</div>
-                            <div class="business-stat-label">Ứng viên mới</div>
-                            <div class="business-stat-sub" style="color: #0d9488; font-weight: 600;">Trong 7 ngày qua</div>
-                        </div>
-                    </div>
-                    <div class="business-stat-card">
-                        <div class="business-stat-icon orange">
-                            <i data-lucide="copy" style="width:24px;height:24px;"></i>
-                        </div>
-                        <div>
-                            <div class="business-stat-val">@Model.BusinessTotalApplicantsCount</div>
-                            <div class="business-stat-label">Tổng số ứng viên</div>
-                            <div class="business-stat-sub">Tất cả tin đăng</div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Latest Candidates List -->
-                <section class="candidates-section">
-                    <div class="candidates-header">
-                        <h2 class="candidates-title">Ứng viên mới nhất</h2>
-                        <a href="#" class="candidates-link" id="btnSeeAllCandidates">Xem tất cả <i data-lucide="chevron-down" style="width:14px;height:14px;"></i></a>
-                    </div>
-                    <div class="candidates-list">
-                        @if (Model.BusinessRecentApplicants.Count == 0)
-                        {
-                            <div class="text-center py-4 text-muted w-100">
-                                <p class="mb-0">Chưa có ứng viên mới ứng tuyển.</p>
-                            </div>
-                        }
-                        else
-                        {
-                            @foreach (var candidate in Model.BusinessRecentApplicants)
-                            {
-                                var gradient = avatarGradients[candidate.Id % avatarGradients.Length];
-                                <div class="candidate-item">
-                                    <div class="candidate-left">
-                                        <div class="candidate-avatar" style="background: @(string.IsNullOrEmpty(candidate.AvatarUrl) ? gradient : "none"); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; overflow: hidden;">
-                                            @if (!string.IsNullOrEmpty(candidate.AvatarUrl))
-                                            {
-                                                <img src="@candidate.AvatarUrl" style="width: 100%; height: 100%; object-fit: cover;" />
-                                            }
-                                            else
-                                            {
-                                                @candidate.Initials
-                                            }
-                                        </div>
-                                        <div>
-                                            <div class="candidate-name">
-                                                @candidate.FullName
-                                                @if (candidate.MatchLevel == "match-high")
-                                                {
-                                                    <span class="candidate-badge match-high">Phù hợp cao</span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="candidate-badge match-medium">Phù hợp trung bình</span>
-                                                }
-                                            </div>
-                                            <div class="candidate-role">@candidate.Role</div>
-                                        </div>
-                                    </div>
-                                    <div class="candidate-right">
-                                        <span class="candidate-time">@candidate.TimeAgo</span>
-                                        <button class="btn-view-profile-sm" onclick="window.location.href='/StudentProfile/Details?id=@candidate.Id'">Xem hồ sơ</button>
-                                    </div>
-                                </div>
-                            }
-                        }
-                    </div>
-                </section>
+                    <div class="placeholder col-12" style="height: 350px; border-radius: 18px; background-color: #cbd5e1;"></div>
+                </div>
             </main>
 
             <!-- ============================================
                   4A. CỘT PHẢI - THÔNG TIN DOANH NGHIỆP
                   ============================================ -->
             <aside class="right-sidebar" id="rightSidebar">
-                @if (Model.BusinessRecentJobs.Any())
-                {
-                    <!-- Recent Postings Widget -->
-                    <div class="recent-posts-widget">
-                        <div class="recent-posts-header">
-                            <h3 class="recent-posts-title">Tin đăng gần đây</h3>
-                            <a href="#" class="candidates-link" id="btnSeeAllJobs" style="font-size:0.8rem;">Xem tất cả <i data-lucide="chevron-down" style="width:12px;height:12px;"></i></a>
-                        </div>
-                        <div class="recent-posts-list">
-                            @foreach (var rJob in Model.BusinessRecentJobs)
-                            {
-                                // Determine Lucide icon for category
-                                var iconName = "briefcase";
-                                var categoryLower = rJob.Category.ToLower();
-                                if (categoryLower.Contains("code") || categoryLower.Contains("web")) iconName = "code-2";
-                                else if (categoryLower.Contains("design") || categoryLower.Contains("thiết kế") || categoryLower.Contains("palette")) iconName = "palette";
-                                else if (categoryLower.Contains("video") || categoryLower.Contains("edit")) iconName = "video";
-                                else if (categoryLower.Contains("content") || categoryLower.Contains("viết")) iconName = "pen-tool";
-                                else if (categoryLower.Contains("slide") || categoryLower.Contains("trình bày")) iconName = "presentation";
-                                else if (categoryLower.Contains("dịch") || categoryLower.Contains("translate") || categoryLower.Contains("ngôn ngữ")) iconName = "languages";
-
-                                var statusText = "Đang hiển thị";
-                                var statusClass = "active";
-                                if (rJob.Status == "Warning")
-                                {
-                                    statusText = "Sắp hết hạn";
-                                    statusClass = "warning";
-                                }
-                                else if (rJob.Status == "Paused")
-                                {
-                                    statusText = "Tạm dừng";
-                                    statusClass = "paused";
-                                }
-
-                                <div class="recent-post-item">
-                                    <div class="recent-post-left">
-                                        <div class="recent-post-icon"><i data-lucide="@iconName" style="width:16px;height:16px;"></i></div>
-                                        <div class="recent-post-info">
-                                            <div class="recent-post-jobtitle">@rJob.Title</div>
-                                            <div class="recent-post-candidates" style="display:flex; gap: 8px; color: #64748b; font-size: 0.75rem;">
-                                                <span><i data-lucide="eye" style="width:12px;height:12px;margin-bottom:-2px"></i> @rJob.ViewCount</span>
-                                                <span><i data-lucide="users" style="width:12px;height:12px;margin-bottom:-2px"></i> @rJob.TotalApplicantsCount</span>
-                                                <span style="color: #0d9488;">(Mới: @rJob.NewApplicantsCount)</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <span class="recent-post-status @statusClass">@statusText</span>
-                                </div>
-                            }
-                        </div>
-                        <button class="btn-sidebar-outline" id="btnManageJobsSidebar">Quản lý tin đăng</button>
-                    </div>
-                }
-
-                <!-- Current Service Package Widget -->
-                <div class="service-pkg-widget">
-                    <h3 class="service-pkg-title">Gói dịch vụ hiện tại</h3>
-                    <div class="service-pkg-card" id="sidebarServicePkgCard">
-                        @if (Model.ActivePackageName == "Gói Premium")
-                        {
-                            var premiumProgress = Math.Min(100, Model.ActivePackageUsedCount * 100 / 20);
-                            <div class="service-pkg-header">
-                                <span class="service-pkg-name"><i data-lucide="star" style="width:18px;height:18px;color:#f59e0b;fill:#f59e0b;"></i> Gói Premium</span>
-                                <span class="service-pkg-status active" style="background:#d1fae5; color:#065f46; padding:2px 8px; border-radius:12px; font-size:0.75rem; font-weight:600;">Đang hoạt động</span>
-                            </div>
-                            <div class="service-pkg-expiry">Hiệu lực đến: @Model.ActivePackageExpiry</div>
-                            <div class="service-pkg-bullets">
-                                <div class="service-pkg-bullet"><i data-lucide="check" style="width:14px;height:14px;"></i> <span>Đăng tối đa 20 tin tuyển dụng</span></div>
-                                <div class="service-pkg-bullet"><i data-lucide="check" style="width:14px;height:14px;"></i> <span>Hiển thị tin ưu tiên</span></div>
-                                <div class="service-pkg-bullet" style="padding-left: 22px;"><span>Truy cập hồ sơ ứng viên không giới hạn</span></div>
-                                <div class="service-pkg-bullet"><i data-lucide="check" style="width:14px;height:14px;"></i> <span>Hỗ trợ tuyển dụng ưu tiên</span></div>
-                            </div>
-                            <div class="service-pkg-usage">
-                                <span>Đã sử dụng</span>
-                                <span>@Model.ActivePackageUsedCount/20 tin</span>
-                            </div>
-                            <div class="service-pkg-progress-bar">
-                                <div class="service-pkg-progress-fill" style="width: @(premiumProgress)%;"></div>
-                            </div>
-                        }
-                        else if (Model.ActivePackageName == "Gói VIP")
-                        {
-                            var vipProgress = Math.Min(100, Model.ActivePackageUsedCount * 100 / 5);
-                            <div class="service-pkg-header">
-                                <span class="service-pkg-name"><i data-lucide="star" style="width:18px;height:18px;color:#f59e0b;fill:#f59e0b;"></i> Gói VIP</span>
-                                <span class="service-pkg-status active" style="background:#fef3c7; color:#92400e; padding:2px 8px; border-radius:12px; font-size:0.75rem; font-weight:600;">Đang hoạt động</span>
-                            </div>
-                            <div class="service-pkg-expiry">Hiệu lực đến: @Model.ActivePackageExpiry</div>
-                            <div class="service-pkg-bullets">
-                                <div class="service-pkg-bullet"><i data-lucide="check" style="width:14px;height:14px;"></i> <span>Đăng tối đa 5 tin tuyển dụng</span></div>
-                                <div class="service-pkg-bullet"><i data-lucide="check" style="width:14px;height:14px;"></i> <span>Hiển thị nhãn VIP nổi bật</span></div>
-                                <div class="service-pkg-bullet"><i data-lucide="check" style="width:14px;height:14px;"></i> <span>Duyệt tin nhanh trong 1 giờ</span></div>
-                            </div>
-                            <div class="service-pkg-usage">
-                                <span>Đã sử dụng</span>
-                                <span>@Model.ActivePackageUsedCount/5 tin</span>
-                            </div>
-                            <div class="service-pkg-progress-bar">
-                                <div class="service-pkg-progress-fill" style="width: @(vipProgress)%;"></div>
-                            </div>
-                        }
-                        else
-                        {
-                            var freeProgress = Model.ActivePackageUsedCount >= 1 ? 100 : 0;
-                            <div class="service-pkg-header">
-                                <span class="service-pkg-name"><i data-lucide="briefcase" style="width:18px;height:18px;color:#64748b;"></i> Gói Thường</span>
-                                <span class="service-pkg-status text-muted" style="background:#f1f5f9; padding:2px 8px; border-radius:12px; font-size:0.75rem; font-weight:600;">Mặc định</span>
-                            </div>
-                            <div class="service-pkg-expiry">Hiệu lực: Vĩnh viễn</div>
-                            <div class="service-pkg-bullets">
-                                <div class="service-pkg-bullet"><i data-lucide="check" style="width:14px;height:14px;"></i> <span>Đăng tối đa 1 tin tuyển dụng</span></div>
-                                <div class="service-pkg-bullet"><i data-lucide="check" style="width:14px;height:14px;"></i> <span>Hiển thị chuẩn trên trang chủ</span></div>
-                            </div>
-                            <div class="service-pkg-usage">
-                                <span>Đã sử dụng</span>
-                                <span>@Model.ActivePackageUsedCount/1 tin</span>
-                            </div>
-                            <div class="service-pkg-progress-bar">
-                                <div class="service-pkg-progress-fill" style="width: @(freeProgress)%;"></div>
-                            </div>
-                        }
-                    </div>
+                <div class="placeholder-glow" style="display: flex; flex-direction: column; gap: 20px;">
+                    <div class="placeholder col-12" style="height: 250px; border-radius: 18px; background-color: #cbd5e1;"></div>
+                    <div class="placeholder col-12" style="height: 220px; border-radius: 18px; background-color: #cbd5e1;"></div>
                 </div>
             </aside>
         }
@@ -2078,7 +1795,6 @@
     @if (User.IsInRole("Business"))
     {
         <script>
-            window.businessActiveJobsCount = @Model.BusinessActiveJobsCount;
             document.addEventListener('DOMContentLoaded', () => {
             // Bind buttons for Business dashboard
             document.getElementById('btnPostJobBusiness')?.addEventListener('click', () => {
@@ -2398,9 +2114,6 @@
                 if (confirm(`Bạn có chắc chắn muốn mua gói dịch vụ ${packageName} với giá ${new Intl.NumberFormat('vi-VN').format(price)} đ không?`)) {
                     executePurchase();
                 }
-            }
-            console.error('Error purchasing package:', e);
-            showToast('Lỗi mạng. Vui lòng kiểm tra kết nối.', 'error');
             }
             }
 

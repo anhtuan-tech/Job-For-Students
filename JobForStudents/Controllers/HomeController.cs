@@ -213,170 +213,6 @@ public class HomeController : Controller
                         dashboard.CurrentUserName = businessProfile.CompanyName;
                     }
                 }
-
-                // Query active package from transactions
-                var wallet = await _context.Wallets
-                    .Include(w => w.Transactions)
-                    .FirstOrDefaultAsync(w => w.UserId == currentUserId.Value);
-
-                var activePackageName = "Gói Thường";
-                var activePackageExpiry = "Vĩnh viễn";
-                var activePackageUsedCount = 0;
-                var activePackageMaxCount = 1;
-                var today = DateTime.UtcNow;
-
-                if (wallet != null)
-                {
-                    var latestPkgTx = wallet.Transactions
-                        .Where(t => t.Type == TransactionType.Withdraw && t.Status == TransactionStatus.Success && t.Description != null && t.Description.Contains("gói dịch vụ"))
-                        .OrderByDescending(t => t.CreatedAt)
-                        .FirstOrDefault();
-
-                    if (latestPkgTx != null && latestPkgTx.CreatedAt.AddDays(30) > today)
-                    {
-                        var isPremium = latestPkgTx.Description?.Contains("Premium") ?? false;
-                        var isVip = latestPkgTx.Description?.Contains("VIP") ?? false;
-
-                        if (isPremium)
-                        {
-                            activePackageName = "Gói Premium";
-                            activePackageExpiry = latestPkgTx.CreatedAt.AddDays(30).ToString("dd/MM/yyyy");
-                            activePackageMaxCount = 20; // 20 posts
-                        }
-                        else if (isVip)
-                        {
-                            activePackageName = "Gói VIP";
-                            activePackageExpiry = latestPkgTx.CreatedAt.AddDays(30).ToString("dd/MM/yyyy");
-                            activePackageMaxCount = 5;
-                        }
-
-                        activePackageUsedCount = await _context.JobPosts
-                            .CountAsync(j => j.BusinessId == currentUserId.Value && !j.IsDeleted && j.CreatedAt >= latestPkgTx.CreatedAt);
-                    }
-                    else
-                    {
-                        activePackageUsedCount = await _context.JobPosts
-                            .CountAsync(j => j.BusinessId == currentUserId.Value && !j.IsDeleted);
-                    }
-                }
-                else
-                {
-                    activePackageUsedCount = await _context.JobPosts
-                        .CountAsync(j => j.BusinessId == currentUserId.Value && !j.IsDeleted);
-                }
-
-                dashboard.ActivePackageName = activePackageName;
-                dashboard.ActivePackageExpiry = activePackageExpiry;
-                dashboard.ActivePackageUsedCount = activePackageUsedCount;
-                dashboard.ActivePackageMaxCount = activePackageMaxCount;
-
-                // Query Business Dashboard Statistics
-                var sevenDaysAgo = today.AddDays(-7);
-                var threeDaysSoon = today.AddDays(3);
-
-                // Active Jobs
-                dashboard.BusinessActiveJobsCount = await _context.JobPosts
-                    .CountAsync(j => j.BusinessId == currentUserId.Value && !j.IsDeleted && j.Status == JobStatus.Open);
-
-                // Soon Expiring Jobs (Open jobs expiring in <= 3 days, but not yet expired)
-                dashboard.BusinessRecentJobsSoonExpiringCount = await _context.JobPosts
-                    .CountAsync(j => j.BusinessId == currentUserId.Value && !j.IsDeleted && j.Status == JobStatus.Open && j.Deadline > today && j.Deadline <= threeDaysSoon);
-
-                // New Applicants in last 7 days
-                dashboard.BusinessNewApplicantsCount = await _context.JobBids
-                    .CountAsync(b => b.JobPost.BusinessId == currentUserId.Value && b.CreatedAt >= sevenDaysAgo);
-
-                // Total Applicants
-                dashboard.BusinessTotalApplicantsCount = await _context.JobBids
-                    .CountAsync(b => b.JobPost.BusinessId == currentUserId.Value);
-
-                // Fetch Recent Job Posts (Tin tuyển dụng gần đây)
-                var rawRecentJobs = await _context.JobPosts
-                    .Include(j => j.JobPostSkills)
-                        .ThenInclude(jps => jps.Skill)
-                    .Include(j => j.JobBids)
-                    .Where(j => j.BusinessId == currentUserId.Value && !j.IsDeleted)
-                    .OrderByDescending(j => j.CreatedAt)
-                    .Take(10)
-                    .ToListAsync();
-
-                dashboard.BusinessRecentJobs = rawRecentJobs.Select(j =>
-                {
-                    var isSoonExpiring = j.Status == JobStatus.Open && j.Deadline > today && j.Deadline <= threeDaysSoon;
-                    var statusStr = j.Status == JobStatus.Draft ? "Draft"
-                        : !j.IsApproved ? "Pending"
-                        : (j.Status == JobStatus.Closed ? "Paused" : (isSoonExpiring ? "Warning" : "Active"));
-
-                    return new BusinessRecentJobViewModel
-                    {
-                        Id = j.Id,
-                        Title = j.Title,
-                        NewApplicantsCount = j.JobBids.Count(b => b.CreatedAt >= sevenDaysAgo),
-                        TotalApplicantsCount = j.JobBids.Count,
-                        ViewCount = j.ViewCount,
-                        Category = j.Category ?? (j.JobPostSkills.FirstOrDefault()?.Skill.Category ?? "Khác"),
-                        Status = statusStr
-                    };
-                }).ToList();
-
-                // Fetch Recent Applicants (Ứng viên mới nhất)
-                var rawRecentBids = await _context.JobBids
-                    .Include(b => b.JobPost)
-                    .Include(b => b.StudentProfile)
-                        .ThenInclude(sp => sp.StudentSkills)
-                            .ThenInclude(ss => ss.Skill)
-                    .Where(b => b.JobPost.BusinessId == currentUserId.Value)
-                    .OrderByDescending(b => b.CreatedAt)
-                    .Take(10)
-                    .ToListAsync();
-
-                dashboard.BusinessRecentApplicants = rawRecentBids.Select(b =>
-                {
-                    var sp = b.StudentProfile;
-
-                    // Time Ago helper
-                    var diff = today - b.CreatedAt;
-                    string timeAgoStr;
-                    if (diff.TotalMinutes < 60)
-                        timeAgoStr = $"{(int)Math.Max(1, diff.TotalMinutes)} phút trước";
-                    else if (diff.TotalHours < 24)
-                        timeAgoStr = $"{(int)diff.TotalHours} giờ trước";
-                    else
-                        timeAgoStr = $"{(int)diff.TotalDays} ngày trước";
-
-                    // Determine Match level: check if student has skills in common with job skills
-                    var jobSkills = b.JobPost.JobPostSkills?.Select(js => js.SkillId).ToList() ?? new List<int>();
-                    var studentSkills = sp.StudentSkills?.Select(ss => ss.SkillId).ToList() ?? new List<int>();
-                    var matchCount = jobSkills.Intersect(studentSkills).Count();
-                    var matchLevel = matchCount >= 1 ? "match-high" : "match-medium";
-
-                    // Initials
-                    var initials = "";
-                    if (!string.IsNullOrEmpty(sp.FullName))
-                    {
-                        var parts = sp.FullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                        if (parts.Length >= 2)
-                        {
-                            initials = (parts[parts.Length - 2][0].ToString() + parts[parts.Length - 1][0].ToString()).ToUpper();
-                        }
-                        else if (parts.Length == 1)
-                        {
-                            initials = parts[0][0].ToString().ToUpper();
-                        }
-                    }
-                    if (string.IsNullOrEmpty(initials)) initials = "US";
-
-                    return new BusinessRecentApplicantViewModel
-                    {
-                        Id = sp.UserId,
-                        FullName = sp.FullName,
-                        Role = sp.StudentSkills?.FirstOrDefault()?.Skill.Name ?? "Chương trình viên",
-                        AvatarUrl = sp.AvatarUrl ?? string.Empty,
-                        TimeAgo = timeAgoStr,
-                        MatchLevel = matchLevel,
-                        Initials = initials
-                    };
-                }).ToList();
             }
         }
 
@@ -835,15 +671,16 @@ public class HomeController : Controller
         var contracts = await _context.JobContracts
             .Include(c => c.JobPost)
                 .ThenInclude(jp => jp.BusinessProfile)
-            .Where(c => c.StudentId == currentUserId.Value && (c.Status == ContractStatus.Active || c.Status == ContractStatus.Submitted))
-            .OrderByDescending(c => c.CreatedAt)
+            .Where(c => c.StudentId == currentUserId.Value && (c.Status == ContractStatus.Active || c.Status == ContractStatus.Submitted || c.Status == ContractStatus.Completed))
+            .OrderBy(c => c.Status == ContractStatus.Completed ? 1 : 0)
+            .ThenByDescending(c => c.CreatedAt)
             .Select(c => new
             {
                 id = c.Id,
                 title = c.JobPost.Title,
                 client = c.BusinessProfile != null ? c.BusinessProfile.CompanyName : "Unknown",
                 clientId = c.BusinessId,
-                status = c.Status == ContractStatus.Submitted ? "Đang xác nhận" : "Đang thực hiện",
+                status = c.Status == ContractStatus.Completed ? "Hoàn thành" : (c.Status == ContractStatus.Submitted ? "Đang xác nhận" : "Đang thực hiện"),
                 deadline = c.JobPost.Deadline.ToString("dd/MM/yyyy"),
                 budget = (double)c.FinalPrice,
                 studentCompleted = c.DeliverableContent != null && c.DeliverableContent.Contains("StudentCompleted"),
@@ -894,6 +731,7 @@ public class HomeController : Controller
         {
             contract.Status = ContractStatus.Completed;
             contract.CompletedAt = DateTime.UtcNow;
+            contract.JobPost.Status = JobStatus.Closed;
 
             // Notify Business
             _context.Notifications.Add(new Notification
@@ -2021,6 +1859,7 @@ public class HomeController : Controller
             .Include(j => j.JobPostSkills)
                 .ThenInclude(jps => jps.Skill)
             .Include(j => j.JobBids)
+            .Include(j => j.JobContracts)
             .Where(j => j.BusinessId == currentUserId.Value && !j.IsDeleted)
             .OrderByDescending(j => j.CreatedAt)
             .ToListAsync();
@@ -2056,7 +1895,13 @@ public class HomeController : Controller
                 hiredCount = j.JobBids.Count(b => b.Status == BidStatus.Hired),
                 skills = j.JobPostSkills.Select(jps => jps.Skill.Name).ToList(),
                 category = j.Category ?? (j.JobPostSkills.FirstOrDefault()?.Skill.Category ?? "Khác"),
-                createdAt = j.CreatedAt.ToString("dd/MM/yyyy")
+                createdAt = j.CreatedAt.ToString("dd/MM/yyyy"),
+                contracts = j.JobContracts.Select(c => new {
+                    id = c.Id,
+                    status = c.Status.ToString(),
+                    studentCompleted = c.DeliverableContent != null && c.DeliverableContent.Contains("StudentCompleted"),
+                    businessCompleted = c.DeliverableContent != null && c.DeliverableContent.Contains("BusinessCompleted")
+                }).ToList()
             }).ToList()
         });
     }
@@ -2320,6 +2165,7 @@ public class HomeController : Controller
         {
             contract.Status = ContractStatus.Completed;
             contract.CompletedAt = DateTime.UtcNow;
+            contract.JobPost.Status = JobStatus.Closed;
 
             // Notify Student
             _context.Notifications.Add(new Notification
