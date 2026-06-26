@@ -484,6 +484,7 @@
         bindFinancialButtons();
         bindViewMoreBtn();
         bindViewProfileButtons();
+        bindBannerButtons();
         // Re-bind category cards
         document.querySelectorAll('.category-card[data-category]').forEach(card => {
             card.addEventListener('click', function () {
@@ -543,10 +544,6 @@
                         <input id="fjKeyword" type="text" placeholder="Tên công việc, kỹ năng, từ khóa..." style="width:100%;border:1px solid #e2e8f0;border-radius:12px;padding:11px 14px 11px 40px;font-size:0.9rem;outline:none;font-family:'Inter',sans-serif;transition:border-color 0.2s;"
                             onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#e2e8f0'" />
                     </div>
-                    <button id="fjSearch" style="background:#2563eb;color:#fff;border:none;border-radius:12px;padding:11px 26px;font-weight:700;cursor:pointer;font-size:0.9rem;white-space:nowrap;transition:background 0.2s;display:flex;align-items:center;gap:6px;"
-                        onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'">
-                        <i data-lucide="search" style="width:15px;height:15px;"></i> Tìm ngay
-                    </button>
                 </div>
             </div>
 
@@ -700,8 +697,11 @@
         }
 
         // Bind events
-        document.getElementById('fjSearch')?.addEventListener('click', doSearch);
-        document.getElementById('fjKeyword')?.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+        let debounceTimer;
+        document.getElementById('fjKeyword')?.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(doSearch, 300);
+        });
         ['fjCategory', 'fjBudget', 'fjDaysAgo', 'fjExperience', 'fjSort'].forEach(id => {
             document.getElementById(id)?.addEventListener('change', doSearch);
         });
@@ -855,26 +855,141 @@
 
     function renderAppliedJobCard(job) {
         const statusMap = {
-            'Pending': { label: 'Đang chờ', bg: '#fffbeb', color: '#f59e0b' },
-            'Accepted': { label: 'Được chấp nhận', bg: '#ecfdf5', color: '#059669' },
-            'Rejected': { label: 'Không phù hợp', bg: '#fef2f2', color: '#dc2626' },
-            'Reviewing': { label: 'Đang xem xét', bg: '#eff6ff', color: '#2563eb' }
+            'Pending': { label: 'Đang xét duyệt', bg: '#fffbeb', color: '#f59e0b' },
+            'Reviewing': { label: 'Đang xét duyệt', bg: '#eff6ff', color: '#2563eb' },
+            'Accepted': { label: 'Được nhận', bg: '#ecfdf5', color: '#059669' },
+            'Hired': { label: 'Được nhận', bg: '#ecfdf5', color: '#059669' },
+            'Rejected': { label: 'Từ chối', bg: '#fef2f2', color: '#dc2626' }
         };
         const status = statusMap[job.status] || statusMap['Pending'];
         const budget = (job.budget || 0).toLocaleString('vi-VN') + ' đ';
         const appliedDate = job.appliedDate ? new Date(job.appliedDate).toLocaleDateString('vi-VN') : '';
+
+        // Setup timeline progress state variables
+        let progressPercent = 0;
+        let progressBarColor = '#e2e8f0';
+
+        let step2Bg = '#fff';
+        let step2Color = '#cbd5e1';
+        let step2Border = '#cbd5e1';
+        let step2Shadow = 'none';
+        let step2Char = '2';
+        let step2FontWeight = '500';
+        let step2TextColor = '#94a3b8';
+
+        let step3Bg = '#fff';
+        let step3Color = '#cbd5e1';
+        let step3Border = '#cbd5e1';
+        let step3Shadow = 'none';
+        let step3Char = '3';
+        let step3Label = 'Kết quả';
+        let step3FontWeight = '500';
+        let step3TextColor = '#94a3b8';
+
+        let showCancelBtn = false;
+
+        if (job.status === 'Pending' || job.status === 'Reviewing') {
+            progressPercent = 50;
+            progressBarColor = '#2563eb';
+            
+            step2Bg = '#2563eb';
+            step2Color = '#fff';
+            step2Border = '#2563eb';
+            step2Shadow = '0 0 0 4px #eff6ff';
+            step2Char = '2';
+            step2FontWeight = '700';
+            step2TextColor = '#1e293b';
+            
+            showCancelBtn = true;
+        } else if (job.status === 'Accepted' || job.status === 'Hired') {
+            progressPercent = 100;
+            progressBarColor = '#10b981';
+            
+            step2Bg = '#10b981';
+            step2Color = '#fff';
+            step2Border = '#10b981';
+            step2Char = '✓';
+            step2TextColor = '#64748b';
+            
+            step3Bg = '#10b981';
+            step3Color = '#fff';
+            step3Border = '#10b981';
+            step3Shadow = '0 0 0 4px #ecfdf5';
+            step3Char = '✓';
+            step3Label = 'Được nhận';
+            step3FontWeight = '700';
+            step3TextColor = '#059669';
+        } else if (job.status === 'Rejected') {
+            progressPercent = 100;
+            progressBarColor = '#ef4444';
+            
+            step2Bg = '#2563eb';
+            step2Color = '#fff';
+            step2Border = '#2563eb';
+            step2Char = '✓';
+            step2TextColor = '#64748b';
+            
+            step3Bg = '#ef4444';
+            step3Color = '#fff';
+            step3Border = '#ef4444';
+            step3Shadow = '0 0 0 4px #fef2f2';
+            step3Char = '✗';
+            step3Label = 'Từ chối';
+            step3FontWeight = '700';
+            step3TextColor = '#dc2626';
+        }
+
         return `
-        <div class="job-card animate-in" data-job-id="${job.id}" style="background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:20px;display:flex;align-items:flex-start;gap:16px;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor='#cbd5e1';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.06)'" onmouseout="this.style.borderColor='#e2e8f0';this.style.boxShadow='none'">
-            <div style="flex:1;min-width:0;">
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-                    <h3 class="job-title" data-job-id="${job.id}" style="font-size:1rem;font-weight:700;color:#1e293b;margin:0;flex:1;">${escapeHtml(job.title || '')}</h3>
-                    <span style="background:${status.bg};color:${status.color};font-size:0.75rem;font-weight:700;padding:3px 12px;border-radius:20px;white-space:nowrap;">${status.label}</span>
+        <div class="job-card animate-in" data-job-id="${job.id}" style="background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:14px;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor='#cbd5e1';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.06)'" onmouseout="this.style.borderColor='#e2e8f0';this.style.boxShadow='none'">
+            <div style="display:flex;align-items:flex-start;gap:16px;width:100%;">
+                <div style="flex:1;min-width:0;">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                        <h3 class="job-title" data-job-id="${job.id}" style="font-size:1rem;font-weight:700;color:#1e293b;margin:0;flex:1;">${escapeHtml(job.title || '')}</h3>
+                        <span style="background:${status.bg};color:${status.color};font-size:0.75rem;font-weight:700;padding:3px 12px;border-radius:20px;white-space:nowrap;">${status.label}</span>
+                    </div>
+                    <p style="font-size:0.85rem;color:#64748b;margin:0 0 10px;line-height:1.5;">${escapeHtml((job.description || '').substring(0, 100))}${(job.description || '').length > 100 ? '...' : ''}</p>
+                    <div style="display:flex;align-items:center;gap:16px;">
+                        <span style="font-size:1rem;font-weight:800;color:#10b981;">${budget}</span>
+                        ${appliedDate ? `<span style="font-size:0.8rem;color:#94a3b8;display:flex;align-items:center;gap:4px;"><i data-lucide="calendar" style="width:13px;height:13px;"></i>Đã ứng tuyển: ${appliedDate}</span>` : ''}
+                        <span style="font-size:0.8rem;color:#94a3b8;display:flex;align-items:center;gap:4px;"><i data-lucide="building-2" style="width:13px;height:13px;"></i>${escapeHtml(job.businessName || '')}</span>
+                        ${showCancelBtn ? `
+                        <button class="btn-cancel-apply" data-job-id="${job.id}" style="background:#fff; border:1px solid #ef4444; color:#ef4444; border-radius:8px; padding:6px 12px; font-size:0.8rem; font-weight:600; cursor:pointer; transition:all 0.2s; display:inline-flex; align-items:center; gap:4px; margin-left:auto;"
+                                onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='#fff'">
+                            <i data-lucide="x-circle" style="width:14px;height:14px;"></i> Hủy ứng tuyển
+                        </button>
+                        ` : ''}
+                    </div>
                 </div>
-                <p style="font-size:0.85rem;color:#64748b;margin:0 0 10px;line-height:1.5;">${escapeHtml((job.description || '').substring(0, 100))}${(job.description || '').length > 100 ? '...' : ''}</p>
-                <div style="display:flex;align-items:center;gap:16px;">
-                    <span style="font-size:1rem;font-weight:800;color:#10b981;">${budget}</span>
-                    ${appliedDate ? `<span style="font-size:0.8rem;color:#94a3b8;display:flex;align-items:center;gap:4px;"><i data-lucide="calendar" style="width:13px;height:13px;"></i>Đã ứng tuyển: ${appliedDate}</span>` : ''}
-                    <span style="font-size:0.8rem;color:#94a3b8;display:flex;align-items:center;gap:4px;"><i data-lucide="building-2" style="width:13px;height:13px;"></i>${escapeHtml(job.businessName || '')}</span>
+            </div>
+            
+            <!-- Recruitment Progress Timeline -->
+            <div class="recruitment-timeline" style="margin-top:4px; padding-top:12px; border-top:1px dashed #e2e8f0; width:100%;">
+                <div style="font-size:0.75rem; font-weight:700; color:#64748b; margin-bottom:12px; display:flex; align-items:center; gap:5px;">
+                    <i data-lucide="git-commit" style="width:14px;height:14px;color:#2563eb;"></i> TIẾN ĐỘ TUYỂN DỤNG
+                </div>
+                <div style="display:flex; align-items:center; position:relative; justify-content:space-between; max-width: 480px; margin: 0 auto 10px;">
+                    <!-- Background Track line -->
+                    <div style="position:absolute; top:12px; left:30px; right:30px; height:2px; background:#e2e8f0; z-index:1;"></div>
+                    <!-- Active Progress line -->
+                    <div style="position:absolute; top:12px; left:30px; width:calc(${progressPercent}% - 60px); height:2px; background:${progressBarColor}; z-index:2; transition: width 0.3s ease;"></div>
+                    
+                    <!-- Step 1: Đã nộp -->
+                    <div style="display:flex; flex-direction:column; align-items:center; position:relative; z-index:3; width: 60px; text-align:center;">
+                        <div style="width:24px; height:24px; border-radius:50%; background:#2563eb; color:#fff; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:bold; box-shadow:0 0 0 4px #eff6ff;">✓</div>
+                        <span style="font-size:0.7rem; font-weight:600; color:#1e293b; margin-top:6px; white-space:nowrap;">Đã nộp</span>
+                    </div>
+
+                    <!-- Step 2: Xét duyệt -->
+                    <div style="display:flex; flex-direction:column; align-items:center; position:relative; z-index:3; width: 60px; text-align:center;">
+                        <div style="width:24px; height:24px; border-radius:50%; background:${step2Bg}; color:${step2Color}; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:bold; border: 2px solid ${step2Border}; box-shadow:${step2Shadow};">${step2Char}</div>
+                        <span style="font-size:0.7rem; font-weight:${step2FontWeight}; color:${step2TextColor}; margin-top:6px; white-space:nowrap;">Xét duyệt</span>
+                    </div>
+
+                    <!-- Step 3: Kết quả -->
+                    <div style="display:flex; flex-direction:column; align-items:center; position:relative; z-index:3; width: 60px; text-align:center;">
+                        <div style="width:24px; height:24px; border-radius:50%; background:${step3Bg}; color:${step3Color}; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:bold; border: 2px solid ${step3Border}; box-shadow:${step3Shadow};">${step3Char}</div>
+                        <span style="font-size:0.7rem; font-weight:${step3FontWeight}; color:${step3TextColor}; margin-top:6px; white-space:nowrap;">${step3Label}</span>
+                    </div>
                 </div>
             </div>
         </div>`;
@@ -2115,10 +2230,10 @@
         }
 
         // Calculate average rating from reviews
+        const reviewsCount = data.reviews ? data.reviews.length : 0;
         const avgRating = data.reviews && data.reviews.length > 0
             ? (data.reviews.reduce((sum, r) => sum + r.rating, 0) / data.reviews.length).toFixed(1)
-            : "5.0";
-        const reviewsCount = data.reviews ? data.reviews.length : 0;
+            : "0.0";
 
         const reviewsHTML = data.reviews && data.reviews.length > 0
             ? `<div class="reviews-modern-container">` + data.reviews.map(r => {
@@ -2148,6 +2263,10 @@
 
         if (data.role === 'Student') {
             const tagline = 'Freelancer chuyên nghiệp | Sinh viên';
+            const studentLevel = data.completedJobsCount >= 10 ? 3 : (data.completedJobsCount >= 3 ? 2 : 1);
+            const ratingBadgeHTML = reviewsCount > 0
+                ? `<span class="badge-modern badge-modern-orange">★ ${avgRating} (${reviewsCount} đánh giá)</span>`
+                : `<span class="badge-modern badge-modern-gray"><i data-lucide="star" style="width:13px;height:13px;"></i> Chưa có đánh giá</span>`;
 
             const skillsHTML = data.skills && data.skills.length > 0
                 ? data.skills.map(s => `<span class="skill-modern-tag">${escapeHtml(s)}</span>`).join('')
@@ -2200,7 +2319,7 @@
                                 <div class="tagline">${escapeHtml(tagline)}</div>
                                 <div class="badge-row">
                                     <span class="badge-modern badge-modern-blue"><i data-lucide="check-circle" style="width:13px;height:13px;"></i> Đã xác minh</span>
-                                    <span class="badge-modern badge-modern-gray"><i data-lucide="graduation-cap" style="width:13px;height:13px;"></i> Level 3</span>
+                                    <span class="badge-modern badge-modern-gray"><i data-lucide="graduation-cap" style="width:13px;height:13px;"></i> Level ${studentLevel}</span>
                                     <span class="badge-modern badge-modern-orange">★ ${avgRating} (${reviewsCount} đánh giá)</span>
                                 </div>
                             </div>
@@ -2215,7 +2334,7 @@
                         </div>
                     </div>
 
-                    <div class="profile-stats-modern-grid">
+                    <div class="profile-stats-modern-grid" style="grid-template-columns: repeat(3, 1fr);">
                         <div class="stat-modern-card animate-in">
                             <div class="stat-modern-icon"><i data-lucide="check-square" style="width:20px;height:20px;"></i></div>
                             <div class="stat-modern-info">
@@ -2226,7 +2345,7 @@
                         <div class="stat-modern-card animate-in">
                             <div class="stat-modern-icon"><i data-lucide="star" style="width:20px;height:20px;"></i></div>
                             <div class="stat-modern-info">
-                                <span class="stat-modern-value">${avgRating} ★</span>
+                                <span class="stat-modern-value">${reviewsCount > 0 ? avgRating + ' ★' : 'Chưa có'}</span>
                                 <span class="stat-modern-title">Đánh giá trung bình</span>
                             </div>
                         </div>
@@ -2235,13 +2354,6 @@
                             <div class="stat-modern-info">
                                 <span class="stat-modern-value">${data.completionRate}%</span>
                                 <span class="stat-modern-title">Tỷ lệ hoàn thành</span>
-                            </div>
-                        </div>
-                        <div class="stat-modern-card animate-in">
-                            <div class="stat-modern-icon"><i data-lucide="wallet" style="width:20px;height:20px;"></i></div>
-                            <div class="stat-modern-info">
-                                <span class="stat-modern-value">${formatVND(data.balance)}</span>
-                                <span class="stat-modern-title">Số dư khả dụng</span>
                             </div>
                         </div>
                     </div>
@@ -2308,10 +2420,6 @@
                                 </div>
                             </div>
 
-                            <div class="profile-card-modern animate-in">
-                                <h3><i data-lucide="star" style="width:16px;height:16px;"></i> Đánh giá từ khách hàng</h3>
-                                ${reviewsHTML}
-                            </div>
                         </div>
 
                         <div style="display: flex; flex-direction: column; gap: 24px;">
