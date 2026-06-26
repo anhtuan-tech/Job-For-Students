@@ -185,7 +185,7 @@
                     </a>
                 </div>
                 <div class="sidebar-bottom">
-                    <button class="btn-post-job" id="btnPostJob">
+                    <button class="btn-post-job" id="btnPostJob" style="background:linear-gradient(135deg,#2563eb,#0ea5e9);color:#fff;border:none;">
                         <i data-lucide="plus" style="width:18px;height:18px;"></i>
                         Đăng tin tuyển dụng
                     </button>
@@ -193,6 +193,13 @@
         }
 
         if (window.lucide) lucide.createIcons();
+
+        // Wire up sidebar post-job button → open modal
+        const btnPostJobEl = document.getElementById('btnPostJob');
+        if (btnPostJobEl) {
+            btnPostJobEl.dataset.bound = '1';
+            btnPostJobEl.addEventListener('click', () => openPostJobModal());
+        }
     }
 
     function bindBusinessSidebarNav() {
@@ -1466,14 +1473,186 @@
         mainContent.innerHTML = `
             <div class="page-header animate-in">
                 <h1 class="page-title"><i data-lucide="circle-help" style="width:24px;height:24px;"></i> Trung tâm hỗ trợ</h1>
-                <p class="page-subtitle">Các kênh hỗ trợ dành cho nhà tuyển dụng.</p>
+                <p class="page-subtitle">Tra cứu FAQ, xem hướng dẫn và gửi yêu cầu hỗ trợ dành cho nhà tuyển dụng</p>
             </div>
-            <div class="support-card-grid">
-                <article class="business-side-card"><h3>Hướng dẫn đăng tin</h3><p>Tạo tin rõ tiêu đề, kỹ năng, mức lương và deadline để ứng viên dễ ứng tuyển.</p></article>
-                <article class="business-side-card"><h3>Quản lý ứng viên</h3><p>Dùng danh sách ứng viên mới, xem hồ sơ và liên hệ qua box chat.</p></article>
-                <article class="business-side-card"><h3>Thanh toán</h3><p>Kiểm tra gói dịch vụ, lượt đăng còn lại và lịch sử thanh toán.</p></article>
+            <div class="row g-4">
+                <div class="col-lg-7">
+                    <!-- FAQ -->
+                    <div class="card border-0 shadow-sm p-4 mb-4" style="border-radius:16px;">
+                        <h3 class="fw-bold mb-3">FAQ - Câu hỏi thường gặp</h3>
+                        <div class="accordion" id="bizHelpFaqAccordion">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#bizFaq1">
+                                        Làm sao để đăng tin tuyển dụng?
+                                    </button>
+                                </h2>
+                                <div id="bizFaq1" class="accordion-collapse collapse show" data-bs-parent="#bizHelpFaqAccordion">
+                                    <div class="accordion-body">Chọn nút <strong>Đăng tin tuyển dụng</strong> ở góc dưới sidebar, nhập tiêu đề, mô tả, ngân sách và hạn chót, sau đó gửi duyệt.</div>
+                                </div>
+                            </div>
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#bizFaq2">
+                                        Vì sao cần nạp tiền bội số 50k?
+                                    </button>
+                                </h2>
+                                <div id="bizFaq2" class="accordion-collapse collapse" data-bs-parent="#bizHelpFaqAccordion">
+                                    <div class="accordion-body">Hệ thống đối soát QR tự động theo từng mệnh giá chuẩn để đảm bảo giao dịch được xác nhận nhanh và chính xác.</div>
+                                </div>
+                            </div>
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#bizFaq3">
+                                        Làm thế nào để xem hồ sơ ứng viên?
+                                    </button>
+                                </h2>
+                                <div id="bizFaq3" class="accordion-collapse collapse" data-bs-parent="#bizHelpFaqAccordion">
+                                    <div class="accordion-body">Mở mục <strong>Ứng viên</strong> trên sidebar hoặc bấm <strong>Xem hồ sơ</strong> ở thẻ ứng viên mới nhất để vào trang hồ sơ chi tiết.</div>
+                                </div>
+                            </div>
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#bizFaq4">
+                                        Gói dịch vụ hết hạn thì tin đăng bị ảnh hưởng không?
+                                    </button>
+                                </h2>
+                                <div id="bizFaq4" class="accordion-collapse collapse" data-bs-parent="#bizHelpFaqAccordion">
+                                    <div class="accordion-body">Khi gói hết hạn, tin đăng hiện tại vẫn hiển thị cho đến khi hết deadline riêng của từng tin. Để đăng tin mới, bạn cần gia hạn hoặc mua gói mới.</div>
+                                </div>
+                            </div>
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#bizFaq5">
+                                        Tôi có thể xóa tin đăng không?
+                                    </button>
+                                </h2>
+                                <div id="bizFaq5" class="accordion-collapse collapse" data-bs-parent="#bizHelpFaqAccordion">
+                                    <div class="accordion-body">Có, bạn có thể xóa tin đăng từ mục <strong>Quản lý tin đăng</strong>. Tin đã xóa sẽ không còn hiển thị với ứng viên, nhưng lịch sử vẫn được lưu để đối soát.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Hướng dẫn sử dụng -->
+                    <div class="card border-0 shadow-sm p-4" style="border-radius:16px;">
+                        <h3 class="fw-bold mb-3">Hướng dẫn sử dụng nhanh</h3>
+                        <ol class="mb-0" style="line-height:2; color:#475569;">
+                            <li>Đăng nhập tài khoản doanh nghiệp và hoàn thiện hồ sơ công ty.</li>
+                            <li>Nạp tiền vào ví bằng QR VietQR (bội số 50.000đ) để mua gói dịch vụ.</li>
+                            <li>Chọn gói phù hợp tại mục <strong>Gói dịch vụ &amp; Thanh toán</strong>.</li>
+                            <li>Đăng tin tuyển dụng — nhập đầy đủ thông tin để thu hút ứng viên.</li>
+                            <li>Theo dõi ứng viên và nhắn tin trực tiếp qua box chat.</li>
+                            <li>Gia hạn, đóng hoặc xóa tin đăng khi nhu cầu thay đổi.</li>
+                        </ol>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <!-- Gửi yêu cầu hỗ trợ -->
+                    <div class="card border-0 shadow-sm p-4 mb-4" style="border-radius:16px;">
+                        <h3 class="fw-bold mb-3">Gửi yêu cầu hỗ trợ</h3>
+                        <form id="bizSupportRequestForm" class="d-grid gap-3">
+                            <input class="form-control" name="subject" placeholder="Tiêu đề hỗ trợ" required />
+                            <select class="form-select" name="category" required>
+                                <option value="">Chọn loại hỗ trợ</option>
+                                <option value="Đăng tin tuyển dụng">Đăng tin tuyển dụng</option>
+                                <option value="Thanh toán &amp; ví">Thanh toán &amp; ví</option>
+                                <option value="Tài khoản">Tài khoản</option>
+                                <option value="Khác">Khác</option>
+                            </select>
+                            <textarea class="form-control" name="message" rows="5" placeholder="Mô tả chi tiết vấn đề..." required></textarea>
+                            <button class="btn btn-primary w-100" type="submit" id="bizSupportSubmitBtn">
+                                <i data-lucide="send" style="width:16px;height:16px;margin-right:6px;"></i>Gửi yêu cầu hỗ trợ
+                            </button>
+                        </form>
+                    </div>
+                    <!-- Liên hệ CSKH -->
+                    <div class="card border-0 shadow-sm p-4 mb-4" style="border-radius:16px;">
+                        <h3 class="fw-bold mb-3">Liên hệ CSKH</h3>
+                        <div class="d-grid gap-3" style="color:#475569;">
+                            <div class="d-flex align-items-center gap-2">
+                                <i data-lucide="mail" style="width:18px;height:18px;color:#2563eb;flex-shrink:0;"></i>
+                                <div><strong>Email:</strong> support@jobforstudents.vn</div>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <i data-lucide="phone" style="width:18px;height:18px;color:#2563eb;flex-shrink:0;"></i>
+                                <div><strong>Hotline:</strong> 1900 6868</div>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <i data-lucide="clock" style="width:18px;height:18px;color:#2563eb;flex-shrink:0;"></i>
+                                <div><strong>Giờ làm việc:</strong> 08:00 - 17:30, Thứ 2 - Thứ 6</div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Yêu cầu gần đây -->
+                    <div class="card border-0 shadow-sm p-4" style="border-radius:16px;">
+                        <h3 class="fw-bold mb-3">Yêu cầu gần đây</h3>
+                        <div id="bizSupportRequestList" class="d-grid gap-2 small" style="color:#475569;"></div>
+                    </div>
+                </div>
             </div>`;
+
         if (window.lucide) lucide.createIcons();
+
+        const form = document.getElementById('bizSupportRequestForm');
+        const list = document.getElementById('bizSupportRequestList');
+
+        function renderBizRequestList(requests) {
+            if (!list) return;
+            list.innerHTML = (requests && requests.length)
+                ? requests.map(r => `
+                    <div class="border rounded-3 p-3">
+                        <div class="fw-semibold">${escapeHtml(r.subject)}</div>
+                        <div class="text-muted">${escapeHtml(r.category)} · <span class="badge bg-secondary-subtle text-secondary rounded-pill">${escapeHtml(r.status || 'Đã tiếp nhận')}</span></div>
+                        <div class="text-muted" style="font-size:0.78rem;">${escapeHtml(r.createdAt || '')}</div>
+                    </div>`).join('')
+                : '<div class="text-muted">Chưa có yêu cầu nào.</div>';
+        }
+
+        fetch('/Support/GetMyRequests')
+            .then(res => res.json())
+            .then(resData => { if (resData.success) renderBizRequestList(resData.requests); })
+            .catch(err => console.error(err));
+
+        form?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const payload = {
+                subject: form.subject.value.trim(),
+                category: form.category.value,
+                message: form.message.value.trim()
+            };
+            const submitBtn = document.getElementById('bizSupportSubmitBtn');
+            const originalHTML = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="margin-right:8px;"></span>Đang gửi...`;
+
+            fetch('/Support/SubmitRequest', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+                .then(res => res.json())
+                .then(resData => {
+                    if (resData.success) {
+                        showToast(resData.message || 'Đã gửi yêu cầu hỗ trợ.', 'success');
+                        form.reset();
+                        fetch('/Support/GetMyRequests')
+                            .then(res => res.json())
+                            .then(d => { if (d.success) renderBizRequestList(d.requests); })
+                            .catch(err => console.error(err));
+                    } else {
+                        showToast(resData.message || 'Không thể gửi yêu cầu hỗ trợ.', 'error');
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    showToast('Lỗi kết nối máy chủ.', 'error');
+                })
+                .finally(() => {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalHTML;
+                    if (window.lucide) lucide.createIcons();
+                });
+        });
     }
 
     function renderBusinessFeedbackView() {
@@ -5797,8 +5976,17 @@
     // ============================================
     function bindPostJobButtons() {
         document.getElementById('btnPostJobBanner')?.addEventListener('click', () => {
-            document.getElementById('btnPostJob')?.click();
+            openPostJobModal();
         });
+        // Also bind the sidebar button (in case not yet bound by setupBusinessDashboardShell)
+        const sidebarPostBtn = document.getElementById('btnPostJob');
+        if (sidebarPostBtn && !sidebarPostBtn.dataset.bound) {
+            sidebarPostBtn.dataset.bound = '1';
+            sidebarPostBtn.style.background = 'linear-gradient(135deg,#2563eb,#0ea5e9)';
+            sidebarPostBtn.style.color = '#fff';
+            sidebarPostBtn.style.border = 'none';
+            sidebarPostBtn.addEventListener('click', () => openPostJobModal());
+        }
     }
 
     function openPostJobModal(job = null) {
