@@ -2127,22 +2127,7 @@ public class HomeController : Controller
         return Json(new { success = true, message = $"Đã gia hạn tin thêm {days} ngày." });
     }
 
-    [Authorize(Roles = "Business")]
-    [HttpPost]
-    public async Task<IActionResult> DeleteBusinessJobPost([FromBody] JobPostIdRequest request)
-    {
-        var job = await GetOwnedJobPost(request.JobId);
-        if (job == null)
-        {
-            return Json(new { success = false, message = "Không tìm thấy tin tuyển dụng." });
-        }
 
-        job.IsDeleted = true;
-        job.UpdatedAt = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
-
-        return Json(new { success = true, message = "Đã xóa tin tuyển dụng." });
-    }
 
     [Authorize(Roles = "Business")]
     [HttpGet]

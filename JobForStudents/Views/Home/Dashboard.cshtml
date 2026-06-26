@@ -29,6 +29,19 @@
         }
     </style>
 }
+@if (User.Identity?.IsAuthenticated != true)
+{
+    <style>
+        .sidebar {
+            display: none !important;
+        }
+        .main-content-wrapper {
+            margin-left: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+    </style>
+}
 
 <!-- Custom Styles for Business & Admin Views -->
 <style>
@@ -77,8 +90,8 @@
     }
 
     .bg-indigo-subtle {
-        background-color: #e0e7ff !important;
-        color: #3730a3 !important;
+        background-color: #e0f2fe !important;
+        color: #0369a1 !important;
     }
 
     .bg-secondary-subtle {
@@ -92,28 +105,28 @@
     }
 
     .text-indigo-600 {
-        color: #4f46e5 !important;
+        color: #0ea5e9 !important;
     }
 
     .bg-indigo {
-        background-color: #4f46e5 !important;
+        background-color: #0ea5e9 !important;
         color: #fff !important;
     }
 
     .btn-indigo {
-        background-color: #4f46e5 !important;
+        background-color: #0ea5e9 !important;
         color: #fff !important;
         border: none !important;
     }
 
         .btn-indigo:hover {
-            background-color: #4338ca !important;
+            background-color: #0284c7 !important;
             color: #fff !important;
         }
 
         .btn-indigo:disabled {
-            background-color: #c7d2fe !important;
-            color: #818cf8 !important;
+            background-color: #bae6fd !important;
+            color: #38bdf8 !important;
             cursor: not-allowed !important;
         }
 
@@ -187,7 +200,7 @@
         .admin-stat-card:hover {
             transform: translateY(-2px);
             border-color: #cfd8ee;
-            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.08);
+            box-shadow: 0 8px 20px rgba(14, 165, 233, 0.08);
         }
 
     .admin-stat-icon {
@@ -207,8 +220,8 @@
         }
 
         .admin-stat-icon.indigo {
-            background: #EEF2FF;
-            color: #4F46E5;
+            background: #e0f2fe;
+            color: #0ea5e9;
         }
 
         .admin-stat-icon.emerald {
@@ -1061,13 +1074,16 @@
             </div>
             <span class="j4s-logo-text">J4S</span>
         </a>
-        <button class="hamburger" id="menuToggle" aria-label="Toggle menu">
-            <i data-lucide="menu" style="width:20px;height:20px;"></i>
-        </button>
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <button class="hamburger" id="menuToggle" aria-label="Toggle menu">
+                <i data-lucide="menu" style="width:20px;height:20px;"></i>
+            </button>
+        }
     </div>
 
     <!-- Thanh tìm kiếm -->
-    @if (!User.IsInRole("Admin"))
+    @if (User.Identity?.IsAuthenticated == true && !User.IsInRole("Admin"))
     {
         <div class="nav-search">
             <i data-lucide="search" class="search-icon" style="width:16px;height:16px;"></i>
@@ -1086,11 +1102,7 @@
     <div class="nav-right">
         @if (User.Identity?.IsAuthenticated == true)
         {
-            @if (User.IsInRole("Business"))
-            {
-                <a href="/" target="_blank" class="view-job-posts-link" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border: 1.5px solid #cbd5e1; border-radius: 9999px; text-decoration: none; font-size: 0.85rem; font-weight: 600; color: #475569; margin-right: 8px; background: white;"><i data-lucide="external-link" style="width:14px;height:14px;"></i> Xem trang việc làm</a>
-            }
-            else if (!User.IsInRole("Student") && !User.IsInRole("Admin"))
+            if (!User.IsInRole("Student") && !User.IsInRole("Admin"))
             {
                 <button class="btn-find-freelancer" id="btnFindFreelancer">
                     <i data-lucide="users" style="width:14px;height:14px;"></i>
@@ -1141,8 +1153,8 @@
         }
         else
         {
-            <a asp-controller="Auth" asp-action="Login" class="btn btn-outline-info rounded-pill px-4 btn-sm fw-semibold" style="border-color: #bae6fd; color: #0284c7;">Đăng nhập</a>
-            <a asp-controller="Auth" asp-action="Register" class="btn btn-info text-white rounded-pill px-4 btn-sm fw-semibold" style="background-color: #0ea5e9; border: none;">Đăng ký</a>
+            <a asp-controller="Auth" asp-action="Login" style="color: #475569; font-size: 0.95rem; font-weight: 600; text-decoration: none; padding: 8px 16px; margin-right: 8px; transition: color 0.2s;" onmouseover="this.style.color='#2563eb';" onmouseout="this.style.color='#475569';">Đăng nhập</a>
+            <a asp-controller="Auth" asp-action="Register" style="background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); color: white; border: none; padding: 10px 24px; border-radius: 9999px; font-size: 0.95rem; font-weight: 700; text-decoration: none; box-shadow: 0 4px 14px rgba(14, 165, 233, 0.25); transition: all 0.2s ease; display: inline-block;" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 20px rgba(14, 165, 233, 0.35)';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 4px 14px rgba(14, 165, 233, 0.25)';">Đăng ký</a>
         }
     </div>
 </nav>
@@ -1266,7 +1278,7 @@
             </div>
         </aside>
     }
-    else
+    else if (User.Identity?.IsAuthenticated == true)
     {
         <!-- ============================================
              2B. SIDEBAR MẶC ĐỊNH / SINH VIÊN
@@ -1646,7 +1658,7 @@
                 </div>
             </aside>
         }
-        else
+        else if (User.IsInRole("Student"))
         {
             <!-- ============================================
                  3B. CỘT GIỮA - NỘI DUNG MẶC ĐỊNH / FREELANCER
@@ -1853,6 +1865,87 @@
             </div>
         </aside>
     }
+    else
+    {
+        <!-- ============================================
+             3D. DOANH NGHIỆP LANDING PAGE (PUBLIC HOMEPAGE)
+             ============================================ -->
+        <main class="main-content" id="mainContent" style="padding: 60px 24px; max-width: 1200px; margin: 0 auto; width: 100%;">
+            
+            <!-- Hero Section -->
+            <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 50%, #e0e7ff 100%); border-radius: 24px; padding: 60px 48px; display: flex; align-items: center; justify-content: space-between; gap: 40px; margin-bottom: 50px; box-shadow: 0 10px 30px rgba(37, 99, 235, 0.04);">
+                <div style="flex: 1; max-width: 600px;">
+                    <span style="background: #2563eb; color: white; font-size: 0.75rem; font-weight: 700; padding: 6px 16px; border-radius: 9999px; text-transform: uppercase; letter-spacing: 1px; display: inline-block; margin-bottom: 20px;">Dành Cho Doanh Nghiệp / Nhà Tuyển Dụng</span>
+                    <h1 style="font-size: 2.8rem; font-weight: 900; color: #1e293b; line-height: 1.2; margin-bottom: 20px;">
+                        Giải pháp tuyển dụng <span style="color: #2563eb;">Freelancer Sinh viên</span> tối ưu nhất
+                    </h1>
+                    <p style="font-size: 1.1rem; color: #475569; line-height: 1.6; margin-bottom: 32px;">
+                        Kết nối doanh nghiệp của bạn với hàng ngàn sinh viên giỏi chuyên môn từ các trường đại học hàng đầu. Đăng tin tuyển dụng và tìm kiếm nhân tài ngay hôm nay.
+                    </p>
+                    <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                        <a href="/Auth/Register" class="btn btn-primary" style="background: #2563eb; border: none; padding: 14px 32px; border-radius: 12px; font-weight: 700; font-size: 1rem; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3); transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; color: white;" onmouseover="this.style.background='#1d4ed8'; this.style.transform='translateY(-2px)';" onmouseout="this.style.background='#2563eb'; this.style.transform='translateY(0)';">
+                            Đăng ký tuyển dụng
+                        </a>
+                        <a href="/Auth/Login" class="btn btn-outline-primary" style="border: 2px solid #2563eb; color: #2563eb; background: transparent; padding: 12px 32px; border-radius: 12px; font-weight: 700; font-size: 1rem; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center;" onmouseover="this.style.background='#eff6ff'; this.style.transform='translateY(-2px)';" onmouseout="this.style.background='transparent'; this.style.transform='translateY(0)';">
+                            Đăng nhập doanh nghiệp
+                        </a>
+                    </div>
+                </div>
+                <div style="flex: 1; display: flex; justify-content: center; align-items: center; max-width: 480px;">
+                    <img src="https://img.freepik.com/free-vector/hiring-agency-concept-illustration_114360-6927.jpg" alt="Tuyển dụng doanh nghiệp" style="width: 100%; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.06);" />
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 60px;">
+                <div style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 30px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.01);">
+                    <div style="background: #eff6ff; color: #2563eb; width: 60px; height: 60px; border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px;"><i data-lucide="users" style="width: 30px; height: 30px;"></i></div>
+                    <h3 style="font-size: 1.8rem; font-weight: 800; color: #0f172a; margin-bottom: 8px;">10,000+</h3>
+                    <p style="color: #64748b; font-size: 0.95rem; margin: 0; font-weight: 500;">Sinh viên tài năng sẵn sàng ứng tuyển</p>
+                </div>
+                <div style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 30px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.01);">
+                    <div style="background: #ecfdf5; color: #10b981; width: 60px; height: 60px; border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px;"><i data-lucide="file-check" style="width: 30px; height: 30px;"></i></div>
+                    <h3 style="font-size: 1.8rem; font-weight: 800; color: #0f172a; margin-bottom: 8px;">5,000+</h3>
+                    <p style="color: #64748b; font-size: 0.95rem; margin: 0; font-weight: 500;">Công việc đã được hoàn thành xuất sắc</p>
+                </div>
+                <div style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 30px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.01);">
+                    <div style="background: #fffbeb; color: #f59e0b; width: 60px; height: 60px; border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px;"><i data-lucide="clock" style="width: 30px; height: 30px;"></i></div>
+                    <h3 style="font-size: 1.8rem; font-weight: 800; color: #0f172a; margin-bottom: 8px;">24 Giờ</h3>
+                    <p style="color: #64748b; font-size: 0.95rem; margin: 0; font-weight: 500;">Thời gian trung bình để tìm được nhân tài phù hợp</p>
+                </div>
+            </div>
+
+            <!-- Features Section -->
+            <div style="margin-bottom: 60px;">
+                <div style="text-align: center; margin-bottom: 40px;">
+                    <h2 style="font-size: 2rem; font-weight: 800; color: #0f172a; margin-bottom: 12px;">Ưu điểm vượt trội của J4S</h2>
+                    <p style="color: #64748b; max-width: 600px; margin: 0 auto;">Giải pháp hoàn hảo giúp các doanh nghiệp, startup và hộ kinh doanh tiếp cận nguồn nhân lực chất lượng cao với chi phí tối ưu nhất.</p>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px;">
+                    <div>
+                        <h3 style="font-size: 1.2rem; font-weight: 700; color: #1e293b; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                            <span style="color: #2563eb;">⚡</span> Đăng tin nhanh chóng
+                        </h3>
+                        <p style="color: #475569; font-size: 0.9rem; line-height: 1.6;">Đăng tin tuyển dụng chỉ trong 2 phút với các mẫu tin có sẵn. Hệ thống duyệt tự động giúp tin của bạn hiển thị ngay lập tức tới các ứng viên tiềm năng.</p>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 1.2rem; font-weight: 700; color: #1e293b; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                            <span style="color: #2563eb;">🔒</span> Thanh toán an toàn
+                        </h3>
+                        <p style="color: #475569; font-size: 0.9rem; line-height: 1.6;">Hệ thống ký quỹ an toàn giúp bảo vệ quyền lợi của doanh nghiệp. Bạn chỉ thanh toán khi sản phẩm/công việc đã hoàn thành đúng cam kết.</p>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 1.2rem; font-weight: 700; color: #1e293b; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                            <span style="color: #2563eb;">🎯</span> Đúng người - Đúng việc
+                        </h3>
+                        <p style="color: #475569; font-size: 0.9rem; line-height: 1.6;">Hệ thống gợi ý ứng viên thông minh dựa trên kỹ năng, chuyên ngành học và lịch học để tìm ra sinh viên freelance phù hợp nhất cho dự án của bạn.</p>
+                    </div>
+                </div>
+            </div>
+
+
+        </main>
+    }
 </div>
 
 @if (User.IsInRole("Business"))
@@ -1895,7 +1988,11 @@
                                 <option value="Viết lách & Dịch thuật">Viết lách & Dịch thuật</option>
                                 <option value="Sales & Marketing">Sales & Marketing</option>
                                 <option value="Video & Photography">Video & Photography</option>
+                                <option value="Khác">Khác</option>
                             </select>
+                            <div id="staticCustomCategoryWrapper" style="display: none;" class="mt-2">
+                                <input type="text" class="form-control" id="jobCustomCategory" placeholder="Nhập danh mục khác..." />
+                            </div>
                         </div>
 
                         <div class="row">
@@ -1918,7 +2015,7 @@
                 <div class="modal-footer" style="border-top: 1px solid #e2e8f0; background: #f8fafc; border-radius: 0 0 12px 12px;">
                     <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
                     <button type="button" class="btn btn-outline-secondary rounded-pill px-4" id="btnSaveDraftJob">Lưu nháp</button>
-                    <button type="button" class="btn btn-primary rounded-pill px-4" id="btnSubmitJob" style="background: #4F46E5; border: none;">Đăng tin ngay</button>
+                    <button type="button" class="btn btn-primary rounded-pill px-4" id="btnSubmitJob" style="background: #0ea5e9; border: none;">Đăng tin ngay</button>
                 </div>
             </div>
         </div>
@@ -1930,7 +2027,7 @@
     @Html.AntiForgeryToken()
 </form>
 
-@if (!User.Identity.IsAuthenticated)
+@if (User.Identity?.IsAuthenticated != true)
 {
     <script>
         document.addEventListener('click', function(e) {
@@ -1998,7 +2095,7 @@
             });
             document.getElementById('navBusinessWallet')?.addEventListener('click', (e) => {
             e.preventDefault();
-            document.getElementById('navWalletCurrent')?.click();
+            window.renderBusinessWalletDeposit();
             });
 
             // Gói dịch vụ & Thanh toán toggle
@@ -2020,7 +2117,7 @@
 
             // --- Business Wallet & Payment Features Implementation ---
             // --- Business Wallet & Payment Features Implementation ---
-            async function getWalletData() {
+            window.getWalletData = async function() {
             try {
             const res = await fetch('/Home/GetWalletInfo');
             const data = await res.json();
@@ -2259,28 +2356,37 @@
             return;
             }
 
-            if (!confirm(`Bạn có chắc chắn muốn mua gói dịch vụ ${packageName} với giá ${new Intl.NumberFormat('vi-VN').format(price)} đ không?`)) {
-            return;
-            }
+            const executePurchase = async () => {
+                try {
+                    const response = await fetch('/Home/PurchasePackage', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                        },
+                        body: JSON.stringify({ PackageName: packageName })
+                    });
 
-            try {
-            const response = await fetch('/Home/PurchasePackage', {
-            method: 'POST',
-            headers: {
-            'Content-Type': 'application/json',
-            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
-            },
-            body: JSON.stringify({ PackageName: packageName })
-            });
+                    const data = await response.json();
+                    if (data.success) {
+                        showToast(`Chúc mừng! Bạn đã mua thành công gói ${packageName}!`, 'success');
+                        window.renderBusinessWalletCurrent();
+                    } else {
+                        showToast(data.message || 'Có lỗi xảy ra khi mua gói.', 'error');
+                    }
+                } catch (e) {
+                    console.error(e);
+                    showToast('Có lỗi xảy ra khi kết nối máy chủ.', 'error');
+                }
+            };
 
-            const data = await response.json();
-            if (data.success) {
-            showToast(`Chúc mừng! Bạn đã mua thành công gói ${packageName}!`, 'success');
-            window.renderBusinessWalletCurrent();
+            if (window.showConfirmModal) {
+                window.showConfirmModal(`Bạn có chắc chắn muốn mua gói dịch vụ ${packageName} với giá ${new Intl.NumberFormat('vi-VN').format(price)} đ không?`, executePurchase, 'Xác nhận mua gói');
             } else {
-            showToast(data.message || 'Có lỗi xảy ra khi mua gói.', 'error');
+                if (confirm(`Bạn có chắc chắn muốn mua gói dịch vụ ${packageName} với giá ${new Intl.NumberFormat('vi-VN').format(price)} đ không?`)) {
+                    executePurchase();
+                }
             }
-            } catch (e) {
             console.error('Error purchasing package:', e);
             showToast('Lỗi mạng. Vui lòng kiểm tra kết nối.', 'error');
             }
@@ -2311,10 +2417,28 @@
             return;
             }
 
+            const businessName = document.querySelector('#userProfile .user-name')?.textContent || 'Nhà tuyển dụng';
             mainContent.innerHTML = `
             <div class="page-header mb-4">
-            <h1 class="page-title"><i data-lucide="plus-circle" style="width:24px;height:24px;"></i> Nạp tiền vào ví</h1>
-            <p class="page-subtitle">Nạp tiền nhanh qua VietQR để nâng cấp dịch vụ tuyển dụng</p>
+            <h1 class="page-title"><i data-lucide="wallet" style="width:24px;height:24px;"></i> Ví doanh nghiệp</h1>
+            <p class="page-subtitle">Quản lý số dư và nạp tiền tài khoản nhà tuyển dụng</p>
+            </div>
+
+            <!-- Balance Card -->
+            <div class="card mb-4 border-0 shadow-sm" style="border-radius: 16px;">
+            <div class="card-body p-4" style="background: linear-gradient(135deg, #f0f9ff, #e0f2fe); border-radius: 16px; border: 1px solid #bae6fd;">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+            <div class="text-muted small uppercase fw-bold mb-1">Tài khoản của bạn</div>
+            <h4 class="mb-1 fw-bold text-slate-800">${businessName}</h4>
+            <p class="text-muted mb-0 small">Sử dụng số dư ví để mua các gói dịch vụ tin đăng</p>
+            </div>
+            <div class="text-end">
+            <div class="text-muted small fw-bold mb-1">Số dư ví hiện tại</div>
+            <h3 class="mb-0 fw-extrabold text-primary" style="color: #0284c7 !important;">${new Intl.NumberFormat('vi-VN').format(walletData.balance)} đ</h3>
+            </div>
+            </div>
+            </div>
             </div>
 
             <div class="row g-4">

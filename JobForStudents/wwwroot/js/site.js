@@ -164,6 +164,10 @@
                         Gói dịch vụ & Thanh toán
                         <i data-lucide="chevron-right" class="sidebar-chevron" style="width:15px;height:15px;"></i>
                     </a>
+                    <a href="#" class="sidebar-item" data-nav="wallet-business" id="navBusinessWallet">
+                        <span class="item-icon"><i data-lucide="wallet" style="width:18px;height:18px;"></i></span>
+                        Ví doanh nghiệp
+                    </a>
                     <a href="#" class="sidebar-item" data-nav="notifications" id="navNotifications">
                         <span class="item-icon"><i data-lucide="bell" style="width:18px;height:18px;"></i></span>
                         Thông báo
@@ -212,6 +216,11 @@
                         break;
                     case 'servicePackages':
                         renderServicePackagesView();
+                        break;
+                    case 'wallet-business':
+                        if (typeof window.renderBusinessWalletDeposit === 'function') {
+                            window.renderBusinessWalletDeposit();
+                        }
                         break;
                     case 'notifications':
                         renderBusinessNotificationsView();
@@ -410,6 +419,14 @@
                     case 'wallet-history':
                         if (typeof window.renderBusinessWalletHistory === 'function') {
                             window.renderBusinessWalletHistory();
+                        } else {
+                            restoreHomeView();
+                            renderJobs(allJobs);
+                        }
+                        break;
+                    case 'wallet-business':
+                        if (typeof window.renderBusinessWalletDeposit === 'function') {
+                            window.renderBusinessWalletDeposit();
                         } else {
                             restoreHomeView();
                             renderJobs(allJobs);
@@ -891,7 +908,7 @@
         if (job.status === 'Pending' || job.status === 'Reviewing') {
             progressPercent = 50;
             progressBarColor = '#2563eb';
-            
+
             step2Bg = '#2563eb';
             step2Color = '#fff';
             step2Border = '#2563eb';
@@ -899,18 +916,18 @@
             step2Char = '2';
             step2FontWeight = '700';
             step2TextColor = '#1e293b';
-            
+
             showCancelBtn = true;
         } else if (job.status === 'Accepted' || job.status === 'Hired') {
             progressPercent = 100;
             progressBarColor = '#10b981';
-            
+
             step2Bg = '#10b981';
             step2Color = '#fff';
             step2Border = '#10b981';
             step2Char = '✓';
             step2TextColor = '#64748b';
-            
+
             step3Bg = '#10b981';
             step3Color = '#fff';
             step3Border = '#10b981';
@@ -922,13 +939,13 @@
         } else if (job.status === 'Rejected') {
             progressPercent = 100;
             progressBarColor = '#ef4444';
-            
+
             step2Bg = '#2563eb';
             step2Color = '#fff';
             step2Border = '#2563eb';
             step2Char = '✓';
             step2TextColor = '#64748b';
-            
+
             step3Bg = '#ef4444';
             step3Color = '#fff';
             step3Border = '#ef4444';
@@ -1525,30 +1542,46 @@
     }
 
     function extendBusinessJob(jobId) {
-        const days = Number(window.prompt('Gia hạn thêm bao nhiêu ngày?', '7'));
-        if (!Number.isFinite(days) || days <= 0) return;
-        postJson('/Home/ExtendBusinessJobPost', { jobId, days })
-            .then(data => {
-                showToast(data.message || 'Đã gia hạn tin.', data.success ? 'success' : 'error');
-                if (data.success) loadBusinessJobs();
-            })
-            .catch(err => {
-                console.error(err);
-                showToast('Không thể gia hạn tin.', 'error');
-            });
+        showPromptModal('Gia hạn thêm bao nhiêu ngày?', '7', (daysText) => {
+            if (daysText === null || daysText.trim() === '') return;
+            const days = Number(daysText);
+            if (!Number.isFinite(days) || days <= 0) return;
+            postJson('/Home/ExtendBusinessJobPost', { jobId, days })
+                .then(data => {
+                    showToast(data.message || 'Đã gia hạn tin.', data.success ? 'success' : 'error');
+                    if (data.success) loadBusinessJobs();
+                })
+                .catch(err => {
+                    console.error(err);
+                    showToast('Không thể gia hạn tin.', 'error');
+                });
+        }, 'Gia hạn tin đăng');
     }
 
     function deleteBusinessJob(jobId) {
-        if (!window.confirm('Bạn chắc chắn muốn xóa tin tuyển dụng này?')) return;
-        postJson('/Home/DeleteBusinessJobPost', { jobId })
-            .then(data => {
-                showToast(data.message || 'Đã xóa tin.', data.success ? 'success' : 'error');
-                if (data.success) loadBusinessJobs();
-            })
-            .catch(err => {
+        showConfirmModal('Bạn chắc chắn muốn xóa tin tuyển dụng này?', async () => {
+            try {
+                const body = new FormData();
+                body.append('jobId', jobId);
+                const response = await fetch('/Home/DeleteBusinessJobPost', {
+                    method: 'POST',
+                    body: body,
+                    headers: {
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                    }
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showToast(data.message || 'Đã xóa tin.', 'success');
+                    loadBusinessJobs();
+                } else {
+                    showToast(data.message || 'Không thể xóa tin.', 'error');
+                }
+            } catch (err) {
                 console.error(err);
                 showToast('Không thể xóa tin.', 'error');
-            });
+            }
+        }, 'Xác nhận xóa');
     }
 
     function openJobApplicantsModal(jobId) {
@@ -1812,30 +1845,123 @@
         });
     }
 
+    function showConfirmModal(message, onConfirm, title = 'Xác nhận thanh toán') {
+        document.getElementById('j4sConfirmModal')?.remove();
+        const modalHTML = `
+            <div class="modal fade" id="j4sConfirmModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+                <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+                    <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
+                        <div class="modal-body p-4 text-center">
+                            <div class="mb-3 d-inline-flex align-items-center justify-content-center" style="width: 56px; height: 56px; background-color: #f0f9ff; color: #0284c7; border-radius: 50%;">
+                                <i data-lucide="help-circle" style="width: 28px; height: 28px;"></i>
+                            </div>
+                            <h5 class="fw-bold text-slate-800 mb-2">${title}</h5>
+                            <p class="text-muted small mb-4" style="line-height: 1.5;">${message}</p>
+                            <div class="d-flex gap-2 justify-content-center">
+                                <button type="button" class="btn btn-light rounded-pill px-4 py-2 fw-semibold text-slate-600 small" style="border: 1px solid #e2e8f0; font-size: 0.85rem;" data-bs-dismiss="modal">Hủy bỏ</button>
+                                <button type="button" id="j4sConfirmBtn" class="btn btn-primary rounded-pill px-4 py-2 fw-bold small" style="background: #0ea5e9; border: none; font-size: 0.85rem;">Xác nhận</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        window.showConfirmModal = showConfirmModal;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        const modalEl = document.getElementById('j4sConfirmModal');
+        if (window.lucide) lucide.createIcons();
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+        document.getElementById('j4sConfirmBtn').addEventListener('click', () => {
+            modal.hide();
+            modalEl.addEventListener('hidden.bs.modal', () => {
+                modalEl.remove();
+                onConfirm();
+            }, { once: true });
+        });
+    }
+
+    function showPromptModal(message, defaultValue, onConfirm, title = 'Nhập thông tin') {
+        document.getElementById('j4sPromptModal')?.remove();
+        const modalHTML = `
+            <div class="modal fade" id="j4sPromptModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+                <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+                    <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
+                        <div class="modal-body p-4">
+                            <div class="text-center mb-3">
+                                <div class="d-inline-flex align-items-center justify-content-center" style="width: 56px; height: 56px; background-color: #f0f9ff; color: #0284c7; border-radius: 50%;">
+                                    <i data-lucide="help-circle" style="width: 28px; height: 28px;"></i>
+                                </div>
+                            </div>
+                            <h5 class="fw-bold text-slate-800 text-center mb-2">${title}</h5>
+                            <p class="text-muted small text-center mb-3" style="line-height: 1.5;">${message}</p>
+                            <div class="mb-4">
+                                <input type="text" id="j4sPromptInput" class="form-control text-center" value="${defaultValue}" style="border-radius: 8px;" />
+                            </div>
+                            <div class="d-flex gap-2 justify-content-center">
+                                <button type="button" class="btn btn-light rounded-pill px-4 py-2 fw-semibold text-slate-600 small" style="border: 1px solid #e2e8f0; font-size: 0.85rem;" data-bs-dismiss="modal">Hủy bỏ</button>
+                                <button type="button" id="j4sPromptBtn" class="btn btn-primary rounded-pill px-4 py-2 fw-bold small" style="background: #0ea5e9; border: none; font-size: 0.85rem;">Xác nhận</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        window.showPromptModal = showPromptModal;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        const modalEl = document.getElementById('j4sPromptModal');
+        if (window.lucide) lucide.createIcons();
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+
+        setTimeout(() => document.getElementById('j4sPromptInput')?.focus(), 500);
+
+        document.getElementById('j4sPromptBtn').addEventListener('click', () => {
+            const val = document.getElementById('j4sPromptInput').value;
+            modal.hide();
+            modalEl.addEventListener('hidden.bs.modal', () => {
+                modalEl.remove();
+                onConfirm(val);
+            }, { once: true });
+        });
+    }
+
     function purchaseServicePlan(planId) {
-        if (!window.confirm('Xác nhận thanh toán/nâng cấp gói dịch vụ này bằng số dư ví?')) return;
-        postJson('/Home/PurchaseServicePlan', { planId })
-            .then(data => {
-                showToast(data.message || 'Đã xử lý thanh toán gói dịch vụ.', data.success ? 'success' : 'error');
-                if (data.success) loadServicePackages();
-            })
-            .catch(err => {
-                console.error(err);
-                showToast('Không thể thanh toán gói dịch vụ.', 'error');
-            });
+        showConfirmModal('Xác nhận thanh toán/nâng cấp gói dịch vụ này bằng số dư ví?', () => {
+            postJson('/Home/PurchaseServicePlan', { planId })
+                .then(data => {
+                    showToast(data.message || 'Đã xử lý thanh toán gói dịch vụ.', data.success ? 'success' : 'error');
+                    if (data.success) {
+                        loadServicePackages();
+                        if (typeof window.getWalletData === 'function') {
+                            window.getWalletData();
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    showToast('Không thể thanh toán gói dịch vụ.', 'error');
+                });
+        });
     }
 
     function renewCurrentServicePlan() {
-        if (!window.confirm('Xác nhận gia hạn gói hiện tại bằng số dư ví?')) return;
-        postJson('/Home/RenewServicePlan', { isAutoRenew: false })
-            .then(data => {
-                showToast(data.message || 'Đã gia hạn gói dịch vụ.', data.success ? 'success' : 'error');
-                if (data.success) loadServicePackages();
-            })
-            .catch(err => {
-                console.error(err);
-                showToast('Không thể gia hạn gói dịch vụ.', 'error');
-            });
+        showConfirmModal('Xác nhận gia hạn gói hiện tại bằng số dư ví?', () => {
+            postJson('/Home/RenewServicePlan', { isAutoRenew: false })
+                .then(data => {
+                    showToast(data.message || 'Đã gia hạn gói dịch vụ.', data.success ? 'success' : 'error');
+                    if (data.success) {
+                        loadServicePackages();
+                        if (typeof window.getWalletData === 'function') {
+                            window.getWalletData();
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    showToast('Không thể gia hạn gói dịch vụ.', 'error');
+                });
+        });
     }
 
     // ============================================
@@ -3421,8 +3547,12 @@
         document.getElementById('jobDescription').value = job.description || '';
         document.getElementById('jobBudget').value = job.budget || '';
         document.getElementById('jobDeadline').value = (job.deadline || '').split('/').reverse().join('-');
-        const categoryEl = document.getElementById('jobCategory');
-        if (categoryEl) categoryEl.value = job.category || '';
+        if (window.setSelectCategory) {
+            window.setSelectCategory('jobCategory', 'staticCustomCategoryWrapper', 'jobCustomCategory', job.category);
+        } else {
+            const categoryEl = document.getElementById('jobCategory');
+            if (categoryEl) categoryEl.value = job.category || '';
+        }
         document.getElementById('postJobModalTitle').textContent = job.status === 'Draft' ? 'Chỉnh sửa tin nháp' : 'Chỉnh sửa tin tuyển dụng';
         document.getElementById('btnSubmitJob').textContent = job.status === 'Draft' ? 'Đăng tin ngay' : 'Lưu thay đổi';
         document.getElementById('btnSaveDraftJob')?.classList.remove('d-none');
@@ -3472,36 +3602,41 @@
             document.getElementById('jobTitle').value = tpl.title || '';
             document.getElementById('jobDescription').value = tpl.description || '';
             document.getElementById('jobBudget').value = tpl.budget || '';
-            const categoryEl = document.getElementById('jobCategory');
-            if (categoryEl) categoryEl.value = tpl.category || '';
+            if (window.setSelectCategory) {
+                window.setSelectCategory('jobCategory', 'staticCustomCategoryWrapper', 'jobCustomCategory', tpl.category);
+            } else {
+                const categoryEl = document.getElementById('jobCategory');
+                if (categoryEl) categoryEl.value = tpl.category || '';
+            }
             deleteBtn?.classList.remove('d-none');
         });
 
         deleteTemplateBtn?.addEventListener('click', async () => {
             const id = parseInt(templateSelect?.value, 10);
             if (!id) return;
-            if (!confirm('Xóa mẫu tin này?')) return;
-            try {
-                const res = await fetch('/Home/DeleteJobTemplate', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
-                    },
-                    body: `templateId=${id}`
-                });
-                const data = await res.json();
-                if (data.success) {
-                    showToast('Đã xóa mẫu tin.', 'success');
-                    await loadJobTemplatesIntoSelect();
-                    deleteTemplateBtn.classList.add('d-none');
-                } else {
-                    showToast(data.message || 'Không thể xóa mẫu tin.', 'error');
+            showConfirmModal('Xóa mẫu tin này?', async () => {
+                try {
+                    const res = await fetch('/Home/DeleteJobTemplate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                        },
+                        body: `templateId=${id}`
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        showToast('Đã xóa mẫu tin.', 'success');
+                        await loadJobTemplatesIntoSelect();
+                        deleteTemplateBtn.classList.add('d-none');
+                    } else {
+                        showToast(data.message || 'Không thể xóa mẫu tin.', 'error');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    showToast('Lỗi kết nối máy chủ.', 'error');
                 }
-            } catch (err) {
-                console.error(err);
-                showToast('Lỗi kết nối máy chủ.', 'error');
-            }
+            }, 'Xác nhận xóa');
         });
 
         document.getElementById('btnSaveAsTemplate')?.addEventListener('click', async () => {
@@ -3515,26 +3650,27 @@
                 return;
             }
 
-            const name = prompt('Đặt tên cho mẫu tin này (VD: Mẫu tuyển CTV thiết kế):', title);
-            if (!name) return;
+            showPromptModal('Đặt tên cho mẫu tin này (VD: Mẫu tuyển CTV thiết kế):', title, async (name) => {
+                if (!name || name.trim() === '') return;
 
-            try {
-                const res = await fetch('/Home/SaveJobTemplate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, title, description, category, budget })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    showToast('Đã lưu thành mẫu tin.', 'success');
-                    await loadJobTemplatesIntoSelect();
-                } else {
-                    showToast(data.message || 'Không thể lưu mẫu tin.', 'error');
+                try {
+                    const res = await fetch('/Home/SaveJobTemplate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name, title, description, category, budget })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        showToast('Đã lưu thành mẫu tin.', 'success');
+                        await loadJobTemplatesIntoSelect();
+                    } else {
+                        showToast(data.message || 'Không thể lưu mẫu tin.', 'error');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    showToast('Lỗi kết nối máy chủ.', 'error');
                 }
-            } catch (err) {
-                console.error(err);
-                showToast('Lỗi kết nối máy chủ.', 'error');
-            }
+            }, 'Lưu thành mẫu');
         });
     });
 
@@ -3545,17 +3681,44 @@
         let body = new FormData();
         body.append('jobId', jobId);
 
+        const executeAction = async () => {
+            showConfirmModal(confirmMessage, async () => {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        body: body,
+                        headers: {
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                        }
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        showToast(data.message || 'Đã cập nhật tin đăng.', 'success');
+                        await renderBusinessJobsView();
+                    } else {
+                        showToast(data.message || 'Không thể cập nhật tin đăng.', 'error');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    showToast('Lỗi kết nối máy chủ.', 'error');
+                }
+            }, 'Xác nhận hành động');
+        };
+
         if (normalizedAction === 'extend') {
-            const daysText = prompt('Nhập số ngày gia hạn', '30');
-            if (daysText === null) return;
-            const extraDays = parseInt(daysText, 10);
-            if (Number.isNaN(extraDays) || extraDays <= 0) {
-                showToast('Số ngày gia hạn không hợp lệ.', 'error');
-                return;
-            }
-            url = '/Home/ExtendJobPost';
-            body.append('extraDays', extraDays);
-            confirmMessage = `Bạn có chắc chắn muốn gia hạn tin thêm ${extraDays} ngày?`;
+            showPromptModal('Nhập số ngày gia hạn', '30', (daysText) => {
+                if (daysText === null || daysText.trim() === '') return;
+                const extraDays = parseInt(daysText, 10);
+                if (Number.isNaN(extraDays) || extraDays <= 0) {
+                    showToast('Số ngày gia hạn không hợp lệ.', 'error');
+                    return;
+                }
+                url = '/Home/ExtendJobPost';
+                body.append('extraDays', extraDays);
+                confirmMessage = `Bạn có chắc chắn muốn gia hạn tin thêm ${extraDays} ngày?`;
+                executeAction();
+            }, 'Gia hạn tin đăng');
+            return;
         } else if (normalizedAction === 'close') {
             url = '/Home/CloseJobPost';
             confirmMessage = 'Bạn có chắc chắn muốn đóng tin tuyển dụng này?';
@@ -3567,27 +3730,7 @@
             return;
         }
 
-        if (!confirm(confirmMessage)) return;
-
-        try {
-            const response = await fetch(url, {
-                method: 'POST',
-                body: body,
-                headers: {
-                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
-                }
-            });
-            const data = await response.json();
-            if (data.success) {
-                showToast(data.message || 'Đã cập nhật tin đăng.', 'success');
-                await renderBusinessJobsView();
-            } else {
-                showToast(data.message || 'Không thể cập nhật tin đăng.', 'error');
-            }
-        } catch (err) {
-            console.error(err);
-            showToast('Lỗi kết nối máy chủ.', 'error');
-        }
+        executeAction();
     };
 
     async function renderBusinessApplicantsView(jobId = null, filters = {}) {
@@ -3746,9 +3889,9 @@
 
             document.querySelectorAll('.btnAcceptBid').forEach(btn => btn.addEventListener('click', () => updateBidStatus(btn.dataset.bidId, 'accept', jobId, currentFiltersForReload())));
             document.querySelectorAll('.btnHireBid').forEach(btn => btn.addEventListener('click', () => {
-                if (confirm('Xác nhận đánh dấu ứng viên này là đã tuyển? Các ứng viên còn lại của tin này sẽ tự động bị từ chối.')) {
+                showConfirmModal('Xác nhận đánh dấu ứng viên này là đã tuyển? Các ứng viên còn lại của tin này sẽ tự động bị từ chối.', () => {
                     updateBidStatus(btn.dataset.bidId, 'hire', jobId, currentFiltersForReload());
-                }
+                }, 'Xác nhận tuyển dụng');
             }));
             document.querySelectorAll('.btnRejectBid').forEach(btn => btn.addEventListener('click', () => updateBidStatus(btn.dataset.bidId, 'reject', jobId, currentFiltersForReload())));
             document.querySelectorAll('.btnSaveCandidate').forEach(btn => btn.addEventListener('click', () => toggleSaveCandidate(btn.dataset.studentId, jobId, currentFiltersForReload())));
@@ -5480,7 +5623,17 @@
                     dropdown.classList.remove('show');
                     setTimeout(() => dropdown.remove(), 200);
                     switch (action) {
-                        case 'deposit': openDepositQrModal(); break;
+                        case 'deposit':
+                            if (isBusiness) {
+                                setActiveSidebar('wallet-business');
+                                currentSidebarMode = 'wallet-business';
+                                if (typeof window.renderBusinessWalletDeposit === 'function') {
+                                    window.renderBusinessWalletDeposit();
+                                }
+                            } else {
+                                openDepositQrModal();
+                            }
+                            break;
                         case 'profile': setActiveSidebar('profile'); currentSidebarMode = 'profile'; renderProfileView(); break;
                         case 'edit-profile': openEditProfileFromMenu(); break;
                         case 'account': openEditProfileFromMenu(); break;
@@ -5650,6 +5803,10 @@
 
     function openPostJobModal(job = null) {
         const isEdit = !!job;
+        const standardCategories = ['IT & Lập trình', 'Thiết kế & Đồ họa', 'Viết lách & Dịch thuật', 'Sales & Marketing', 'Video & Photography'];
+        const isCustomCategory = job?.category && !standardCategories.includes(job.category);
+        const selectedCategory = isCustomCategory ? 'Khác' : (job?.category || 'IT & Lập trình');
+
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
         modal.innerHTML = `
@@ -5669,8 +5826,11 @@
                         <div class="form-group">
                             <label class="form-label">Danh mục</label>
                             <select class="form-select" id="postJobCategory">
-                                ${['Thiết kế', 'Làm slide', 'Dịch thuật', 'Viết content', 'Code web', 'Edit video', 'Khác'].map(c => `<option ${job?.category === c ? 'selected' : ''}>${c}</option>`).join('')}
+                                ${['IT & Lập trình', 'Thiết kế & Đồ họa', 'Viết lách & Dịch thuật', 'Sales & Marketing', 'Video & Photography', 'Khác'].map(c => `<option ${selectedCategory === c ? 'selected' : ''}>${c}</option>`).join('')}
                             </select>
+                            <div id="dynamicCustomCategoryWrapper" style="${selectedCategory === 'Khác' ? '' : 'display: none;'}" class="mt-2">
+                                <input type="text" class="form-input" id="postJobCustomCategory" value="${isCustomCategory ? escapeHtml(job.category) : ''}" placeholder="Nhập danh mục khác..." />
+                            </div>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Ngân sách (VNĐ)</label>
@@ -5738,6 +5898,21 @@
         modal.querySelector('.btn-modal-cancel').addEventListener('click', () => closeModal(modal));
         modal.addEventListener('click', e => { if (e.target === modal) closeModal(modal); });
 
+        const dynCategory = modal.querySelector('#postJobCategory');
+        const dynWrapper = modal.querySelector('#dynamicCustomCategoryWrapper');
+        const dynInput = modal.querySelector('#postJobCustomCategory');
+        if (dynCategory) {
+            dynCategory.addEventListener('change', () => {
+                if (dynCategory.value === 'Khác') {
+                    if (dynWrapper) dynWrapper.style.display = 'block';
+                    if (dynInput) dynInput.focus();
+                } else {
+                    if (dynWrapper) dynWrapper.style.display = 'none';
+                    if (dynInput) dynInput.value = '';
+                }
+            });
+        }
+
         const submitBusinessJob = (saveAsDraft) => {
             const title = modal.querySelector('#postJobTitle').value.trim();
             const description = modal.querySelector('#postJobDesc').value.trim();
@@ -5749,13 +5924,18 @@
             if (!saveAsDraft && !deadline) { showToast('Vui lòng chọn deadline tuyển dụng.', 'warning'); return; }
             if (!saveAsDraft && (!Number.isFinite(budget) || budget <= 0)) { showToast('Vui lòng nhập mức lương hợp lệ.', 'warning'); return; }
 
+            let finalCategory = modal.querySelector('#postJobCategory').value;
+            if (finalCategory === 'Khác') {
+                finalCategory = modal.querySelector('#postJobCustomCategory')?.value.trim() || 'Khác';
+            }
+
             const payload = {
                 id: job?.id || null,
                 title,
                 description,
                 requirements: modal.querySelector('#postJobRequirements').value.trim(),
                 benefits: modal.querySelector('#postJobBenefits').value.trim(),
-                category: modal.querySelector('#postJobCategory').value,
+                category: finalCategory,
                 skills: modal.querySelector('#postJobSkills').value.split(',').map(s => s.trim()).filter(Boolean),
                 budget: Number.isFinite(budget) ? budget : 0,
                 budgetType: modal.querySelector('#postJobBudgetType').value,
@@ -5846,7 +6026,44 @@
 })();
 
 
+window.setSelectCategory = function (selectId, wrapperId, inputId, categoryValue) {
+    const select = document.getElementById(selectId);
+    const wrapper = document.getElementById(wrapperId);
+    const input = document.getElementById(inputId);
+    if (!select) return;
+
+    const standardCategories = ['IT & Lập trình', 'Thiết kế & Đồ họa', 'Viết lách & Dịch thuật', 'Sales & Marketing', 'Video & Photography'];
+    if (!categoryValue) {
+        select.value = '';
+        if (wrapper) wrapper.style.display = 'none';
+        if (input) input.value = '';
+    } else if (standardCategories.includes(categoryValue)) {
+        select.value = categoryValue;
+        if (wrapper) wrapper.style.display = 'none';
+        if (input) input.value = '';
+    } else {
+        select.value = 'Khác';
+        if (wrapper) wrapper.style.display = 'block';
+        if (input) input.value = categoryValue;
+    }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
+    const staticCategory = document.getElementById('jobCategory');
+    const staticWrapper = document.getElementById('staticCustomCategoryWrapper');
+    const staticInput = document.getElementById('jobCustomCategory');
+    if (staticCategory) {
+        staticCategory.addEventListener('change', () => {
+            if (staticCategory.value === 'Khác') {
+                if (staticWrapper) staticWrapper.style.display = 'block';
+                if (staticInput) staticInput.focus();
+            } else {
+                if (staticWrapper) staticWrapper.style.display = 'none';
+                if (staticInput) staticInput.value = '';
+            }
+        });
+    }
+
     const btnSubmitJob = document.getElementById('btnSubmitJob');
     if (btnSubmitJob) {
         btnSubmitJob.addEventListener('click', async () => {
@@ -5856,6 +6073,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             const formData = new FormData(form);
+            if (formData.get('category') === 'Khác') {
+                const customVal = document.getElementById('jobCustomCategory')?.value.trim() || 'Khác';
+                formData.set('category', customVal);
+            }
             const mode = (formData.get('jobMode') || 'new').toString().toLowerCase();
             const url = mode === 'edit' ? '/Home/UpdateJobPost' : '/Home/PostJob';
             try {
