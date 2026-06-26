@@ -111,43 +111,52 @@
         bindFindFreelancerBtn();
         updateNotificationBadge();
 
-        if (isBusiness) {
-            bindBusinessSidebarNav();
-            // Delay tab restore so Dashboard.cshtml inline scripts (renderBusinessWalletDeposit etc.) finish defining
-            const _restoreBizTab = () => {
-                const activeTab = localStorage.getItem('j4s_active_tab') || 'home';
-                const targetSidebarItem = document.querySelector(`.business-dashboard-shell .sidebar-item[data-nav="${activeTab}"]`);
-                if (targetSidebarItem) {
-                    targetSidebarItem.click();
-                } else {
-                    renderBusinessEmployerHome();
-                }
-            };
-            // If wallet-related tabs, poll until Dashboard.cshtml wallet functions are ready (max 2s)
-            const _savedTab = localStorage.getItem('j4s_active_tab') || 'home';
-            const _walletTabs = ['wallet-business', 'wallet-current', 'wallet-deposit', 'wallet-history'];
-            if (_walletTabs.includes(_savedTab)) {
-                let _pollCount = 0;
-                const _pollReady = setInterval(() => {
-                    const _fnReady = (
-                        (_savedTab === 'wallet-business' && typeof window.renderBusinessWalletDeposit === 'function') ||
-                        (_savedTab === 'wallet-current' && typeof window.renderBusinessWalletCurrent === 'function') ||
-                        (_savedTab === 'wallet-deposit' && typeof window.renderBusinessWalletDeposit === 'function') ||
-                        (_savedTab === 'wallet-history' && typeof window.renderBusinessWalletHistory === 'function')
-                    );
-                    if (_fnReady || ++_pollCount > 20) {
-                        clearInterval(_pollReady);
-                        _restoreBizTab();
+        try {
+            if (isBusiness) {
+                bindBusinessSidebarNav();
+                // Delay tab restore so Dashboard.cshtml inline scripts (renderBusinessWalletDeposit etc.) finish defining
+                const _restoreBizTab = () => {
+                    const activeTab = localStorage.getItem('j4s_active_tab') || 'home';
+                    const targetSidebarItem = document.querySelector(`.business-dashboard-shell .sidebar-item[data-nav="${activeTab}"]`);
+                    if (targetSidebarItem) {
+                        targetSidebarItem.click();
+                    } else {
+                        renderBusinessEmployerHome();
                     }
-                }, 100);
+                };
+                // If wallet-related tabs, poll until Dashboard.cshtml wallet functions are ready (max 2s)
+                const _savedTab = localStorage.getItem('j4s_active_tab') || 'home';
+                const _walletTabs = ['wallet-business', 'wallet-current', 'wallet-deposit', 'wallet-history'];
+                if (_walletTabs.includes(_savedTab)) {
+                    let _pollCount = 0;
+                    const _pollReady = setInterval(() => {
+                        const _fnReady = (
+                            (_savedTab === 'wallet-business' && typeof window.renderBusinessWalletDeposit === 'function') ||
+                            (_savedTab === 'wallet-current' && typeof window.renderBusinessWalletCurrent === 'function') ||
+                            (_savedTab === 'wallet-deposit' && typeof window.renderBusinessWalletDeposit === 'function') ||
+                            (_savedTab === 'wallet-history' && typeof window.renderBusinessWalletHistory === 'function')
+                        );
+                        if (_fnReady || ++_pollCount > 20) {
+                            clearInterval(_pollReady);
+                            _restoreBizTab();
+                        }
+                    }, 100);
+                } else {
+                    _restoreBizTab();
+                }
             } else {
-                _restoreBizTab();
+                const activeTab = localStorage.getItem('j4s_active_tab') || 'home';
+                const targetSidebarItem = document.querySelector(`.sidebar-item[data-nav="${activeTab}"]:not(.business-dashboard-shell *)`);
+                if (targetSidebarItem && activeTab !== 'home') {
+                    targetSidebarItem.click();
+                }
             }
-        } else {
-            const activeTab = localStorage.getItem('j4s_active_tab') || 'home';
-            const targetSidebarItem = document.querySelector(`.sidebar-item[data-nav="${activeTab}"]:not(.business-dashboard-shell *)`);
-            if (targetSidebarItem && activeTab !== 'home') {
-                targetSidebarItem.click();
+        } catch (err) {
+            console.error("Tab restore error:", err);
+        } finally {
+            const hideStyle = document.getElementById('j4s-hide-main');
+            if (hideStyle) {
+                hideStyle.remove();
             }
         }
     }
@@ -6411,7 +6420,7 @@
         init();
     }
 
-})();
+
 
 
 window.setSelectCategory = function (selectId, wrapperId, inputId, categoryValue) {
@@ -6503,6 +6512,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    });
 
     function renderBusinessReviewsView() {
         mainContent.innerHTML = `

@@ -1309,6 +1309,14 @@
                  3C. CỘT GIỮA - NỘI DUNG ADMIN
                  ============================================ -->
             <main class="main-content" id="mainContent">
+                <script>
+                    (function() {
+                        const activeTab = localStorage.getItem('j4s_active_tab') || 'home';
+                        if (activeTab !== 'home') {
+                            document.write('<style id="j4s-hide-admin">#mainContent { display: none !important; }</style>');
+                        }
+                    })();
+                </script>
                 <!-- Welcome Header -->
                 <div class="welcome-box-business" style="padding: 24px;">
                     <div>
@@ -1393,6 +1401,14 @@
                  3B. CỘT GIỮA - NỘI DUNG MẶC ĐỊNH / FREELANCER
                  ============================================ -->
             <main class="main-content" id="mainContent">
+                <script>
+                    (function() {
+                        const activeTab = localStorage.getItem('j4s_active_tab') || 'home';
+                        if (activeTab !== 'home') {
+                            document.write('<style id="j4s-hide-main">#mainContent, #rightSidebar { display: none !important; }</style>');
+                        }
+                    })();
+                </script>
 
                 <!-- === Banner chào mừng === -->
                 <section class="welcome-banner" id="welcomeBanner" style="margin-bottom: 24px;">
@@ -2734,6 +2750,7 @@
                     e.preventDefault();
                     clearActive();
                     navHome.classList.add('active');
+                    localStorage.setItem('j4s_active_tab', 'home');
                     renderAdminHome();
                 });
 
@@ -2741,6 +2758,7 @@
                     e.preventDefault();
                     clearActive();
                     navUsers.classList.add('active');
+                    localStorage.setItem('j4s_active_tab', 'users');
                     renderAdminUsers();
                 });
 
@@ -2748,6 +2766,7 @@
                     e.preventDefault();
                     clearActive();
                     navJobs.classList.add('active');
+                    localStorage.setItem('j4s_active_tab', 'jobs');
                     renderAdminJobs();
                 });
 
@@ -2755,6 +2774,7 @@
                     e.preventDefault();
                     clearActive();
                     navTxs.classList.add('active');
+                    localStorage.setItem('j4s_active_tab', 'txs');
                     renderAdminTxs();
                 });
 
@@ -2762,6 +2782,7 @@
                     e.preventDefault();
                     clearActive();
                     navSupport.classList.add('active');
+                    localStorage.setItem('j4s_active_tab', 'support');
                     renderAdminSupport();
                 });
 
@@ -2769,11 +2790,38 @@
                     e.preventDefault();
                     clearActive();
                     navFeedback.classList.add('active');
+                    localStorage.setItem('j4s_active_tab', 'feedback');
                     renderAdminFeedback();
                 });
 
-                // Render initial home view
-                renderAdminHome();
+                // Restore saved active tab
+                const activeTab = localStorage.getItem('j4s_active_tab') || 'home';
+                clearActive();
+                if (activeTab === 'users' && navUsers) {
+                    navUsers.classList.add('active');
+                    renderAdminUsers();
+                } else if (activeTab === 'jobs' && navJobs) {
+                    navJobs.classList.add('active');
+                    renderAdminJobs();
+                } else if (activeTab === 'txs' && navTxs) {
+                    navTxs.classList.add('active');
+                    renderAdminTxs();
+                } else if (activeTab === 'support' && navSupport) {
+                    navSupport.classList.add('active');
+                    renderAdminSupport();
+                } else if (activeTab === 'feedback' && navFeedback) {
+                    navFeedback.classList.add('active');
+                    renderAdminFeedback();
+                } else {
+                    navHome?.classList.add('active');
+                    renderAdminHome();
+                }
+
+                // Clean up j4s-hide-admin style block to reveal content
+                const hideStyle = document.getElementById('j4s-hide-admin');
+                if (hideStyle) {
+                    hideStyle.remove();
+                }
             }
 
             async function updateAdminStats() {
