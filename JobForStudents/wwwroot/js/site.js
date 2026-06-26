@@ -111,7 +111,42 @@
 
         if (isBusiness) {
             bindBusinessSidebarNav();
-            renderBusinessEmployerHome();
+            // Delay tab restore so Dashboard.cshtml inline scripts (renderBusinessWalletDeposit etc.) finish defining
+            const _restoreBizTab = () => {
+                const activeTab = localStorage.getItem('j4s_active_tab') || 'home';
+                const targetSidebarItem = document.querySelector(`.business-dashboard-shell .sidebar-item[data-nav="${activeTab}"]`);
+                if (targetSidebarItem) {
+                    targetSidebarItem.click();
+                } else {
+                    renderBusinessEmployerHome();
+                }
+            };
+            // If wallet-related tabs, poll until Dashboard.cshtml wallet functions are ready (max 2s)
+            const _savedTab = localStorage.getItem('j4s_active_tab') || 'home';
+            const _walletTabs = ['wallet-business', 'wallet-current', 'wallet-deposit', 'wallet-history'];
+            if (_walletTabs.includes(_savedTab)) {
+                let _pollCount = 0;
+                const _pollReady = setInterval(() => {
+                    const _fnReady = (
+                        (_savedTab === 'wallet-business' && typeof window.renderBusinessWalletDeposit === 'function') ||
+                        (_savedTab === 'wallet-current' && typeof window.renderBusinessWalletCurrent === 'function') ||
+                        (_savedTab === 'wallet-deposit' && typeof window.renderBusinessWalletDeposit === 'function') ||
+                        (_savedTab === 'wallet-history' && typeof window.renderBusinessWalletHistory === 'function')
+                    );
+                    if (_fnReady || ++_pollCount > 20) {
+                        clearInterval(_pollReady);
+                        _restoreBizTab();
+                    }
+                }, 100);
+            } else {
+                _restoreBizTab();
+            }
+        } else {
+            const activeTab = localStorage.getItem('j4s_active_tab') || 'home';
+            const targetSidebarItem = document.querySelector(`.sidebar-item[data-nav="${activeTab}"]:not(.business-dashboard-shell *)`);
+            if (targetSidebarItem && activeTab !== 'home') {
+                targetSidebarItem.click();
+            }
         }
     }
 
@@ -155,6 +190,10 @@
                         <span class="item-icon"><i data-lucide="file-text" style="width:18px;height:18px;"></i></span>
                         Quản lý tin đăng
                     </a>
+                    <a href="#" class="sidebar-item" data-nav="approveCandidates" id="navApproveCandidates">
+                        <span class="item-icon"><i data-lucide="user-check" style="width:18px;height:18px;"></i></span>
+                        Duyệt ứng viên
+                    </a>
                     <a href="#" class="sidebar-item" data-nav="candidateSearch" id="navCandidateSearch">
                         <span class="item-icon"><i data-lucide="users" style="width:18px;height:18px;"></i></span>
                         Ứng viên
@@ -171,6 +210,10 @@
                     <a href="#" class="sidebar-item" data-nav="notifications" id="navNotifications">
                         <span class="item-icon"><i data-lucide="bell" style="width:18px;height:18px;"></i></span>
                         Thông báo
+                    </a>
+                    <a href="#" class="sidebar-item" data-nav="messages" id="navMessages">
+                        <span class="item-icon"><i data-lucide="message-square" style="width:18px;height:18px;"></i></span>
+                        Tin nhắn
                     </a>
                 </div>
                 <div class="sidebar-group">
@@ -209,6 +252,7 @@
                 const nav = item.dataset.nav;
                 setActiveSidebar(nav);
                 currentSidebarMode = nav;
+                localStorage.setItem('j4s_active_tab', nav);
                 if (searchInput) searchInput.value = '';
 
                 switch (nav) {
@@ -217,6 +261,9 @@
                         break;
                     case 'businessJobs':
                         renderBusinessJobsManagement();
+                        break;
+                    case 'approveCandidates':
+                        renderApproveCandidatesView();
                         break;
                     case 'candidateSearch':
                         renderCandidateSearchView();
@@ -227,10 +274,24 @@
                     case 'wallet-business':
                         if (typeof window.renderBusinessWalletDeposit === 'function') {
                             window.renderBusinessWalletDeposit();
+                        } else {
+                            // Function defined later in Dashboard.cshtml — retry after scripts load
+                            let _wRetry = 0;
+                            const _wInterval = setInterval(() => {
+                                if (typeof window.renderBusinessWalletDeposit === 'function') {
+                                    clearInterval(_wInterval);
+                                    window.renderBusinessWalletDeposit();
+                                } else if (++_wRetry > 20) {
+                                    clearInterval(_wInterval);
+                                }
+                            }, 100);
                         }
                         break;
                     case 'notifications':
                         renderBusinessNotificationsView();
+                        break;
+                    case 'messages':
+                        renderMessagesView();
                         break;
                     case 'support':
                         renderBusinessSupportView();
@@ -360,16 +421,13 @@
                 clearCategoryActive();
                 searchInput.value = '';
                 currentSidebarMode = nav;
+                localStorage.setItem('j4s_active_tab', nav);
 
-                // Handle right sidebar display for students (hide if not on home page)
+                // Handle right sidebar display for students
                 if (!isBusinessAccount()) {
                     const rs = document.getElementById('rightSidebar');
                     if (rs) {
-                        if (nav === 'home') {
-                            rs.style.display = '';
-                        } else {
-                            rs.style.display = 'none';
-                        }
+                        rs.style.display = ''; // always show
                     }
                 }
 
@@ -868,7 +926,7 @@
                 <div style="display:flex;align-items:center;gap:16px;">
                     <span style="font-size:1.05rem;font-weight:800;color:#10b981;">${budget}</span>
                     <span style="font-size:0.8rem;color:#94a3b8;display:flex;align-items:center;gap:4px;"><i data-lucide="clock" style="width:13px;height:13px;"></i>${escapeHtml(job.deadline || '')}</span>
-                    <span style="font-size:0.8rem;color:#94a3b8;display:flex;align-items:center;gap:4px;"><i data-lucide="users" style="width:13px;height:13px;"></i>${job.applicantsCount || 0} ứng viên</span>
+                    <span style="font-size:0.8rem;color:#94a3b8;display:flex;align-items:center;gap:4px;"><i data-lucide="users" style="width:13px;height:13px;"></i>Đã nhận: ${job.hiredCount || 0}/${job.quantity || 1} · ${job.applicantsCount || 0} ứng viên</span>
                     <button class="btn-save-job ${job.isSaved ? 'saved' : ''}" data-job-id="${job.id}" title="Lưu">
                         <i data-lucide="bookmark" style="width:18px;height:18px;"></i>
                     </button>
@@ -972,10 +1030,11 @@
                         <span style="background:${status.bg};color:${status.color};font-size:0.75rem;font-weight:700;padding:3px 12px;border-radius:20px;white-space:nowrap;">${status.label}</span>
                     </div>
                     <p style="font-size:0.85rem;color:#64748b;margin:0 0 10px;line-height:1.5;">${escapeHtml((job.description || '').substring(0, 100))}${(job.description || '').length > 100 ? '...' : ''}</p>
-                    <div style="display:flex;align-items:center;gap:16px;">
+                    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
                         <span style="font-size:1rem;font-weight:800;color:#10b981;">${budget}</span>
                         ${appliedDate ? `<span style="font-size:0.8rem;color:#94a3b8;display:flex;align-items:center;gap:4px;"><i data-lucide="calendar" style="width:13px;height:13px;"></i>Đã ứng tuyển: ${appliedDate}</span>` : ''}
                         <span style="font-size:0.8rem;color:#94a3b8;display:flex;align-items:center;gap:4px;"><i data-lucide="building-2" style="width:13px;height:13px;"></i>${escapeHtml(job.businessName || '')}</span>
+                        <span style="font-size:0.8rem;color:#94a3b8;display:flex;align-items:center;gap:4px;"><i data-lucide="users" style="width:13px;height:13px;"></i>Đã nhận: ${job.hiredCount || 0}/${job.quantity || 1} · ${job.applicantsCount || 0} ứng viên</span>
                         ${showCancelBtn ? `
                         <button class="btn-cancel-apply" data-job-id="${job.id}" style="background:#fff; border:1px solid #ef4444; color:#ef4444; border-radius:8px; padding:6px 12px; font-size:0.8rem; font-weight:600; cursor:pointer; transition:all 0.2s; display:inline-flex; align-items:center; gap:4px; margin-left:auto;"
                                 onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='#fff'">
@@ -1019,22 +1078,41 @@
         </div>`;
     }
 
+    function cancelApplication(jobId) {
+        showConfirmModal('Bạn có chắc chắn muốn hủy ứng tuyển công việc này?', () => {
+            fetch('/Home/ApplyJob', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ jobId })
+            })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success && !data.isApplied) {
+                        showToast('Đã hủy ứng tuyển thành công.', 'success');
+                        renderAppliedJobsView(); // Refresh the list
+                    } else {
+                        showToast(data.message || 'Lỗi khi hủy ứng tuyển.', 'error');
+                    }
+                })
+                .catch(err => {
+                    console.error('Cancel apply error:', err);
+                    showToast('Không thể kết nối đến máy chủ.', 'error');
+                });
+        }, 'Xác nhận hủy ứng tuyển');
+    }
+
     function bindJobCardClicks() {
-        document.querySelectorAll('.job-title[data-job-id]').forEach(el => {
-            el.addEventListener('click', function () {
-                const jobId = this.dataset.jobId;
-                const job = allJobs.find(j => String(j.id) === String(jobId));
-                if (job) openJobDetailModal(job);
-                else fetch('/Home/GetJobDetail/' + jobId).then(r => r.json()).then(j => openJobDetailModal(j)).catch(() => { });
-            });
-        });
         document.querySelectorAll('.job-card[data-job-id]').forEach(el => {
             el.addEventListener('click', function (e) {
                 if (e.target.closest('.btn-save-job')) return;
+                if (e.target.closest('.btn-cancel-apply')) return;
                 const jobId = this.dataset.jobId;
                 const job = allJobs.find(j => String(j.id) === String(jobId));
-                if (job) openJobDetailModal(job);
-                else fetch('/Home/GetJobDetail/' + jobId).then(r => r.json()).then(j => openJobDetailModal(j)).catch(() => { });
+                if (job) openJobModal(jobId);
+                else fetch('/Home/GetJobDetail/' + jobId).then(r => r.json()).then(j => {
+                    if (!allJobs.find(x => String(x.id) === String(j.id))) allJobs.push(j);
+                    openJobModal(j.id);
+                }).catch(() => { });
             });
         });
         document.querySelectorAll('.btn-save-job').forEach(btn => {
@@ -1042,6 +1120,13 @@
                 e.stopPropagation();
                 const jobId = this.dataset.jobId;
                 toggleSaveJob(jobId, this);
+            });
+        });
+        document.querySelectorAll('.btn-cancel-apply').forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                const jobId = this.dataset.jobId;
+                cancelApplication(jobId);
             });
         });
     }
@@ -1056,7 +1141,6 @@
                 </button>
             </div>
             <div id="businessJobStatsPanel" class="business-job-stats-panel"></div>
-            <div id="newApplicantsPanel" class="new-applicants-panel"></div>
             <div id="businessJobsPanel" class="business-jobs-panel">
                 <div style="display:flex;align-items:center;justify-content:center;min-height:220px;color:var(--text-secondary);font-weight:600;">
                     <span class="spinner-border spinner-border-sm" style="margin-right:8px;"></span> Đang tải tin tuyển dụng...
@@ -1065,6 +1149,16 @@
         if (window.lucide) lucide.createIcons();
         document.getElementById('btnCreateManagedJob')?.addEventListener('click', () => openPostJobModal());
         loadBusinessJobs();
+    }
+
+    function renderApproveCandidatesView() {
+        mainContent.innerHTML = `
+            <div class="page-header animate-in">
+                <h1 class="page-title"><i data-lucide="user-check" style="width:24px;height:24px;"></i> Duyệt ứng viên</h1>
+                <p class="page-subtitle">Xem danh sách ứng viên mới ứng tuyển và đưa ra quyết định duyệt hoặc từ chối.</p>
+            </div>
+            <div id="newApplicantsPanel" class="new-applicants-panel"></div>`;
+        if (window.lucide) lucide.createIcons();
         loadNewBusinessApplicants();
     }
 
@@ -1108,9 +1202,9 @@
                     <article class="managed-job-card animate-in" data-job-id="${job.id}">
                         <div class="managed-job-main">
                             <div class="managed-job-topline">
-                                <span class="managed-status status-${escapeHtml(job.status.toLowerCase())}">${escapeHtml(job.statusText)}</span>
+                                <span class="managed-status ${!job.isApproved && job.status === 'Open' ? 'status-pending' : 'status-' + job.status.toLowerCase()}">${escapeHtml(job.statusText)}</span>
                                 <span><i data-lucide="calendar" style="width:13px;height:13px;"></i> Hạn: ${escapeHtml(job.deadlineText)}</span>
-                                <span><i data-lucide="users" style="width:13px;height:13px;"></i> ${job.applicantsCount} ứng viên</span>
+                                <span><i data-lucide="users" style="width:13px;height:13px;"></i> Đã tuyển: ${job.hiredCount || 0}/${job.quantity} · ${job.applicantsCount} ứng viên</span>
                             </div>
                             <h3>${escapeHtml(job.title)}</h3>
                             <p>${escapeHtml(job.description)}</p>
@@ -1170,20 +1264,7 @@
                     <span>Tổng hồ sơ nhận được</span>
                     <strong>${summary.totalReceivedProfiles ?? 0}</strong>
                 </div>
-                <div class="overview-details">
-                    <h3>Tin đăng hiển thị</h3>
-                    ${activeJobs.length ? activeJobs.slice(0, 4).map(job => `
-                        <button class="overview-job-row" data-job-id="${job.id}">
-                            <span>${escapeHtml(job.title)}</span>
-                            <small>${escapeHtml(job.deadlineText)} · ${job.applicantsCount} ứng viên</small>
-                        </button>
-                    `).join('') : '<p>Chưa có tin đang hoạt động.</p>'}
-                </div>
             </section>`;
-
-        panel.querySelectorAll('.overview-job-row').forEach(btn => {
-            btn.addEventListener('click', () => openJobApplicantsModal(Number(btn.dataset.jobId)));
-        });
     }
 
     function renderBusinessEmployerHome() {
@@ -1763,6 +1844,26 @@
         }, 'Xác nhận xóa');
     }
 
+    function updateApplicantStatus(bidId, action, onSuccess) {
+        postJson('/Home/UpdateBidStatus', { bidId, action })
+            .then(data => {
+                showToast(data.message || 'Đã cập nhật trạng thái ứng viên.', data.success ? 'success' : 'error');
+                if (data.success) {
+                    if (onSuccess) {
+                        onSuccess();
+                    } else {
+                        loadNewBusinessApplicants();
+                        loadBusinessJobs();
+                        loadBusinessHomeData();
+                    }
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showToast('Không thể kết nối đến máy chủ.', 'error');
+            });
+    }
+
     function openJobApplicantsModal(jobId) {
         fetch(`/Home/GetJobApplicants?jobId=${jobId}`)
             .then(res => res.json())
@@ -1780,37 +1881,121 @@
                         <div class="modal-header"><h2>Ứng viên: ${escapeHtml(data.jobTitle)}</h2></div>
                         <div class="modal-body">
                             ${data.applicants.length ? data.applicants.map(app => `
-                                <div class="applicant-card">
-                                    <div class="applicant-avatar">
-                                        ${app.avatarUrl ? `<img src="${escapeHtml(app.avatarUrl)}" alt="${escapeHtml(app.name)}" />` : `<span>${escapeHtml(app.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase())}</span>`}
-                                    </div>
-                                    <div class="applicant-info">
-                                        <h3>${escapeHtml(app.name)}</h3>
-                                        <p>${escapeHtml(app.proposal || 'Chưa có lời nhắn ứng tuyển.')}</p>
-                                        <div class="applicant-meta">
-                                            <span>${escapeHtml(app.email)}</span>
-                                            <span>${escapeHtml(app.phone)}</span>
-                                            <span>${formatVND(app.bidAmount)}</span>
-                                            <span>${app.estimatedDays} ngày</span>
+                                <div class="applicant-card" data-bid-id="${app.id}" style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding:16px 0; gap: 16px;">
+                                    <div style="display:flex; gap:16px; flex: 1; min-width: 0;">
+                                        <div class="applicant-avatar">
+                                            ${app.avatarUrl ? `<img src="${escapeHtml(app.avatarUrl)}" alt="${escapeHtml(app.name)}" />` : `<span>${escapeHtml(app.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase())}</span>`}
                                         </div>
-                                        <div class="job-tags">${(app.skills || []).map(skill => `<span class="job-tag">${escapeHtml(skill)}</span>`).join('')}</div>
+                                        <div class="applicant-info" style="flex: 1; min-width: 0;">
+                                            <h3>${escapeHtml(app.name)}</h3>
+                                            <p style="white-space: pre-wrap; word-break: break-word;">${escapeHtml(app.proposal || 'Chưa có lời nhắn ứng tuyển.')}</p>
+                                            <div class="applicant-meta">
+                                                <span>${escapeHtml(app.email)}</span>
+                                                <span>${escapeHtml(app.phone)}</span>
+                                                <span>${formatVND(app.bidAmount)}</span>
+                                                <span>${app.estimatedDays} ngày</span>
+                                            </div>
+                                            <div class="job-tags">${(app.skills || []).map(skill => `<span class="job-tag">${escapeHtml(skill)}</span>`).join('')}</div>
+                                        </div>
+                                    </div>
+                                    <div class="applicant-actions" style="display:flex; flex-direction:column; gap:8px; align-items:flex-end; flex-shrink: 0;">
+                                        ${app.status === 'Pending' ? `
+                                            <div style="display:flex; gap:8px;">
+                                                <button class="btn-sm" data-action="approve-bid" style="background:#10b981; color:#fff; border:none; border-radius:6px; cursor:pointer; padding:6px 12px; font-weight:600;">Duyệt</button>
+                                                <button class="btn-sm" data-action="reject-bid" style="background:#ef4444; color:#fff; border:none; border-radius:6px; cursor:pointer; padding:6px 12px; font-weight:600;">Từ chối</button>
+                                            </div>
+                                        ` : `
+                                            <span style="font-size:0.8rem; font-weight:700; padding:4px 12px; border-radius:20px; ${app.status === 'Hired' || app.status === 'Accepted' ? 'background:#ecfdf5; color:#059669;' : 'background:#fef2f2; color:#dc2626;'}">
+                                                ${app.status === 'Hired' || app.status === 'Accepted' ? 'Đã nhận' : 'Từ chối'}
+                                            </span>
+                                            
+                                            ${(app.status === 'Hired' || app.status === 'Accepted') && app.contractId ? `
+                                                <div style="margin-top: 6px;">
+                                                    ${app.contractStatus === 'Completed' ? `
+                                                        <span style="font-size:0.75rem; color:#10b981; font-weight:700; display:flex; align-items:center; gap:4px;">
+                                                            <i data-lucide="check-circle" style="width:14px;height:14px;"></i> Dự án đã hoàn thành
+                                                        </span>
+                                                    ` : app.businessCompleted ? `
+                                                        <span style="font-size:0.75rem; color:#d97706; font-weight:700; display:flex; align-items:center; gap:4px;">
+                                                            <i data-lucide="clock" style="width:14px;height:14px;"></i> Chờ sinh viên xác nhận
+                                                        </span>
+                                                    ` : `
+                                                        <button class="btn-sm complete-contract-business-btn" data-contract-id="${app.contractId}" style="background:#10b981; color:#fff; border:none; border-radius:6px; cursor:pointer; padding:4px 10px; font-size:0.75rem; font-weight:600; display:flex; align-items:center; gap:4px; transition: background 0.2s;">
+                                                            <i data-lucide="check-circle" style="width:12px;height:12px;"></i> ${app.studentCompleted ? 'Xác nhận hoàn thành (SV đã hoàn thành)' : 'Hoàn thành dự án'}
+                                                        </button>
+                                                    `}
+                                                </div>
+                                            ` : ''}
+                                        `}
                                     </div>
                                 </div>
                             `).join('') : `<div style="padding:28px;text-align:center;color:var(--text-muted);font-weight:600;">Chưa có ứng viên nào cho tin này.</div>`}
                         </div>
-                        <div class="modal-footer"><button class="btn-modal-cancel">Đóng</button></div>
-                    </div>`;
+                        </div>
+                     </div>`;
                 document.body.appendChild(modal);
                 if (window.lucide) lucide.createIcons();
                 requestAnimationFrame(() => modal.classList.add('active'));
+
+                modal.querySelectorAll('.applicant-card').forEach(card => {
+                    const bidId = Number(card.dataset.bidId);
+                    card.querySelector('[data-action="approve-bid"]')?.addEventListener('click', () => {
+                        updateApplicantStatus(bidId, 'hire', () => {
+                            closeModal(modal);
+                            openJobApplicantsModal(jobId);
+                        });
+                    });
+                    card.querySelector('[data-action="reject-bid"]')?.addEventListener('click', () => {
+                        updateApplicantStatus(bidId, 'reject', () => {
+                            closeModal(modal);
+                            openJobApplicantsModal(jobId);
+                        });
+                    });
+                });
+
+                // Bind business complete button
+                modal.querySelectorAll('.complete-contract-business-btn').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        const contractId = Number(this.dataset.contractId);
+                        completeBusinessProject(contractId, modal, jobId);
+                    });
+                });
+
                 modal.querySelector('.modal-close').addEventListener('click', () => closeModal(modal));
-                modal.querySelector('.btn-modal-cancel').addEventListener('click', () => closeModal(modal));
                 modal.addEventListener('click', e => { if (e.target === modal) closeModal(modal); });
             })
             .catch(err => {
                 console.error(err);
                 showToast('Không thể kết nối đến máy chủ.', 'error');
             });
+    }
+
+    function completeBusinessProject(contractId, modal, jobId) {
+        showConfirmModal('Bạn chắc chắn muốn đánh dấu dự án này là hoàn thành? Trạng thái sẽ được lưu vào hệ thống.', () => {
+            const body = new FormData();
+            body.append('contractId', contractId);
+            fetch('/Home/CompleteContractBusiness', {
+                method: 'POST',
+                body: body,
+                headers: {
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                }
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast(data.message || 'Đã hoàn thành dự án!', 'success');
+                        closeModal(modal);
+                        openJobApplicantsModal(jobId);
+                    } else {
+                        showToast(data.message || 'Lỗi khi hoàn thành dự án.', 'error');
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    showToast('Không thể kết nối đến máy chủ.', 'error');
+                });
+        }, 'Xác nhận hoàn thành dự án');
     }
 
     function loadNewBusinessApplicants() {
@@ -1842,38 +2027,77 @@
             <section class="new-applicants-section animate-in">
                 <div class="section-header">
                     <div>
-                        <h2 class="section-title">Ứng viên mới</h2>
-                        <p class="section-subtitle">${totalNewApplicants} ứng viên mới trong 7 ngày</p>
+                        <h2 class="section-title">Danh sách ứng viên</h2>
+                        <p class="section-subtitle">Tổng số: ${totalNewApplicants} ứng viên đã ứng tuyển</p>
                     </div>
                 </div>
                 <div class="new-applicant-list">
                     ${applicants.length ? applicants.map(app => `
-                        <article class="new-applicant-card" data-student-id="${app.studentId}">
+                        <article class="new-applicant-card" data-student-id="${app.studentId}" data-bid-id="${app.id}">
                             <div class="applicant-avatar">
                                 ${app.avatarUrl ? `<img src="${escapeHtml(app.avatarUrl)}" alt="${escapeHtml(app.name)}" />` : `<span>${getInitials(app.name)}</span>`}
                             </div>
-                            <div class="new-applicant-main">
-                                <h3>${escapeHtml(app.name)}</h3>
-                                <p>${escapeHtml(app.jobTitle)} · ${escapeHtml(app.appliedAt)}</p>
-                                <p>${escapeHtml(app.proposal || 'Ứng viên chưa gửi lời nhắn ứng tuyển.')}</p>
-                                <div class="job-tags">${(app.skills || []).map(skill => `<span class="job-tag">${escapeHtml(skill)}</span>`).join('')}</div>
-                            </div>
-                            <div class="new-applicant-side">
-                                <strong>${formatVND(app.bidAmount)}</strong>
-                                <span>${app.estimatedDays} ngày</span>
-                                <button class="btn-sm btn-primary" data-action="profile">Xem hồ sơ</button>
-                                <button class="btn-sm btn-outline" data-action="contact">Liên hệ ứng viên</button>
+                            <div class="new-applicant-main" style="width: 100%;">
+                                <div class="applicant-header-row" style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; gap: 12px; width:100%;">
+                                    <div>
+                                        <h3 style="margin: 0 0 4px; font-size: 16px; font-weight: 900;">${escapeHtml(app.name)}</h3>
+                                        <p style="margin: 0; color: var(--text-secondary); font-size: 13px;">${escapeHtml(app.jobTitle)} · ${escapeHtml(app.appliedAt)}</p>
+                                    </div>
+                                    <div style="text-align: right; display:flex; flex-direction:column; align-items:flex-end; flex-shrink:0;">
+                                        <strong style="color: #0f766e; font-size: 16px; font-weight: 900;">${formatVND(app.bidAmount)}</strong>
+                                        <span style="color: var(--text-muted); font-size: 12px; font-weight: 800; margin-top:2px;">${app.estimatedDays} ngày</span>
+                                    </div>
+                                </div>
+                                
+                                ${app.proposal && app.proposal !== 'Tôi muốn ứng tuyển vào công việc này. Tôi có kỹ năng phù hợp.' ? `
+                                <p class="proposal-text" style="margin: 10px 0 12px; font-size:13.5px; line-height:1.5; color:#334155; white-space: pre-wrap; word-break: break-word;">
+                                    ${escapeHtml(app.proposal)}
+                                </p>
+                                ` : ''}
+                                
+                                <div class="job-tags" style="margin-bottom:16px;">
+                                    ${(app.skills || []).map(skill => `<span class="job-tag">${escapeHtml(skill)}</span>`).join('')}
+                                </div>
+                                
+                                <div class="applicant-actions-row" style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #e2e8f0; padding-top:12px; gap: 12px; flex-wrap: wrap; width:100%;">
+                                    <div style="display:flex; gap:8px;">
+                                        <button class="btn-sm btn-primary" data-action="profile" style="padding: 6px 14px; font-weight:600; display:flex; align-items:center; gap:6px;">
+                                            <i data-lucide="user" style="width:14px;height:14px;"></i> Hồ sơ
+                                        </button>
+                                        <button class="btn-sm btn-outline" data-action="contact" style="padding: 6px 14px; font-weight:600; display:flex; align-items:center; gap:6px;">
+                                            <i data-lucide="message-square" style="width:14px;height:14px;"></i> Liên hệ
+                                        </button>
+                                    </div>
+                                    <div style="display:flex; gap:8px;">
+                                        ${app.status === 'Pending' ? `
+                                            <button class="btn-sm" data-action="approve" style="background:#10b981; color:#fff; border:none; padding: 6px 16px; font-weight:600; cursor:pointer; border-radius:var(--radius-sm); display:flex; align-items:center; gap:6px;">
+                                                <i data-lucide="check" style="width:14px;height:14px;"></i> Duyệt
+                                            </button>
+                                            <button class="btn-sm" data-action="reject" style="background:#ef4444; color:#fff; border:none; padding: 6px 16px; font-weight:600; cursor:pointer; border-radius:var(--radius-sm); display:flex; align-items:center; gap:6px;">
+                                                <i data-lucide="x" style="width:14px;height:14px;"></i> Từ chối
+                                            </button>
+                                        ` : `
+                                            <span style="font-size:0.85rem; font-weight:700; padding:6px 14px; border-radius:6px; display:inline-flex; align-items:center; gap:6px; ${app.status === 'Hired' || app.status === 'Accepted' ? 'background:#ecfdf5; color:#059669;' : 'background:#fef2f2; color:#dc2626;'}">
+                                                <i data-lucide="${app.status === 'Hired' || app.status === 'Accepted' ? 'check-circle' : 'x-circle'}" style="width:14px;height:14px;"></i>
+                                                ${app.status === 'Hired' || app.status === 'Accepted' ? 'Đã nhận' : 'Từ chối'}
+                                            </span>
+                                        `}
+                                    </div>
+                                </div>
                             </div>
                         </article>
-                    `).join('') : '<div class="service-payment-empty">Chưa có ứng viên mới trong 7 ngày.</div>'}
+                    `).join('') : '<div class="service-payment-empty">Chưa có ứng viên nào ứng tuyển.</div>'}
                 </div>
             </section>`;
 
         if (window.lucide) lucide.createIcons();
         panel.querySelectorAll('.new-applicant-card').forEach(card => {
             const studentId = Number(card.dataset.studentId);
+            const bidId = Number(card.dataset.bidId);
             card.querySelector('[data-action="profile"]')?.addEventListener('click', () => openCandidateProfileModal(studentId));
             card.querySelector('[data-action="contact"]')?.addEventListener('click', () => contactCandidate(studentId));
+            card.querySelector('[data-action="approve"]')?.addEventListener('click', () => updateApplicantStatus(bidId, 'hire'));
+            card.querySelector('[data-action="reject"]')?.addEventListener('click', () => updateApplicantStatus(bidId, 'reject'));
         });
     }
 
@@ -1951,20 +2175,20 @@
             };
         };
         panel.innerHTML = `
-            <section class="service-package-current animate-in">
+            <section class="service-package-current animate-in" style="display:block; padding:24px;">
                 <div class="service-current-main">
                     <span class="service-eyebrow">Gói đang sử dụng</span>
                     <h2>${escapeHtml(current?.planName || 'Chưa có gói')}</h2>
                     <p>${escapeHtml(current?.description || 'Doanh nghiệp chưa có gói dịch vụ đang hoạt động.')}</p>
+                    <div style="display:flex; flex-wrap:wrap; align-items:center; gap:16px; margin-top:14px;">
+                        ${current ? `<span style="font-size:0.85rem; color:#475569; font-weight:600;"><strong>Hết hạn:</strong> ${escapeHtml(current.endDate || '--')}</span>
+                        <span style="font-size:0.85rem; color:#475569; font-weight:600;"><strong>Tin còn lại:</strong> ${current.remainingJobPosts ?? 0} tin</span>
+                        <span style="font-size:0.85rem; color:#475569; font-weight:600;"><strong>Còn:</strong> ${current.daysLeft ?? 0} ngày</span>
+                        <button class="btn-modern-primary" id="btnRenewCurrentPlan" style="padding:8px 20px;">Gia hạn gói</button>` : ''}
+                    </div>
                     <div class="service-benefits">
                         ${(current?.benefits || []).map(b => `<span><i data-lucide="check" style="width:14px;height:14px;"></i>${escapeHtml(b)}</span>`).join('')}
                     </div>
-                </div>
-                <div class="service-current-stats">
-                    <div><strong>${escapeHtml(current?.endDate || '--')}</strong><span>Ngày hết hạn</span></div>
-                    <div><strong>${current?.remainingJobPosts ?? 0}</strong><span>Số lượng tin còn lại</span></div>
-                    <div><strong>${current?.daysLeft ?? 0}</strong><span>Ngày còn lại</span></div>
-                    <button class="btn-modern-primary" id="btnRenewCurrentPlan">Gia hạn gói</button>
                 </div>
             </section>
 
@@ -2045,7 +2269,6 @@
                 </div>
             </div>
         `;
-        window.showConfirmModal = showConfirmModal;
         document.body.insertAdjacentHTML('beforeend', modalHTML);
         const modalEl = document.getElementById('j4sConfirmModal');
         if (window.lucide) lucide.createIcons();
@@ -2086,7 +2309,6 @@
                 </div>
             </div>
         `;
-        window.showPromptModal = showPromptModal;
         document.body.insertAdjacentHTML('beforeend', modalHTML);
         const modalEl = document.getElementById('j4sPromptModal');
         if (window.lucide) lucide.createIcons();
@@ -2104,6 +2326,9 @@
             }, { once: true });
         });
     }
+
+    window.showConfirmModal = showConfirmModal;
+    window.showPromptModal = showPromptModal;
 
     function purchaseServicePlan(planId) {
         showConfirmModal('Xác nhận thanh toán/nâng cấp gói dịch vụ này bằng số dư ví?', () => {
@@ -2382,14 +2607,12 @@
                                 </div>
                             </section>
                         </div>
-                        <div class="modal-footer"><button class="btn-modal-cancel">Đóng</button></div>
                     </div>`;
 
                 document.body.appendChild(modal);
                 if (window.lucide) lucide.createIcons();
                 requestAnimationFrame(() => modal.classList.add('active'));
                 modal.querySelector('.modal-close').addEventListener('click', () => closeModal(modal));
-                modal.querySelector('.btn-modal-cancel').addEventListener('click', () => closeModal(modal));
                 modal.addEventListener('click', e => { if (e.target === modal) closeModal(modal); });
                 modal.querySelector('#btnSaveCandidateFromModal')?.addEventListener('click', e => {
                     toggleSaveCandidate(studentId, e.currentTarget);
@@ -2432,68 +2655,129 @@
 
     function renderProjectsView() {
         mainContent.innerHTML = `
-            <div class="page-header">
+            <div class="page-header animate-in">
                 <h1 class="page-title"><i data-lucide="folder-open" style="width:24px;height:24px;"></i> Dự án đang làm</h1>
                 <p class="page-subtitle">Quản lý các dự án bạn đang thực hiện</p>
             </div>
-            <div class="projects-list">
-                ${mockProjects.map(p => `
-                    <div class="project-card">
-                        <div class="project-header">
-                            <h3>${escapeHtml(p.title)}</h3>
-                            <span class="project-status status-${p.progress >= 80 ? 'almost' : 'active'}">${p.status}</span>
-                        </div>
-                        <div class="project-client">
-                            <i data-lucide="user" style="width:14px;height:14px;"></i>
-                            Khách hàng: <strong>${escapeHtml(p.client)}</strong>
-                        </div>
-                        <div class="project-progress">
-                            <div class="progress-info">
-                                <span>Tiến độ</span>
-                                <span class="progress-pct">${p.progress}%</span>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width:${p.progress}%"></div>
-                            </div>
-                        </div>
-                        <div class="project-footer">
-                            <span class="project-deadline"><i data-lucide="calendar" style="width:14px;height:14px;"></i> Hạn: ${p.deadline}</span>
-                            <span class="project-budget">${formatVND(p.budget)}</span>
-                        </div>
-                        <div class="project-actions">
-                            <button class="btn-sm btn-primary" onclick="document.dispatchEvent(new CustomEvent('updateProgress', {detail:'${p.id}'}))">Cập nhật tiến độ</button>
-                            <button class="btn-sm btn-outline" onclick="document.dispatchEvent(new CustomEvent('submitProject', {detail:'${p.id}'}))">Nộp bài</button>
-                            <button class="btn-sm btn-ghost" onclick="document.dispatchEvent(new CustomEvent('chatClient', {detail:'${p.id}'}))"><i data-lucide="message-circle" style="width:14px;height:14px;"></i> Nhắn tin</button>
-                        </div>
-                    </div>
-                `).join('')}
+            <div class="projects-list" id="studentProjectsList">
+                <div style="padding:18px;color:var(--text-muted);font-weight:700;"><span class="spinner-border spinner-border-sm" style="margin-right:8px;"></span> Đang tải danh sách dự án...</div>
             </div>`;
         if (window.lucide) lucide.createIcons();
-        bindProjectActions();
+        loadStudentActiveContracts();
     }
 
-    function bindProjectActions() {
-        document.addEventListener('updateProgress', (e) => {
-            const p = mockProjects.find(p => p.id === e.detail);
-            if (p && p.progress < 100) {
-                p.progress = Math.min(100, p.progress + 10);
-                if (p.progress >= 100) p.status = 'Hoàn thành';
-                else if (p.progress >= 80) p.status = 'Sắp hoàn thành';
-                renderProjectsView();
-                showToast(`Đã cập nhật tiến độ: ${p.progress}%`, 'success');
-            }
-        }, { once: true });
-        document.addEventListener('submitProject', (e) => {
-            showToast('📤 Đã nộp bài thành công! Đang chờ khách hàng xác nhận.', 'success');
-        }, { once: true });
-        document.addEventListener('chatClient', (e) => {
-            showToast('💬 Đang mở cửa sổ chat...', 'info');
-            setTimeout(() => {
-                setActiveSidebar('messages');
-                currentSidebarMode = 'messages';
-                renderMessagesView();
-            }, 500);
-        }, { once: true });
+    function loadStudentActiveContracts() {
+        fetch('/Home/GetStudentActiveContracts')
+            .then(res => res.json())
+            .then(data => {
+                const list = document.getElementById('studentProjectsList');
+                if (!list) return;
+
+                if (!data.success) {
+                    showToast(data.message || 'Không thể tải danh sách dự án.', 'error');
+                    list.innerHTML = `<div style="padding:18px;color:#ef4444;font-weight:700;">Lỗi: ${data.message}</div>`;
+                    return;
+                }
+
+                const contracts = data.contracts || [];
+                if (!contracts.length) {
+                    list.innerHTML = '<div class="service-payment-empty" style="text-align:center; padding:40px; color:var(--text-muted); font-weight:600;">Chưa có dự án nào đang thực hiện.</div>';
+                    return;
+                }
+
+                list.innerHTML = contracts.map(p => `
+                    <div class="project-card animate-in" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:20px; margin-bottom:16px; box-shadow:0 4px 15px rgba(0,0,0,0.01);">
+                        <div class="project-header" style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; gap: 12px;">
+                            <h3 style="margin:0; font-size:1.1rem; font-weight:800; color:#0f172a;">${escapeHtml(p.title)}</h3>
+                            <span class="project-status" style="${p.contractStatus === 'Submitted' ? 'background:#fef3c7; color:#d97706;' : 'background:#ecfdf5; color:#059669;'} padding:4px 12px; border-radius:999px; font-size:0.75rem; font-weight:700;">${escapeHtml(p.status)}</span>
+                        </div>
+                        <div class="project-client" style="color:#475569; font-size:0.88rem; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                            <i data-lucide="building" style="width:16px;height:16px;color:#64748b;"></i>
+                            Khách hàng: <strong>${escapeHtml(p.client)}</strong>
+                        </div>
+                        <div class="project-footer" style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #f1f5f9; padding-top:14px; margin-top:14px;">
+                            <span class="project-deadline" style="font-size:0.85rem; color:#ef4444; font-weight:600; display:flex; align-items:center; gap:6px;">
+                                <i data-lucide="calendar" style="width:16px;height:16px;"></i> Hạn chót: ${escapeHtml(p.deadline)}
+                            </span>
+                            <span class="project-budget" style="font-size:1.1rem; font-weight:900; color:#0f766e;">${formatVND(p.budget)}</span>
+                        </div>
+                        <div class="project-actions" style="margin-top:16px; display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;">
+                            <button class="btn-sm btn-outline chat-client-btn" data-client-id="${p.clientId}" style="display:flex; align-items:center; gap:6px; font-weight:600; padding:6px 14px;">
+                                <i data-lucide="message-square" style="width:14px;height:14px;"></i> Trao đổi với khách hàng
+                            </button>
+                            ${p.studentCompleted ? `
+                                <button class="btn-sm" disabled style="display:flex; align-items:center; gap:6px; font-weight:600; padding:6px 14px; background:#d1fae5; color:#065f46; border:none; border-radius:8px; cursor:not-allowed; opacity:0.85;">
+                                    <i data-lucide="clock" style="width:14px;height:14px;"></i> ${p.businessCompleted ? 'Cả hai đã xác nhận' : 'Chờ doanh nghiệp xác nhận'}
+                                </button>
+                            ` : `
+                                <button class="btn-sm complete-project-btn" data-contract-id="${p.id}" style="display:flex; align-items:center; gap:6px; font-weight:700; padding:6px 16px; background:linear-gradient(135deg,#10b981,#059669); color:#fff; border:none; border-radius:8px; cursor:pointer; box-shadow:0 2px 8px rgba(16,185,129,0.25);">
+                                    <i data-lucide="check-circle" style="width:14px;height:14px;"></i> ${p.businessCompleted ? 'Xác nhận hoàn thành (DN đã xác nhận)' : 'Hoàn thành'}
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                `).join('');
+
+                if (window.lucide) lucide.createIcons();
+
+                // Bind chat click
+                list.querySelectorAll('.chat-client-btn').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        const clientId = Number(this.dataset.clientId);
+                        chatWithClient(clientId);
+                    });
+                });
+
+                // Bind complete click
+                list.querySelectorAll('.complete-project-btn').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        const contractId = Number(this.dataset.contractId);
+                        completeStudentProject(contractId);
+                    });
+                });
+            })
+            .catch(err => {
+                console.error(err);
+                const list = document.getElementById('studentProjectsList');
+                if (list) {
+                    list.innerHTML = `<div style="padding:18px;color:#ef4444;font-weight:700;">Không thể kết nối đến máy chủ.</div>`;
+                }
+            });
+    }
+
+    function completeStudentProject(contractId) {
+        showConfirmModal('Bạn chắc chắn muốn đánh dấu dự án này là hoàn thành? Trạng thái sẽ được lưu vào hệ thống.', () => {
+            const body = new FormData();
+            body.append('contractId', contractId);
+            fetch('/Home/CompleteContract', {
+                method: 'POST',
+                body: body,
+                headers: {
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                }
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast(data.message || 'Đã hoàn thành dự án!', 'success');
+                        loadStudentActiveContracts();
+                    } else {
+                        showToast(data.message || 'Lỗi khi hoàn thành dự án.', 'error');
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    showToast('Không thể kết nối đến máy chủ.', 'error');
+                });
+        }, 'Xác nhận hoàn thành dự án');
+    }
+
+    function chatWithClient(clientId) {
+        pendingChatUserId = clientId;
+        setActiveSidebar('messages');
+        currentSidebarMode = 'messages';
+        renderMessagesView();
+        showToast('Đang mở hội thoại với khách hàng...', 'info');
     }
 
     // ============================================
@@ -2630,9 +2914,7 @@
                             </div>
                         </div>
                         <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;">
-                            <button class="btn-modern-primary" id="btnViewBusinessJobs">
-                                <i data-lucide="briefcase-business" style="width:16px;height:16px;"></i> Xem trang việc làm
-                            </button>
+
                             <button class="btn-modern-primary" id="btnEditProfile">
                                 <i data-lucide="edit-3" style="width:16px;height:16px;"></i> Chỉnh sửa hồ sơ
                             </button>
@@ -2902,13 +3184,6 @@
 
         document.getElementById('btnEditProfile').addEventListener('click', () => {
             openEditProfileModal(data);
-        });
-
-        document.getElementById('btnViewBusinessJobs')?.addEventListener('click', () => {
-            const currentUserId = document.getElementById('userProfile')?.getAttribute('data-user-id');
-            if (currentUserId) {
-                window.location.href = `/business/${currentUserId}/jobs`;
-            }
         });
     }
 
@@ -3193,7 +3468,6 @@
                 </div>
                 <div class="modal-footer">
                     <button class="btn-apply-job" id="btnSaveProfile"><i data-lucide="save" style="width:16px;height:16px;"></i> Lưu hồ sơ</button>
-                    <button class="btn-modal-cancel">Hủy</button>
                 </div>
             </div>`;
 
@@ -3203,7 +3477,6 @@
         requestAnimationFrame(() => modal.classList.add('active'));
 
         modal.querySelector('.modal-close').addEventListener('click', () => closeModal(modal));
-        modal.querySelector('.btn-modal-cancel').addEventListener('click', () => closeModal(modal));
         modal.addEventListener('click', e => { if (e.target === modal) closeModal(modal); });
 
         const avatarInput = modal.querySelector('#editAvatarFile');
@@ -4363,10 +4636,11 @@
     }
 
     function renderBusinessMessagesView() {
+        const subtitle = isBusinessAccount() ? "Trao đổi với ứng viên và đối tác" : "Trao đổi với khách hàng và đối tác";
         mainContent.innerHTML = `
             <div class="page-header">
                 <h1 class="page-title"><i data-lucide="message-circle" style="width:24px;height:24px;"></i> Tin nhắn</h1>
-                <p class="page-subtitle">Trao đổi với ứng viên và đối tác</p>
+                <p class="page-subtitle">${subtitle}</p>
             </div>
             <div class="messages-container">
                 <div class="messages-list" id="businessMessagesList">
@@ -4512,121 +4786,7 @@
     }
 
     function renderMessagesView() {
-        if (isBusinessAccount()) {
-            renderBusinessMessagesView();
-            return;
-        }
-
-        mainContent.innerHTML = `
-            <div class="page-header">
-                <h1 class="page-title"><i data-lucide="message-circle" style="width:24px;height:24px;"></i> Tin nhắn</h1>
-                <p class="page-subtitle">Trò chuyện với khách hàng và đối tác</p>
-            </div>
-            <div class="messages-container">
-                <div class="messages-list">
-                    ${mockMessages.map(m => `
-                        <div class="message-item ${m.unread > 0 ? 'unread' : ''}" data-msg-id="${m.id}">
-                            <div class="msg-avatar" style="background:${m.avatarImg ? 'none' : (m.color || '#6366F1')}">
-                                ${m.avatarImg ? `<img src="${m.avatarImg}" alt="${m.name}" />` : m.avatar}
-                            </div>
-                            <div class="msg-content">
-                                <div class="msg-header">
-                                    <span class="msg-name">${escapeHtml(m.name)}</span>
-                                    <span class="msg-time">${m.time}</span>
-                                </div>
-                                <p class="msg-preview">${escapeHtml(m.lastMsg)}</p>
-                            </div>
-                            ${m.unread > 0 ? `<span class="msg-badge">${m.unread}</span>` : ''}
-                        </div>
-                    `).join('')}
-                </div>
-                <div class="chat-panel" id="chatPanel">
-                    <div class="chat-placeholder">
-                        <i data-lucide="message-square" style="width:48px;height:48px;color:var(--text-muted);"></i>
-                        <p>Chọn một cuộc trò chuyện để bắt đầu</p>
-                    </div>
-                </div>
-            </div>`;
-        if (window.lucide) lucide.createIcons();
-
-        // Bind message item clicks
-        document.querySelectorAll('.message-item').forEach(item => {
-            item.addEventListener('click', function () {
-                const msgId = this.dataset.msgId;
-                const msg = mockMessages.find(m => m.id === msgId);
-                if (!msg) return;
-                document.querySelectorAll('.message-item').forEach(i => i.classList.remove('selected'));
-                this.classList.add('selected');
-                this.classList.remove('unread');
-                const badge = this.querySelector('.msg-badge');
-                if (badge) badge.remove();
-                openChat(msg);
-            });
-        });
-    }
-
-    function openChat(msg) {
-        const chatPanel = document.getElementById('chatPanel');
-        if (!chatPanel) return;
-        const mockChats = [
-            { from: 'them', text: 'Chào bạn! Mình cần hỗ trợ dự án này.', time: '10:30' },
-            { from: 'me', text: 'Chào bạn! Mình sẵn sàng hỗ trợ ạ. Bạn có thể mô tả chi tiết hơn không?', time: '10:32' },
-            { from: 'them', text: msg.lastMsg, time: '10:45' }
-        ];
-        chatPanel.innerHTML = `
-            <div class="chat-header">
-                <div class="chat-user-info">
-                    <div class="msg-avatar small" style="background:${msg.avatarImg ? 'none' : (msg.color || '#6366F1')}">
-                        ${msg.avatarImg ? `<img src="${msg.avatarImg}" alt="" />` : msg.avatar}
-                    </div>
-                    <div>
-                        <div class="chat-user-name">${escapeHtml(msg.name)}</div>
-                        <div class="chat-status">Đang hoạt động</div>
-                    </div>
-                </div>
-            </div>
-            <div class="chat-messages" id="chatMessages">
-                ${mockChats.map(c => `
-                    <div class="chat-bubble ${c.from === 'me' ? 'me' : 'them'}">
-                        <p>${escapeHtml(c.text)}</p>
-                        <span class="bubble-time">${c.time}</span>
-                    </div>
-                `).join('')}
-            </div>
-            <div class="chat-input-area">
-                <input type="text" placeholder="Nhập tin nhắn..." class="chat-input" id="chatInput" />
-                <button class="chat-send-btn" id="chatSendBtn"><i data-lucide="send" style="width:18px;height:18px;"></i></button>
-            </div>`;
-        if (window.lucide) lucide.createIcons();
-
-        const chatInput = document.getElementById('chatInput');
-        const chatSendBtn = document.getElementById('chatSendBtn');
-        const chatMessages = document.getElementById('chatMessages');
-
-        function sendMsg() {
-            const text = chatInput.value.trim();
-            if (!text) return;
-            const bubble = document.createElement('div');
-            bubble.className = 'chat-bubble me';
-            const now = new Date();
-            bubble.innerHTML = `<p>${escapeHtml(text)}</p><span class="bubble-time">${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}</span>`;
-            chatMessages.appendChild(bubble);
-            chatInput.value = '';
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-
-            // Auto reply
-            setTimeout(() => {
-                const replies = ['Cảm ơn bạn! 👍', 'Ok mình hiểu rồi!', 'Để mình xem lại nhé!', 'Tuyệt vời! 🎉', 'Mình sẽ gửi lại sớm ạ.'];
-                const reply = document.createElement('div');
-                reply.className = 'chat-bubble them';
-                reply.innerHTML = `<p>${replies[Math.floor(Math.random() * replies.length)]}</p><span class="bubble-time">${now.getHours()}:${String(now.getMinutes() + 1).padStart(2, '0')}</span>`;
-                chatMessages.appendChild(reply);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }, 1500);
-        }
-
-        chatSendBtn?.addEventListener('click', sendMsg);
-        chatInput?.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMsg(); });
+        renderBusinessMessagesView();
     }
 
     // ============================================
@@ -5151,34 +5311,31 @@
                 </div>
                 <div class="modal-body">
                     <p class="modal-description">${escapeHtml(job.description)}</p>
-                    <div class="modal-details">
-                        <div class="detail-item">
+                    <div class="modal-details" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:20px;">
+                        <div class="detail-item" style="flex:1; min-width:140px; margin:0;">
                             <div class="detail-icon"><i data-lucide="banknote" style="width:18px;height:18px;"></i></div>
                             <div><div class="detail-label">Ngân sách</div><div class="detail-value">${budgetFormatted}</div></div>
                         </div>
-                        <div class="detail-item">
+                        <div class="detail-item" style="flex:1; min-width:140px; margin:0;">
                             <div class="detail-icon"><i data-lucide="clock" style="width:18px;height:18px;"></i></div>
                             <div><div class="detail-label">Thời hạn</div><div class="detail-value">${escapeHtml(job.deadline)}</div></div>
                         </div>
-                        <div class="detail-item">
+                        <div class="detail-item" style="flex:1; min-width:140px; margin:0;">
+                            <div class="detail-icon"><i data-lucide="award" style="width:18px;height:18px;"></i></div>
+                            <div><div class="detail-label">Kinh nghiệm</div><div class="detail-value">${escapeHtml(job.experienceLevel === 'No_Experience' ? 'Không yêu cầu' : job.experienceLevel === 'Expert' ? 'Chuyên gia' : job.experienceLevel === 'Mid_Level' ? 'Có kinh nghiệm' : job.experienceLevel || 'Không yêu cầu')}</div></div>
+                        </div>
+                        <div class="detail-item" style="flex:1; min-width:140px; margin:0;">
                             <div class="detail-icon"><i data-lucide="users" style="width:18px;height:18px;"></i></div>
-                            <div><div class="detail-label">Đề xuất</div><div class="detail-value" id="modalApplicants">${job.applicantsCount} người</div></div>
+                            <div><div class="detail-label">Tuyển dụng</div><div class="detail-value" id="modalApplicants">Đã nhận: ${job.hiredCount || 0}/${job.quantity || 1} (Có ${job.applicantsCount || 0} đề xuất)</div></div>
                         </div>
                     </div>
-                    <div class="escrow-notice">
-                        <div class="escrow-icon">🛡️</div>
-                        <div><strong>Bảo vệ bởi J4S Escrow</strong><p>Tiền được giữ an toàn trong ví trung gian. Freelancer nhận tiền sau khi khách hàng xác nhận hoàn thành.</p></div>
-                    </div>
-                    <div class="deadline-warning">
-                        <div class="warning-icon"><i data-lucide="alert-triangle" style="width:16px;height:16px;"></i></div>
-                        <div><strong>Cam kết thời hạn</strong><p>Trễ deadline sẽ bị trừ điểm uy tín và có thể bị hạn chế nhận việc mới.</p></div>
-                    </div>
+                    ${job.requirements ? `<h3 style="font-size:1rem;font-weight:700;color:#1e293b;margin-bottom:8px;margin-top:20px;">Yêu cầu ứng viên</h3>
+                    <p class="modal-description">${escapeHtml(job.requirements)}</p>` : ''}
                 </div>
                 <div class="modal-footer">
                     ${job.isApplied
                 ? '<button class="btn-applied" disabled><i data-lucide="check-circle" style="width:16px;height:16px;"></i> Đã ứng tuyển</button>'
                 : `<button class="btn-apply-job" id="btnApplyJob" data-job-id="${job.id}"><i data-lucide="send" style="width:16px;height:16px;"></i> Ứng tuyển ngay</button>`}
-                    <button class="btn-modal-cancel">Đóng</button>
                 </div>
             </div>`;
 
@@ -5187,7 +5344,6 @@
         requestAnimationFrame(() => modal.classList.add('active'));
 
         modal.querySelector('.modal-close').addEventListener('click', () => closeModal(modal));
-        modal.querySelector('.btn-modal-cancel').addEventListener('click', () => closeModal(modal));
         modal.addEventListener('click', e => { if (e.target === modal) closeModal(modal); });
 
         const applyBtn = modal.querySelector('#btnApplyJob');
@@ -5303,15 +5459,12 @@
                 <div style="padding:24px 28px 8px; font-family:'Inter', sans-serif;">
                     ${tip.content}
                 </div>
-                <div style="padding:16px 28px 24px; display:flex; justify-content:flex-end;">
-                    <button class="btn-modal-cancel" style="background:#f1f5f9; border:none; padding:10px 24px; border-radius:10px; font-weight:600; cursor:pointer; color:#475569; font-size:14px; transition:background 0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">Đóng</button>
                 </div>
             </div>`;
         document.body.appendChild(modal);
         if (window.lucide) lucide.createIcons();
         requestAnimationFrame(() => modal.classList.add('active'));
         modal.querySelector('.modal-close').addEventListener('click', () => closeModal(modal));
-        modal.querySelector('.btn-modal-cancel').addEventListener('click', () => closeModal(modal));
         modal.addEventListener('click', e => { if (e.target === modal) closeModal(modal); });
     };
 
@@ -5484,7 +5637,6 @@
                     <button class="btn-apply-job" onclick="this.closest('.modal-overlay').querySelector('.modal-close').click();">
                         <i data-lucide="message-circle" style="width:16px;height:16px;"></i> Nhắn tin
                     </button>
-                    <button class="btn-modal-cancel">Đóng</button>
                 </div>
             </div>`;
 
@@ -5493,7 +5645,6 @@
         requestAnimationFrame(() => modal.classList.add('active'));
 
         modal.querySelector('.modal-close').addEventListener('click', () => closeModal(modal));
-        modal.querySelector('.btn-modal-cancel').addEventListener('click', () => closeModal(modal));
         modal.addEventListener('click', e => { if (e.target === modal) closeModal(modal); });
 
         modal.querySelector('.btn-apply-job').addEventListener('click', () => {
@@ -5535,7 +5686,6 @@
                 </div>
                 <div class="modal-footer">
                     <button class="btn-apply-job" id="btnGenerateDepositQr"><i data-lucide="qr-code" style="width:16px;height:16px;"></i> Tạo mã QR</button>
-                    <button class="btn-modal-cancel">Đóng</button>
                 </div>
             </div>`;
 
@@ -5544,7 +5694,6 @@
         requestAnimationFrame(() => modal.classList.add('active'));
 
         modal.querySelector('.modal-close').addEventListener('click', () => closeModal(modal));
-        modal.querySelector('.btn-modal-cancel').addEventListener('click', () => closeModal(modal));
         modal.addEventListener('click', e => { if (e.target === modal) closeModal(modal); });
 
         modal.querySelector('#btnGenerateDepositQr').addEventListener('click', function () {
@@ -5615,14 +5764,12 @@
                 <button class="modal-close"><i data-lucide="x" style="width:20px;height:20px;"></i></button>
                 <div class="modal-header"><h2>${config.icon} ${config.title}</h2></div>
                 <div class="modal-body">${bodyContent}</div>
-                <div class="modal-footer"><button class="btn-modal-cancel">Đóng</button></div>
             </div>`;
 
         document.body.appendChild(modal);
         if (window.lucide) lucide.createIcons();
         requestAnimationFrame(() => modal.classList.add('active'));
         modal.querySelector('.modal-close').addEventListener('click', () => closeModal(modal));
-        modal.querySelector('.btn-modal-cancel').addEventListener('click', () => closeModal(modal));
         modal.addEventListener('click', e => { if (e.target === modal) closeModal(modal); });
     }
 
@@ -5925,7 +6072,7 @@
             currentSidebarMode = 'find';
             if (!isBusinessAccount()) {
                 const rs = document.getElementById('rightSidebar');
-                if (rs) rs.style.display = 'none';
+                if (rs) rs.style.display = '';
             }
             renderFindJobView();
         });
@@ -6074,7 +6221,6 @@
                 <div class="modal-footer">
                     <button class="btn-apply-job" id="btnSubmitJob"><i data-lucide="send" style="width:16px;height:16px;"></i> Đăng ngay</button>
                     <button class="btn-sm btn-outline" id="btnSaveDraftJob" type="button">Lưu nháp</button>
-                    <button class="btn-modal-cancel">Hủy</button>
                 </div>
             </div>`;
 
@@ -6083,7 +6229,6 @@
         requestAnimationFrame(() => modal.classList.add('active'));
 
         modal.querySelector('.modal-close').addEventListener('click', () => closeModal(modal));
-        modal.querySelector('.btn-modal-cancel').addEventListener('click', () => closeModal(modal));
         modal.addEventListener('click', e => { if (e.target === modal) closeModal(modal); });
 
         const dynCategory = modal.querySelector('#postJobCategory');

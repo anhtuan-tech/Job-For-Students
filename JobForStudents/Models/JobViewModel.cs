@@ -10,6 +10,8 @@ public class JobViewModel
     public decimal Budget { get; set; }
     public string Deadline { get; set; } = string.Empty;
     public int ApplicantsCount { get; set; }
+    public int Quantity { get; set; }
+    public int HiredCount { get; set; }
     public bool IsSaved { get; set; }
     public bool IsApplied { get; set; }
     public string BudgetType { get; set; } = string.Empty;

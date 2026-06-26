@@ -1214,6 +1214,10 @@
                     <span class="item-icon"><i data-lucide="file-text" style="width:18px;height:18px;"></i></span>
                     Quản lý tin đăng
                 </a>
+                <a href="#" class="sidebar-item" data-nav="approveCandidates" id="navApproveCandidates">
+                    <span class="item-icon"><i data-lucide="user-check" style="width:18px;height:18px;"></i></span>
+                    Duyệt ứng viên
+                </a>
                 <a href="#" class="sidebar-item" data-nav="topFreelancer" id="navTopFreelancer">
                     <span class="item-icon"><i data-lucide="users" style="width:18px;height:18px;"></i></span>
                     Ứng viên
@@ -1245,7 +1249,7 @@
                     <span class="item-icon"><i data-lucide="wallet" style="width:18px;height:18px;"></i></span>
                     Ví doanh nghiệp
                 </a>
-                <a href="#" class="sidebar-item" data-nav="messages" id="navMessages" style="position: relative;">
+                <a href="#" class="sidebar-item" data-nav="notifications" id="navNotifications" style="position: relative;">
                     <span class="item-icon"><i data-lucide="bell" style="width:18px;height:18px;"></i></span>
                     Thông báo
                     @{
@@ -1255,6 +1259,10 @@
                     {
                         <span class="sidebar-badge" style="background: #ef4444; color: white; border-radius: 9999px; padding: 2px 6px; font-size: 0.7rem; font-weight: bold; position: absolute; right: 16px; top: 50%; transform: translateY(-50%);">@unreadNotifications</span>
                     }
+                </a>
+                <a href="#" class="sidebar-item" data-nav="messages" id="navMessages" style="position: relative;">
+                    <span class="item-icon"><i data-lucide="message-square" style="width:18px;height:18px;"></i></span>
+                    Tin nhắn
                 </a>
             </div>
 
@@ -1317,6 +1325,10 @@
                     <a href="#" class="sidebar-item" data-nav="businessJobs" id="navBusinessJobs">
                         <span class="item-icon"><i data-lucide="briefcase-business" style="width:18px;height:18px;"></i></span>
                         Quản lý tin đăng
+                    </a>
+                    <a href="#" class="sidebar-item" data-nav="approveCandidates" id="navApproveCandidates">
+                        <span class="item-icon"><i data-lucide="user-check" style="width:18px;height:18px;"></i></span>
+                        Duyệt ứng viên
                     </a>
                     <a href="#" class="sidebar-item" data-nav="servicePackages" id="navServicePackages">
                         <span class="item-icon"><i data-lucide="package-check" style="width:18px;height:18px;"></i></span>
@@ -3326,30 +3338,40 @@
                 window.renderAdminTable('users', users, headers, rowRenderer, 'adminSectionBody');
             }
 
-            async function toggleUserStatus(userId) {
-                if (!confirm("Bạn có chắc chắn muốn thay đổi trạng thái hoạt động của tài khoản này?")) return;
-
-                try {
-                    const resToggle = await fetch(`/Home/ToggleUserStatus?userId=${userId}`, {
-                        method: 'POST',
-                        headers: {
-                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
-                        }
-                    });
-                    const data = await resToggle.json();
-
-                    if (data.success) {
-                        showToast("Cập nhật trạng thái thành công!", "success");
-                        window.adminDataCache.users = []; // invalidate cache
-                        renderAdminUsers(false);
-                        updateAdminStats();
-                    } else {
-                        showToast(data.message || "Lỗi khi cập nhật trạng thái.", "error");
+            function adminConfirm(message, onConfirm, title = 'Xác nhận') {
+                if (window.showConfirmModal) {
+                    window.showConfirmModal(message, onConfirm, title);
+                } else {
+                    if (confirm(message)) {
+                        onConfirm();
                     }
-                } catch (err) {
-                    console.error(err);
-                    showToast("Không thể kết nối đến máy chủ.", "error");
                 }
+            }
+
+            async function toggleUserStatus(userId) {
+                adminConfirm("Bạn có chắc chắn muốn thay đổi trạng thái hoạt động của tài khoản này?", async () => {
+                    try {
+                        const resToggle = await fetch(`/Home/ToggleUserStatus?userId=${userId}`, {
+                            method: 'POST',
+                            headers: {
+                                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                            }
+                        });
+                        const data = await resToggle.json();
+
+                        if (data.success) {
+                            showToast("Cập nhật trạng thái thành công!", "success");
+                            window.adminDataCache.users = []; // invalidate cache
+                            renderAdminUsers(false);
+                            updateAdminStats();
+                        } else {
+                            showToast(data.message || "Lỗi khi cập nhật trạng thái.", "error");
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        showToast("Không thể kết nối đến máy chủ.", "error");
+                    }
+                }, "Xác nhận đổi trạng thái");
             }
 
             async function renderAdminJobs(isPagedReload = false) {
@@ -3419,78 +3441,80 @@
             }
 
             async function approveJob(jobId) {
-                if (!confirm("Bạn có chắc chắn muốn duyệt tin tuyển dụng này?")) return;
-                try {
-                    const res = await fetch(`/Home/ApproveJob?id=${jobId}`, {
-                        method: 'POST',
-                        headers: {
-                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                adminConfirm("Bạn có chắc chắn muốn duyệt tin tuyển dụng này?", async () => {
+                    try {
+                        const res = await fetch(`/Home/ApproveJob?id=${jobId}`, {
+                            method: 'POST',
+                            headers: {
+                                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                            }
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            showToast("Đã duyệt tin thành công!", "success");
+                            // Clear pending job locally
+                            const idx = adminPendingJobsData.findIndex(x => x.id === jobId);
+                            if (idx > -1) adminPendingJobsData.splice(idx, 1);
+                            window.adminDataCache.allJobs = []; // invalidate cache
+                            renderAdminJobs(false);
+                        } else {
+                            showToast(data.message || "Lỗi khi duyệt tin", "error");
                         }
-                    });
-                    const data = await res.json();
-                    if (data.success) {
-                        showToast("Đã duyệt tin thành công!", "success");
-                        // Clear pending job locally
-                        const idx = adminPendingJobsData.findIndex(x => x.id === jobId);
-                        if (idx > -1) adminPendingJobsData.splice(idx, 1);
-                        window.adminDataCache.allJobs = []; // invalidate cache
-                        renderAdminJobs(false);
-                    } else {
-                        showToast(data.message || "Lỗi khi duyệt tin", "error");
+                    } catch (err) {
+                        showToast("Lỗi kết nối", "error");
                     }
-                } catch (err) {
-                    showToast("Lỗi kết nối", "error");
-                }
+                }, "Duyệt tin tuyển dụng");
             }
 
             async function rejectJob(jobId) {
-                if (!confirm("Bạn có chắc chắn muốn từ chối tin tuyển dụng này?")) return;
-                try {
-                    const res = await fetch(`/Home/RejectJob?id=${jobId}`, {
-                        method: 'POST',
-                        headers: {
-                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                adminConfirm("Bạn có chắc chắn muốn từ chối tin tuyển dụng này?", async () => {
+                    try {
+                        const res = await fetch(`/Home/RejectJob?id=${jobId}`, {
+                            method: 'POST',
+                            headers: {
+                                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                            }
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            showToast("Đã từ chối tin.", "success");
+                            // Clear pending job locally
+                            const idx = adminPendingJobsData.findIndex(x => x.id === jobId);
+                            if (idx > -1) adminPendingJobsData.splice(idx, 1);
+                            window.adminDataCache.allJobs = []; // invalidate cache
+                            renderAdminJobs(false);
+                        } else {
+                            showToast(data.message || "Lỗi khi từ chối tin", "error");
                         }
-                    });
-                    const data = await res.json();
-                    if (data.success) {
-                        showToast("Đã từ chối tin.", "success");
-                        // Clear pending job locally
-                        const idx = adminPendingJobsData.findIndex(x => x.id === jobId);
-                        if (idx > -1) adminPendingJobsData.splice(idx, 1);
-                        window.adminDataCache.allJobs = []; // invalidate cache
-                        renderAdminJobs(false);
-                    } else {
-                        showToast(data.message || "Lỗi khi từ chối tin", "error");
+                    } catch (err) {
+                        showToast("Lỗi kết nối", "error");
                     }
-                } catch (err) {
-                    showToast("Lỗi kết nối", "error");
-                }
+                }, "Từ chối tin tuyển dụng");
             }
 
             async function deleteJobPost(jobId) {
-                if (!confirm("Bạn có chắc chắn muốn gỡ (xóa) tin tuyển dụng này khỏi hệ thống?")) return;
-
-                try {
-                    const res = await fetch(`/Home/DeleteJobPost?jobId=${jobId}`, {
-                        method: 'POST',
-                        headers: {
-                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                adminConfirm("Bạn có chắc chắn muốn gỡ (xóa) tin tuyển dụng này khỏi hệ thống?", async () => {
+                    try {
+                        const res = await fetch(`/Home/DeleteJobPost?jobId=${jobId}`, {
+                            method: 'POST',
+                            headers: {
+                                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                            }
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            showToast("Đã gỡ tin tuyển dụng thành công!", "success");
+                            window.adminDataCache.allJobs = []; // invalidate cache
+                            renderAdminJobs(false);
+                            updateAdminStats();
+                        } else {
+                            showToast("Lỗi khi gỡ tin.", "error");
                         }
-                    });
-                    const data = await res.json();
-                    if (data.success) {
-                        showToast("Đã gỡ tin tuyển dụng thành công!", "success");
-                        window.adminDataCache.allJobs = []; // invalidate cache
-                        renderAdminJobs(false);
-                        updateAdminStats();
-                    } else {
-                        showToast("Lỗi khi gỡ tin.", "error");
+                    } catch (err) {
+                        console.error(err);
+                        showToast("Không thể kết nối đến máy chủ.", "error");
                     }
-                } catch (err) {
-                    console.error(err);
-                    showToast("Không thể kết nối đến máy chủ.", "error");
-                }
+                }, "Gỡ tin tuyển dụng");
             }
 
             async function renderAdminTxs(isPagedReload = false) {

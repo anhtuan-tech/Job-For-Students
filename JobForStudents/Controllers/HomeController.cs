@@ -80,6 +80,8 @@ public class HomeController : Controller
             Budget = j.Budget,
             Deadline = j.Deadline.ToString("dd/MM/yyyy"),
             ApplicantsCount = _context.JobBids.Count(b => b.JobPostId == j.Id),
+            Quantity = j.Quantity,
+            HiredCount = _context.JobBids.Count(b => b.JobPostId == j.Id && b.Status == BidStatus.Hired),
             IsSaved = savedJobIds.Contains(j.Id),
             IsApplied = appliedJobIds.Contains(j.Id),
             BudgetType = j.BudgetType.ToString(),
@@ -420,6 +422,8 @@ public class HomeController : Controller
             Budget = j.Budget,
             Deadline = j.Deadline.ToString("dd/MM/yyyy"),
             ApplicantsCount = _context.JobBids.Count(b => b.JobPostId == j.Id),
+            Quantity = j.Quantity,
+            HiredCount = _context.JobBids.Count(b => b.JobPostId == j.Id && b.Status == BidStatus.Hired),
             IsSaved = savedJobIds.Contains(j.Id),
             IsApplied = appliedJobIds.Contains(j.Id)
         }).ToList();
@@ -445,7 +449,7 @@ public class HomeController : Controller
         var jobQuery = _context.JobPosts
             .Include(j => j.JobPostSkills)
                 .ThenInclude(jps => jps.Skill)
-            .Where(j => !j.IsDeleted && j.Status == JobStatus.Open);
+            .Where(j => !j.IsDeleted && j.IsApproved && j.Status == JobStatus.Open);
 
         // Filter: keyword
         if (!string.IsNullOrEmpty(searchTerm))
@@ -512,6 +516,8 @@ public class HomeController : Controller
             Budget = j.Budget,
             Deadline = j.Deadline.ToString("dd/MM/yyyy"),
             ApplicantsCount = _context.JobBids.Count(b => b.JobPostId == j.Id),
+            Quantity = j.Quantity,
+            HiredCount = _context.JobBids.Count(b => b.JobPostId == j.Id && b.Status == BidStatus.Hired),
             IsSaved = savedJobIds.Contains(j.Id),
             IsApplied = appliedJobIds.Contains(j.Id),
             BudgetType = j.BudgetType.ToString(),
@@ -725,6 +731,8 @@ public class HomeController : Controller
                 budget = sj.JobPost.Budget,
                 deadline = sj.JobPost.Deadline.ToString("dd/MM/yyyy"),
                 applicantsCount = _context.JobBids.Count(b => b.JobPostId == sj.JobPostId),
+                quantity = sj.JobPost.Quantity,
+                hiredCount = _context.JobBids.Count(b => b.JobPostId == sj.JobPostId && b.Status == BidStatus.Hired),
                 isSaved = true,
                 isApplied = appliedJobIds.Contains(sj.JobPostId),
                 tags = sj.JobPost.JobPostSkills.Select(jps => jps.Skill.Name).ToList()
@@ -757,6 +765,8 @@ public class HomeController : Controller
                 budget = b.JobPost.Budget,
                 deadline = b.JobPost.Deadline.ToString("dd/MM/yyyy"),
                 applicantsCount = _context.JobBids.Count(jb => jb.JobPostId == b.JobPostId),
+                quantity = b.JobPost.Quantity,
+                hiredCount = _context.JobBids.Count(jb => jb.JobPostId == b.JobPostId && jb.Status == BidStatus.Hired),
                 isSaved = false,
                 isApplied = true,
                 status = b.Status.ToString(),
@@ -800,11 +810,14 @@ public class HomeController : Controller
             budget = job.Budget,
             deadline = job.Deadline.ToString("dd/MM/yyyy"),
             applicantsCount = await _context.JobBids.CountAsync(b => b.JobPostId == id),
+            quantity = job.Quantity,
+            hiredCount = await _context.JobBids.CountAsync(b => b.JobPostId == id && b.Status == BidStatus.Hired),
             isSaved,
             isApplied,
             tags = job.JobPostSkills.Select(jps => jps.Skill.Name).ToList(),
             budgetType = job.BudgetType.ToString(),
-            experienceLevel = job.ExperienceLevelRequired.ToString()
+            experienceLevel = job.ExperienceLevelRequired.ToString(),
+            requirements = job.Requirements
         });
     }
 
@@ -822,20 +835,91 @@ public class HomeController : Controller
         var contracts = await _context.JobContracts
             .Include(c => c.JobPost)
                 .ThenInclude(jp => jp.BusinessProfile)
-            .Where(c => c.StudentId == currentUserId.Value && c.Status == ContractStatus.Active)
+            .Where(c => c.StudentId == currentUserId.Value && (c.Status == ContractStatus.Active || c.Status == ContractStatus.Submitted))
             .OrderByDescending(c => c.CreatedAt)
             .Select(c => new
             {
                 id = c.Id,
                 title = c.JobPost.Title,
                 client = c.BusinessProfile != null ? c.BusinessProfile.CompanyName : "Unknown",
-                status = "Đang thực hiện",
+                clientId = c.BusinessId,
+                status = c.Status == ContractStatus.Submitted ? "Đang xác nhận" : "Đang thực hiện",
                 deadline = c.JobPost.Deadline.ToString("dd/MM/yyyy"),
-                budget = (double)c.FinalPrice
+                budget = (double)c.FinalPrice,
+                studentCompleted = c.DeliverableContent != null && c.DeliverableContent.Contains("StudentCompleted"),
+                businessCompleted = c.DeliverableContent != null && c.DeliverableContent.Contains("BusinessCompleted"),
+                contractStatus = c.Status.ToString()
             })
             .ToListAsync();
 
         return Json(new { success = true, contracts = contracts });
+    }
+
+    [Authorize(Roles = "Student")]
+    [HttpPost]
+    public async Task<IActionResult> CompleteContract([FromForm] int contractId)
+    {
+        var currentUserId = GetCurrentUserId();
+        if (!currentUserId.HasValue)
+        {
+            return Json(new { success = false, message = "Vui lòng đăng nhập." });
+        }
+
+        var contract = await _context.JobContracts
+            .Include(c => c.JobPost)
+            .FirstOrDefaultAsync(c => c.Id == contractId && c.StudentId == currentUserId.Value);
+
+        if (contract == null)
+        {
+            return Json(new { success = false, message = "Không tìm thấy hợp đồng hợp lệ hoặc bạn không có quyền." });
+        }
+
+        if (contract.Status == ContractStatus.Completed)
+        {
+            return Json(new { success = false, message = "Hợp đồng đã hoàn thành trước đó." });
+        }
+
+        if (contract.DeliverableContent != null && contract.DeliverableContent.Contains("StudentCompleted"))
+        {
+            return Json(new { success = false, message = "Bạn đã xác nhận hoàn thành trước đó, vui lòng đợi doanh nghiệp xác nhận." });
+        }
+
+        // Update DeliverableContent flag
+        contract.DeliverableContent = string.IsNullOrEmpty(contract.DeliverableContent)
+            ? "StudentCompleted"
+            : contract.DeliverableContent + ",StudentCompleted";
+
+        bool isFullyCompleted = contract.DeliverableContent.Contains("BusinessCompleted");
+        if (isFullyCompleted)
+        {
+            contract.Status = ContractStatus.Completed;
+            contract.CompletedAt = DateTime.UtcNow;
+
+            // Notify Business
+            _context.Notifications.Add(new Notification
+            {
+                UserId = contract.BusinessId,
+                Title = "Dự án đã hoàn thành",
+                Message = $"Sinh viên đã xác nhận hoàn thành dự án \"{contract.JobPost.Title}\". Trạng thái hợp đồng hiện tại là Hoàn thành.",
+                Type = NotificationType.JobStatus,
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+        else
+        {
+            contract.Status = ContractStatus.Submitted;
+        }
+
+        await _context.SaveChangesAsync();
+
+        return Json(new
+        {
+            success = true,
+            message = isFullyCompleted
+                ? "Chúc mừng! Cả hai bên đã xác nhận hoàn thành dự án thành công."
+                : "Xác nhận thành công. Đang đợi doanh nghiệp xác nhận hoàn thành."
+        });
     }
 
     [Authorize(Roles = "Business")]
@@ -1004,7 +1088,33 @@ public class HomeController : Controller
         else if (action == "hire")
         {
             bid.Status = BidStatus.Hired;
-            bid.JobPost.Status = JobStatus.In_Progress;
+
+            var alreadyHiredCount = await _context.JobBids.CountAsync(b => b.JobPostId == bid.JobPostId && b.Status == BidStatus.Hired && b.Id != bid.Id);
+            var hiredCount = alreadyHiredCount + 1;
+
+            if (hiredCount >= bid.JobPost.Quantity)
+            {
+                bid.JobPost.Status = JobStatus.In_Progress;
+
+                // Tự động từ chối các ứng viên khác (chưa bị từ chối/hired) của cùng job này
+                var otherBids = await _context.JobBids
+                    .Where(b => b.JobPostId == bid.JobPostId && b.Id != bid.Id && b.Status != BidStatus.Rejected && b.Status != BidStatus.Hired)
+                    .ToListAsync();
+
+                foreach (var other in otherBids)
+                {
+                    other.Status = BidStatus.Rejected;
+                    _context.Notifications.Add(new Notification
+                    {
+                        UserId = other.StudentId,
+                        Title = "Kết quả ứng tuyển công việc",
+                        Message = $"Hồ sơ ứng tuyển của bạn cho công việc \"{bid.JobPost.Title}\" không được chọn.",
+                        Type = NotificationType.JobStatus,
+                        IsRead = false,
+                        CreatedAt = DateTime.UtcNow
+                    });
+                }
+            }
 
             var existingContract = await _context.JobContracts
                 .AnyAsync(c => c.JobPostId == bid.JobPostId && c.StudentId == bid.StudentId && c.BusinessId == currentUserId.Value);
@@ -1031,25 +1141,6 @@ public class HomeController : Controller
                 IsRead = false,
                 CreatedAt = DateTime.UtcNow
             });
-
-            // Tự động từ chối các ứng viên khác (chưa bị từ chối) của cùng job này
-            var otherBids = await _context.JobBids
-                .Where(b => b.JobPostId == bid.JobPostId && b.Id != bid.Id && b.Status != BidStatus.Rejected)
-                .ToListAsync();
-
-            foreach (var other in otherBids)
-            {
-                other.Status = BidStatus.Rejected;
-                _context.Notifications.Add(new Notification
-                {
-                    UserId = other.StudentId,
-                    Title = "Kết quả ứng tuyển công việc",
-                    Message = $"Hồ sơ ứng tuyển của bạn cho công việc \"{bid.JobPost.Title}\" không được chọn.",
-                    Type = NotificationType.JobStatus,
-                    IsRead = false,
-                    CreatedAt = DateTime.UtcNow
-                });
-            }
         }
         else if (action == "reject")
         {
@@ -1959,8 +2050,10 @@ public class HomeController : Controller
                 deadline = j.Deadline.ToString("yyyy-MM-dd"),
                 deadlineText = j.Deadline.ToString("dd/MM/yyyy"),
                 status = j.Status.ToString(),
-                statusText = GetJobStatusText(j.Status),
+                statusText = GetJobStatusText(j.Status, j.IsApproved),
+                isApproved = j.IsApproved,
                 applicantsCount = j.JobBids.Count,
+                hiredCount = j.JobBids.Count(b => b.Status == BidStatus.Hired),
                 skills = j.JobPostSkills.Select(jps => jps.Skill.Name).ToList(),
                 category = j.Category ?? (j.JobPostSkills.FirstOrDefault()?.Skill.Category ?? "Khác"),
                 createdAt = j.CreatedAt.ToString("dd/MM/yyyy")
@@ -2074,7 +2167,7 @@ public class HomeController : Controller
         {
             UserId = currentUserId.Value,
             Title = request.Id.HasValue ? "Tin tuyển dụng đã được cập nhật" : "Tin tuyển dụng đã được tạo",
-            Message = $"Tin \"{job.Title}\" đang ở trạng thái {GetJobStatusText(job.Status)}.",
+            Message = $"Tin \"{job.Title}\" đang ở trạng thái {GetJobStatusText(job.Status, job.IsApproved)}.",
             Type = NotificationType.JobStatus,
             IsRead = false,
             CreatedAt = DateTime.UtcNow
@@ -2106,7 +2199,7 @@ public class HomeController : Controller
         job.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
-        return Json(new { success = true, message = $"Đã chuyển tin sang trạng thái {GetJobStatusText(job.Status)}." });
+        return Json(new { success = true, message = $"Đã chuyển tin sang trạng thái {GetJobStatusText(job.Status, job.IsApproved)}." });
     }
 
     [Authorize(Roles = "Business")]
@@ -2133,6 +2226,12 @@ public class HomeController : Controller
     [HttpGet]
     public async Task<IActionResult> GetJobApplicants(int jobId)
     {
+        var currentUserId = GetCurrentUserId();
+        if (!currentUserId.HasValue)
+        {
+            return Json(new { success = false, message = "Vui lòng đăng nhập." });
+        }
+
         var job = await GetOwnedJobPost(jobId);
         if (job == null)
         {
@@ -2149,25 +2248,103 @@ public class HomeController : Controller
             .OrderByDescending(b => b.CreatedAt)
             .ToListAsync();
 
+        var contracts = await _context.JobContracts
+            .Where(c => c.JobPostId == jobId && c.BusinessId == currentUserId.Value)
+            .ToListAsync();
+
         return Json(new
         {
             success = true,
             jobTitle = job.Title,
-            applicants = applicants.Select(b => new
-            {
-                id = b.Id,
-                studentId = b.StudentId,
-                name = b.StudentProfile.FullName,
-                avatarUrl = b.StudentProfile.AvatarUrl ?? "",
-                email = b.StudentProfile.User.Email,
-                phone = b.StudentProfile.User.Phone,
-                bidAmount = b.BidAmount,
-                estimatedDays = b.EstimatedDays,
-                proposal = b.Proposal,
-                status = b.Status.ToString(),
-                createdAt = b.CreatedAt.ToString("dd/MM/yyyy"),
-                skills = b.StudentProfile.StudentSkills.Select(ss => ss.Skill.Name).ToList()
+            applicants = applicants.Select(b => {
+                var contract = contracts.FirstOrDefault(c => c.StudentId == b.StudentId);
+                return new
+                {
+                    id = b.Id,
+                    studentId = b.StudentId,
+                    name = b.StudentProfile.FullName,
+                    avatarUrl = b.StudentProfile.AvatarUrl ?? "",
+                    email = b.StudentProfile.User.Email,
+                    phone = b.StudentProfile.User.Phone,
+                    bidAmount = b.BidAmount,
+                    estimatedDays = b.EstimatedDays,
+                    proposal = b.Proposal,
+                    status = b.Status.ToString(),
+                    createdAt = b.CreatedAt.ToString("dd/MM/yyyy"),
+                    skills = b.StudentProfile.StudentSkills.Select(ss => ss.Skill.Name).ToList(),
+                    contractId = contract?.Id,
+                    contractStatus = contract?.Status.ToString(),
+                    studentCompleted = contract?.DeliverableContent != null && contract.DeliverableContent.Contains("StudentCompleted"),
+                    businessCompleted = contract?.DeliverableContent != null && contract.DeliverableContent.Contains("BusinessCompleted")
+                };
             }).ToList()
+        });
+    }
+
+    [Authorize(Roles = "Business")]
+    [HttpPost]
+    public async Task<IActionResult> CompleteContractBusiness([FromForm] int contractId)
+    {
+        var currentUserId = GetCurrentUserId();
+        if (!currentUserId.HasValue)
+        {
+            return Json(new { success = false, message = "Vui lòng đăng nhập." });
+        }
+
+        var contract = await _context.JobContracts
+            .Include(c => c.JobPost)
+            .FirstOrDefaultAsync(c => c.Id == contractId && c.BusinessId == currentUserId.Value);
+
+        if (contract == null)
+        {
+            return Json(new { success = false, message = "Không tìm thấy hợp đồng hợp lệ hoặc bạn không có quyền." });
+        }
+
+        if (contract.Status == ContractStatus.Completed)
+        {
+            return Json(new { success = false, message = "Hợp đồng đã hoàn thành trước đó." });
+        }
+
+        if (contract.DeliverableContent != null && contract.DeliverableContent.Contains("BusinessCompleted"))
+        {
+            return Json(new { success = false, message = "Bạn đã xác nhận hoàn thành trước đó, vui lòng đợi sinh viên xác nhận." });
+        }
+
+        // Update DeliverableContent flag
+        contract.DeliverableContent = string.IsNullOrEmpty(contract.DeliverableContent)
+            ? "BusinessCompleted"
+            : contract.DeliverableContent + ",BusinessCompleted";
+
+        bool isFullyCompleted = contract.DeliverableContent.Contains("StudentCompleted");
+        if (isFullyCompleted)
+        {
+            contract.Status = ContractStatus.Completed;
+            contract.CompletedAt = DateTime.UtcNow;
+
+            // Notify Student
+            _context.Notifications.Add(new Notification
+            {
+                UserId = contract.StudentId,
+                Title = "Dự án đã hoàn thành",
+                Message = $"Doanh nghiệp đã xác nhận hoàn thành dự án \"{contract.JobPost.Title}\". Trạng thái hợp đồng hiện tại là Hoàn thành.",
+                Type = NotificationType.JobStatus,
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+        else
+        {
+            contract.Status = ContractStatus.Submitted;
+        }
+
+        await _context.SaveChangesAsync();
+
+        return Json(new
+        {
+            success = true,
+            message = isFullyCompleted
+                ? "Chúc mừng! Cả hai bên đã xác nhận hoàn thành dự án thành công."
+                : "Xác nhận thành công. Đang đợi sinh viên xác nhận hoàn thành."
         });
     }
 
@@ -2181,7 +2358,6 @@ public class HomeController : Controller
             return Json(new { success = false, message = "Chưa đăng nhập." });
         }
 
-        var fromDate = DateTime.UtcNow.AddDays(-7);
         var applicants = await _context.JobBids
             .Include(b => b.JobPost)
             .Include(b => b.StudentProfile)
@@ -2190,10 +2366,8 @@ public class HomeController : Controller
                 .ThenInclude(sp => sp.StudentSkills)
                     .ThenInclude(ss => ss.Skill)
             .Where(b => b.JobPost.BusinessId == currentUserId.Value
-                && !b.JobPost.IsDeleted
-                && b.CreatedAt >= fromDate)
+                && !b.JobPost.IsDeleted)
             .OrderByDescending(b => b.CreatedAt)
-            .Take(20)
             .ToListAsync();
 
         return Json(new
@@ -2213,6 +2387,7 @@ public class HomeController : Controller
                 proposal = b.Proposal,
                 appliedAt = b.CreatedAt.ToString("dd/MM/yyyy"),
                 appliedAgo = GetTimeAgo(b.CreatedAt),
+                status = b.Status.ToString(),
                 skills = b.StudentProfile.StudentSkills.Select(ss => ss.Skill.Name).Take(6).ToList()
             }).ToList()
         });
@@ -2893,12 +3068,12 @@ public class HomeController : Controller
         }
     }
 
-    private static string GetJobStatusText(JobStatus status)
+    private static string GetJobStatusText(JobStatus status, bool isApproved = true)
     {
         return status switch
         {
             JobStatus.Draft => "Bản nháp",
-            JobStatus.Open => "Đã duyệt đăng",
+            JobStatus.Open => isApproved ? "Đã duyệt đăng" : "Chưa được duyệt",
             JobStatus.In_Progress => "Đang thực hiện",
             JobStatus.Paused => "Tạm dừng",
             JobStatus.Closed => "Đã đóng",
