@@ -427,10 +427,17 @@ public class HomeController : Controller
         return Json(jobsList);
     }
 
-    // GET: /Home/SearchJobs?searchTerm=poster — Public (allow anonymous browsing)
+    // GET: /Home/SearchJobs — Public (allow anonymous browsing)
     [AllowAnonymous]
     [HttpGet]
-    public async Task<IActionResult> SearchJobs(string searchTerm)
+    public async Task<IActionResult> SearchJobs(
+        string? searchTerm,
+        string? category,
+        decimal? minBudget,
+        decimal? maxBudget,
+        int? daysAgo,
+        string? experienceLevel,
+        string? sortBy)
     {
         var currentUserId = GetCurrentUserId();
         var isStudent = User.IsInRole("Student");
@@ -440,6 +447,7 @@ public class HomeController : Controller
                 .ThenInclude(jps => jps.Skill)
             .Where(j => !j.IsDeleted && j.Status == JobStatus.Open);
 
+        // Filter: keyword
         if (!string.IsNullOrEmpty(searchTerm))
         {
             var term = searchTerm.ToLower();
@@ -450,14 +458,47 @@ public class HomeController : Controller
             );
         }
 
-        var jobPosts = await jobQuery.OrderByDescending(j => j.CreatedAt).ToListAsync();
+        // Filter: category
+        if (!string.IsNullOrEmpty(category))
+            jobQuery = jobQuery.Where(j => j.Category == category);
+
+        // Filter: budget range
+        if (minBudget.HasValue)
+            jobQuery = jobQuery.Where(j => j.Budget >= minBudget.Value);
+        if (maxBudget.HasValue)
+            jobQuery = jobQuery.Where(j => j.Budget <= maxBudget.Value);
+
+        // Filter: posted time
+        if (daysAgo.HasValue && daysAgo.Value > 0)
+        {
+            var cutoff = DateTime.UtcNow.AddDays(-daysAgo.Value);
+            jobQuery = jobQuery.Where(j => j.CreatedAt >= cutoff);
+        }
+
+        // Filter: experience level
+        if (!string.IsNullOrEmpty(experienceLevel) &&
+            Enum.TryParse<ExperienceLevel>(experienceLevel, out var expLevel))
+        {
+            jobQuery = jobQuery.Where(j => j.ExperienceLevelRequired == expLevel);
+        }
+
+        // Sort
+        jobQuery = (sortBy ?? "newest") switch
+        {
+            "budget_asc"  => jobQuery.OrderBy(j => j.Budget),
+            "budget_desc" => jobQuery.OrderByDescending(j => j.Budget),
+            "applicants"  => jobQuery.OrderByDescending(j => j.JobBids.Count),
+            _             => jobQuery.OrderByDescending(j => j.CreatedAt)
+        };
+
+        var jobPosts = await jobQuery.ToListAsync();
 
         var savedJobIds = new HashSet<int>();
         var appliedJobIds = new HashSet<int>();
 
         if (currentUserId.HasValue && isStudent)
         {
-            savedJobIds = new HashSet<int>(await _context.SavedJobs.Where(sj => sj.StudentId == currentUserId.Value).Select(sj => sj.JobPostId).ToListAsync());
+            savedJobIds  = new HashSet<int>(await _context.SavedJobs.Where(sj => sj.StudentId == currentUserId.Value).Select(sj => sj.JobPostId).ToListAsync());
             appliedJobIds = new HashSet<int>(await _context.JobBids.Where(jb => jb.StudentId == currentUserId.Value).Select(jb => jb.JobPostId).ToListAsync());
         }
 
@@ -479,6 +520,20 @@ public class HomeController : Controller
         }).ToList();
 
         return Json(jobsList);
+    }
+
+    // GET: /Home/GetCategories
+    [AllowAnonymous]
+    [HttpGet]
+    public async Task<IActionResult> GetCategories()
+    {
+        var categories = await _context.JobPosts
+            .Where(j => !j.IsDeleted && j.IsApproved && j.Status == JobStatus.Open && j.Category != null && j.Category != "")
+            .Select(j => j.Category)
+            .Distinct()
+            .OrderBy(c => c)
+            .ToListAsync();
+        return Json(categories);
     }
 
     // POST: /Home/ToggleSaveJob
@@ -638,6 +693,119 @@ public class HomeController : Controller
             .ToListAsync();
 
         return Json(new { success = true, bids = bids });
+    }
+
+    // GET: /Home/GetSavedJobs — Returns saved jobs for current student
+    [Authorize(Roles = "Student")]
+    [HttpGet]
+    public async Task<IActionResult> GetSavedJobs()
+    {
+        var currentUserId = GetCurrentUserId();
+        if (!currentUserId.HasValue)
+            return Json(new List<object>());
+
+        var appliedJobIds = new HashSet<int>(
+            await _context.JobBids
+                .Where(jb => jb.StudentId == currentUserId.Value)
+                .Select(jb => jb.JobPostId)
+                .ToListAsync());
+
+        var savedJobs = await _context.SavedJobs
+            .Include(sj => sj.JobPost)
+                .ThenInclude(jp => jp.JobPostSkills)
+                    .ThenInclude(jps => jps.Skill)
+            .Where(sj => sj.StudentId == currentUserId.Value && !sj.JobPost.IsDeleted)
+            .OrderByDescending(sj => sj.SavedAt)
+            .Select(sj => new
+            {
+                id = sj.JobPost.Id.ToString(),
+                title = sj.JobPost.Title,
+                description = sj.JobPost.Description,
+                category = sj.JobPost.Category ?? (sj.JobPost.JobPostSkills.Select(jps => jps.Skill.Category).FirstOrDefault() ?? "Khác"),
+                budget = sj.JobPost.Budget,
+                deadline = sj.JobPost.Deadline.ToString("dd/MM/yyyy"),
+                applicantsCount = _context.JobBids.Count(b => b.JobPostId == sj.JobPostId),
+                isSaved = true,
+                isApplied = appliedJobIds.Contains(sj.JobPostId),
+                tags = sj.JobPost.JobPostSkills.Select(jps => jps.Skill.Name).ToList()
+            })
+            .ToListAsync();
+
+        return Json(savedJobs);
+    }
+
+    // GET: /Home/GetAppliedJobs — Returns jobs the student applied to
+    [Authorize(Roles = "Student")]
+    [HttpGet]
+    public async Task<IActionResult> GetAppliedJobs()
+    {
+        var currentUserId = GetCurrentUserId();
+        if (!currentUserId.HasValue)
+            return Json(new List<object>());
+
+        var appliedJobs = await _context.JobBids
+            .Include(b => b.JobPost)
+                .ThenInclude(jp => jp.BusinessProfile)
+            .Where(b => b.StudentId == currentUserId.Value && !b.JobPost.IsDeleted)
+            .OrderByDescending(b => b.CreatedAt)
+            .Select(b => new
+            {
+                id = b.JobPost.Id.ToString(),
+                title = b.JobPost.Title,
+                description = b.JobPost.Description,
+                category = b.JobPost.Category ?? "Khác",
+                budget = b.JobPost.Budget,
+                deadline = b.JobPost.Deadline.ToString("dd/MM/yyyy"),
+                applicantsCount = _context.JobBids.Count(jb => jb.JobPostId == b.JobPostId),
+                isSaved = false,
+                isApplied = true,
+                status = b.Status.ToString(),
+                appliedDate = b.CreatedAt,
+                businessName = b.JobPost.BusinessProfile != null ? b.JobPost.BusinessProfile.CompanyName : ""
+            })
+            .ToListAsync();
+
+        return Json(appliedJobs);
+    }
+
+    // GET: /Home/GetJobDetail/{id} — Returns job details for modal
+    [AllowAnonymous]
+    [HttpGet]
+    public async Task<IActionResult> GetJobDetail(int id)
+    {
+        var currentUserId = GetCurrentUserId();
+        var isStudent = User.IsInRole("Student");
+
+        var job = await _context.JobPosts
+            .Include(j => j.JobPostSkills)
+                .ThenInclude(jps => jps.Skill)
+            .FirstOrDefaultAsync(j => j.Id == id && !j.IsDeleted);
+
+        if (job == null)
+            return Json(new { error = "Không tìm thấy công việc." });
+
+        bool isSaved = false, isApplied = false;
+        if (currentUserId.HasValue && isStudent)
+        {
+            isSaved = await _context.SavedJobs.AnyAsync(sj => sj.StudentId == currentUserId.Value && sj.JobPostId == id);
+            isApplied = await _context.JobBids.AnyAsync(jb => jb.StudentId == currentUserId.Value && jb.JobPostId == id);
+        }
+
+        return Json(new
+        {
+            id = job.Id.ToString(),
+            title = job.Title,
+            description = job.Description,
+            category = job.Category ?? (job.JobPostSkills.FirstOrDefault()?.Skill.Category ?? "Khác"),
+            budget = job.Budget,
+            deadline = job.Deadline.ToString("dd/MM/yyyy"),
+            applicantsCount = await _context.JobBids.CountAsync(b => b.JobPostId == id),
+            isSaved,
+            isApplied,
+            tags = job.JobPostSkills.Select(jps => jps.Skill.Name).ToList(),
+            budgetType = job.BudgetType.ToString(),
+            experienceLevel = job.ExperienceLevelRequired.ToString()
+        });
     }
 
     // GET: /Home/GetStudentActiveContracts — Requires Student role

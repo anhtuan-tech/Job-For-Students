@@ -345,25 +345,32 @@
                 searchInput.value = '';
                 currentSidebarMode = nav;
 
+                // Handle right sidebar display for students (hide if not on home page)
+                if (!isBusinessAccount()) {
+                    const rs = document.getElementById('rightSidebar');
+                    if (rs) {
+                        if (nav === 'home') {
+                            rs.style.display = '';
+                        } else {
+                            rs.style.display = 'none';
+                        }
+                    }
+                }
+
                 switch (nav) {
                     case 'home':
                         restoreHomeView();
                         renderJobs(allJobs);
                         break;
                     case 'find':
-                        restoreHomeView();
-                        renderJobs(allJobs);
+                        renderFindJobView();
                         searchInput.focus();
                         break;
                     case 'saved':
-                        restoreHomeView();
-                        renderJobs(allJobs.filter(j => j.isSaved));
-                        updateSectionTitle('Việc đã lưu');
+                        renderSavedJobsView();
                         break;
                     case 'applied':
-                        restoreHomeView();
-                        renderJobs(allJobs.filter(j => j.isApplied));
-                        updateSectionTitle('Đã ứng tuyển');
+                        renderAppliedJobsView();
                         break;
                     case 'projects':
                         if (document.querySelector('.dashboard-layout')?.classList.contains('layout-business')) {
@@ -510,6 +517,394 @@
                     .catch(err => console.error(err));
             });
         }
+    }
+
+    // ============================================
+    // STUDENT VIEWS — Tìm việc / Đã lưu / Đã ứng tuyển
+    // ============================================
+
+    function renderFindJobView() {
+        if (!mainContent) return;
+        mainContent.innerHTML = `
+            <!-- Page Header -->
+            <div class="animate-in" style="margin-bottom:24px;">
+                <h1 style="font-size:1.5rem;font-weight:800;color:#0f172a;margin:0 0 4px;display:flex;align-items:center;gap:10px;">
+                    <span style="background:#eff6ff;color:#2563eb;border-radius:12px;padding:8px 10px;display:inline-flex;"><i data-lucide="search" style="width:20px;height:20px;"></i></span>
+                    Tìm việc
+                </h1>
+                <p style="color:#64748b;font-size:0.9rem;margin:0;">Khám phá hàng trăm công việc freelance phù hợp với kỹ năng của bạn.</p>
+            </div>
+
+            <!-- Search Bar -->
+            <div style="background:#fff;border:1px solid #e2e8f0;border-radius:18px;padding:16px 20px;margin-bottom:18px;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+                <div style="display:flex;gap:10px;align-items:center;">
+                    <div style="position:relative;flex:1;">
+                        <i data-lucide="search" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);width:17px;height:17px;color:#94a3b8;pointer-events:none;"></i>
+                        <input id="fjKeyword" type="text" placeholder="Tên công việc, kỹ năng, từ khóa..." style="width:100%;border:1px solid #e2e8f0;border-radius:12px;padding:11px 14px 11px 40px;font-size:0.9rem;outline:none;font-family:'Inter',sans-serif;transition:border-color 0.2s;"
+                            onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#e2e8f0'" />
+                    </div>
+                    <button id="fjSearch" style="background:#2563eb;color:#fff;border:none;border-radius:12px;padding:11px 26px;font-weight:700;cursor:pointer;font-size:0.9rem;white-space:nowrap;transition:background 0.2s;display:flex;align-items:center;gap:6px;"
+                        onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'">
+                        <i data-lucide="search" style="width:15px;height:15px;"></i> Tìm ngay
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filters Row -->
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;align-items:flex-end;">
+                <div style="flex:1;min-width:160px;">
+                    <label style="font-size:0.75rem;font-weight:700;color:#64748b;display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em;">Ngành nghề</label>
+                    <select id="fjCategory" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:9px 12px;font-size:0.85rem;color:#334155;outline:none;background:#fff;cursor:pointer;">
+                        <option value="">Đang tải...</option>
+                    </select>
+                </div>
+
+                <!-- Mức lương -->
+                <div style="flex:1;min-width:160px;">
+                    <label style="font-size:0.75rem;font-weight:700;color:#64748b;display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em;">Mức lương (đ)</label>
+                    <select id="fjBudget" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:9px 12px;font-size:0.85rem;color:#334155;outline:none;background:#fff;cursor:pointer;">
+                        <option value="">Tất cả mức</option>
+                        <option value="0-500000">Dưới 500k</option>
+                        <option value="500000-2000000">500k – 2 triệu</option>
+                        <option value="2000000-5000000">2 – 5 triệu</option>
+                        <option value="5000000-10000000">5 – 10 triệu</option>
+                        <option value="10000000-">Trên 10 triệu</option>
+                    </select>
+                </div>
+
+                <!-- Thời gian đăng -->
+                <div style="flex:1;min-width:160px;">
+                    <label style="font-size:0.75rem;font-weight:700;color:#64748b;display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em;">Thời gian đăng</label>
+                    <select id="fjDaysAgo" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:9px 12px;font-size:0.85rem;color:#334155;outline:none;background:#fff;cursor:pointer;">
+                        <option value="">Tất cả thời gian</option>
+                        <option value="1">Hôm nay</option>
+                        <option value="3">3 ngày gần đây</option>
+                        <option value="7">Tuần này</option>
+                        <option value="30">Tháng này</option>
+                    </select>
+                </div>
+
+                <!-- Kinh nghiệm -->
+                <div style="flex:1;min-width:160px;">
+                    <label style="font-size:0.75rem;font-weight:700;color:#64748b;display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em;">Kinh nghiệm</label>
+                    <select id="fjExperience" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:9px 12px;font-size:0.85rem;color:#334155;outline:none;background:#fff;cursor:pointer;">
+                        <option value="">Tất cả cấp độ</option>
+                        <option value="No_Experience">🌱 Không cần kinh nghiệm</option>
+                        <option value="Mid_Level">⭐ Có kinh nghiệm</option>
+                        <option value="Expert">🏆 Chuyên gia</option>
+                    </select>
+                </div>
+
+                <!-- Sắp xếp -->
+                <div style="flex:1;min-width:150px;">
+                    <label style="font-size:0.75rem;font-weight:700;color:#64748b;display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em;">Sắp xếp</label>
+                    <select id="fjSort" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:9px 12px;font-size:0.85rem;color:#334155;outline:none;background:#fff;cursor:pointer;">
+                        <option value="newest">Mới nhất</option>
+                        <option value="budget_desc">Lương cao nhất</option>
+                        <option value="budget_asc">Lương thấp nhất</option>
+                        <option value="applicants">Nhiều ứng tuyển nhất</option>
+                    </select>
+                </div>
+
+                <!-- Reset -->
+                <button id="fjReset" title="Xóa bộ lọc" style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:10px;padding:9px 14px;cursor:pointer;color:#64748b;font-size:0.85rem;white-space:nowrap;display:flex;align-items:center;gap:5px;transition:all 0.2s;"
+                    onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
+                    <i data-lucide="x" style="width:14px;height:14px;"></i> Xóa lọc
+                </button>
+            </div>
+
+            <!-- Results Summary & Count -->
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+                <div id="fjCount" style="font-size:0.85rem;color:#64748b;font-weight:600;"></div>
+                <div id="fjActiveFilters" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+            </div>
+
+            <!-- Results Container -->
+            <div id="fjResults" style="display:flex;flex-direction:column;gap:14px;">
+                <div style="text-align:center;padding:50px;color:#94a3b8;">
+                    <span class="spinner-border spinner-border-sm" style="margin-right:8px;"></span> Đang tải danh sách việc làm...
+                </div>
+            </div>`;
+
+        if (window.lucide) lucide.createIcons();
+
+        function buildUrl() {
+            const term = document.getElementById('fjKeyword')?.value.trim() || '';
+            const cat = document.getElementById('fjCategory')?.value || '';
+            const budgetVal = document.getElementById('fjBudget')?.value || '';
+            const daysAgo = document.getElementById('fjDaysAgo')?.value || '';
+            const exp = document.getElementById('fjExperience')?.value || '';
+            const sort = document.getElementById('fjSort')?.value || 'newest';
+
+            const params = new URLSearchParams();
+            if (term) params.set('searchTerm', term);
+            if (cat) params.set('category', cat);
+            if (daysAgo) params.set('daysAgo', daysAgo);
+            if (exp) params.set('experienceLevel', exp);
+            if (sort) params.set('sortBy', sort);
+            if (budgetVal) {
+                const [min, max] = budgetVal.split('-');
+                if (min) params.set('minBudget', min);
+                if (max) params.set('maxBudget', max);
+            }
+            return '/Home/SearchJobs?' + params.toString();
+        }
+
+        function updateActiveFilters() {
+            const container = document.getElementById('fjActiveFilters');
+            if (!container) return;
+            const tags = [];
+            const cat = document.getElementById('fjCategory')?.value;
+            const budget = document.getElementById('fjBudget');
+            const daysAgo = document.getElementById('fjDaysAgo');
+            const exp = document.getElementById('fjExperience');
+            if (cat) tags.push(cat);
+            if (budget?.value) tags.push(budget.options[budget.selectedIndex].text);
+            if (daysAgo?.value) tags.push(daysAgo.options[daysAgo.selectedIndex].text);
+            if (exp?.value) tags.push(exp.options[exp.selectedIndex].text);
+
+            container.innerHTML = tags.map(t =>
+                `<span style="background:#eff6ff;color:#2563eb;font-size:0.75rem;font-weight:600;padding:3px 10px;border-radius:20px;">${escapeHtml(t)}</span>`
+            ).join('');
+        }
+
+        function doSearch() {
+            const results = document.getElementById('fjResults');
+            const countEl = document.getElementById('fjCount');
+            if (!results) return;
+            results.innerHTML = '<div style="text-align:center;padding:50px;color:#94a3b8;"><span class="spinner-border spinner-border-sm" style="margin-right:8px;"></span> Đang tìm kiếm...</div>';
+            if (countEl) countEl.textContent = '';
+            updateActiveFilters();
+
+            fetch(buildUrl())
+                .then(r => r.json())
+                .then(jobs => {
+                    if (!jobs || !jobs.length) {
+                        results.innerHTML = `
+                            <div style="text-align:center;padding:70px 20px;">
+                                <div style="font-size:3.5rem;margin-bottom:14px;">🔍</div>
+                                <h3 style="color:#1e293b;font-weight:700;margin-bottom:8px;">Không tìm thấy việc làm phù hợp</h3>
+                                <p style="color:#64748b;max-width:360px;margin:0 auto;">Hãy thử thay đổi từ khóa hoặc bỏ bớt bộ lọc.</p>
+                            </div>`;
+                        if (countEl) countEl.textContent = '0 kết quả';
+                        return;
+                    }
+                    if (countEl) countEl.textContent = `${jobs.length} việc làm phù hợp`;
+                    results.innerHTML = jobs.map(job => renderJobCard(job)).join('');
+                    if (window.lucide) lucide.createIcons();
+                    bindJobCardClicks();
+                })
+                .catch(() => {
+                    results.innerHTML = '<div style="text-align:center;padding:60px;color:#ef4444;">⚠️ Lỗi khi tải dữ liệu. Vui lòng thử lại.</div>';
+                });
+        }
+
+        // Bind events
+        document.getElementById('fjSearch')?.addEventListener('click', doSearch);
+        document.getElementById('fjKeyword')?.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+        ['fjCategory', 'fjBudget', 'fjDaysAgo', 'fjExperience', 'fjSort'].forEach(id => {
+            document.getElementById(id)?.addEventListener('change', doSearch);
+        });
+        document.getElementById('fjReset')?.addEventListener('click', () => {
+            ['fjKeyword', 'fjCategory', 'fjBudget', 'fjDaysAgo', 'fjExperience'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+            const sortEl = document.getElementById('fjSort');
+            if (sortEl) sortEl.value = 'newest';
+            const activeEl = document.getElementById('fjActiveFilters');
+            if (activeEl) activeEl.innerHTML = '';
+            doSearch();
+        });
+
+        // Fetch categories dynamically from database
+        fetch('/Home/GetCategories')
+            .then(r => r.json())
+            .then(categories => {
+                const select = document.getElementById('fjCategory');
+                if (!select) return;
+                let html = '<option value="">Tất cả ngành</option>';
+                const iconMap = {
+                    'IT & Lập trình': '💻',
+                    'Thiết kế & Đồ họa': '🎨',
+                    'Viết lách & Dịch thuật': '✍️',
+                    'Sales & Marketing': '📣',
+                    'Video & Photography': '🎬'
+                };
+                categories.forEach(cat => {
+                    const emoji = iconMap[cat] || '💼';
+                    html += `<option value="${escapeHtml(cat)}">${emoji} ${escapeHtml(cat)}</option>`;
+                });
+                select.innerHTML = html;
+            })
+            .catch(err => {
+                console.error(err);
+                const select = document.getElementById('fjCategory');
+                if (select) select.innerHTML = '<option value="">Tất cả ngành</option>';
+            });
+
+        doSearch();
+    }
+
+    function renderSavedJobsView() {
+        if (!mainContent) return;
+        mainContent.innerHTML = `
+            <div class="page-header animate-in" style="margin-bottom:24px;">
+                <h1 style="font-size:1.5rem;font-weight:800;color:#0f172a;margin:0 0 6px;"><i data-lucide="bookmark" style="width:22px;height:22px;vertical-align:middle;margin-right:8px;"></i>Việc đã lưu</h1>
+                <p style="color:#64748b;font-size:0.9rem;margin:0;">Danh sách các công việc bạn đã đánh dấu để xem lại sau.</p>
+            </div>
+            <div id="savedJobResults" style="display:flex;flex-direction:column;gap:14px;">
+                <div style="text-align:center;padding:40px;color:#94a3b8;"><span class="spinner-border spinner-border-sm" style="margin-right:8px;"></span> Đang tải...</div>
+            </div>`;
+        if (window.lucide) lucide.createIcons();
+
+        fetch('/Home/GetSavedJobs')
+            .then(r => r.json())
+            .then(data => {
+                const results = document.getElementById('savedJobResults');
+                if (!results) return;
+                const jobs = Array.isArray(data) ? data : (data.jobs || []);
+                if (!jobs.length) {
+                    results.innerHTML = `<div style="text-align:center;padding:60px;">
+                        <div style="font-size:3rem;margin-bottom:12px;">🔖</div>
+                        <h3 style="color:#1e293b;font-weight:700;margin-bottom:8px;">Chưa có việc làm nào được lưu</h3>
+                        <p style="color:#64748b;">Bấm vào icon bookmark trên các tin để lưu lại.</p>
+                    </div>`;
+                    return;
+                }
+                results.innerHTML = jobs.map(job => renderJobCard(job)).join('');
+                if (window.lucide) lucide.createIcons();
+                bindJobCardClicks();
+            })
+            .catch(() => {
+                const results = document.getElementById('savedJobResults');
+                if (results) results.innerHTML = '<div style="text-align:center;padding:60px;color:#ef4444;">Lỗi khi tải dữ liệu.</div>';
+            });
+    }
+
+    function renderAppliedJobsView() {
+        if (!mainContent) return;
+        mainContent.innerHTML = `
+            <div class="page-header animate-in" style="margin-bottom:24px;">
+                <h1 style="font-size:1.5rem;font-weight:800;color:#0f172a;margin:0 0 6px;"><i data-lucide="send" style="width:22px;height:22px;vertical-align:middle;margin-right:8px;"></i>Đã ứng tuyển</h1>
+                <p style="color:#64748b;font-size:0.9rem;margin:0;">Theo dõi trạng thái các vị trí bạn đã nộp hồ sơ.</p>
+            </div>
+            <div id="appliedJobResults" style="display:flex;flex-direction:column;gap:14px;">
+                <div style="text-align:center;padding:40px;color:#94a3b8;"><span class="spinner-border spinner-border-sm" style="margin-right:8px;"></span> Đang tải...</div>
+            </div>`;
+        if (window.lucide) lucide.createIcons();
+
+        fetch('/Home/GetAppliedJobs')
+            .then(r => r.json())
+            .then(data => {
+                const results = document.getElementById('appliedJobResults');
+                if (!results) return;
+                const jobs = Array.isArray(data) ? data : (data.jobs || []);
+                if (!jobs.length) {
+                    results.innerHTML = `<div style="text-align:center;padding:60px;">
+                        <div style="font-size:3rem;margin-bottom:12px;">📋</div>
+                        <h3 style="color:#1e293b;font-weight:700;margin-bottom:8px;">Bạn chưa ứng tuyển công việc nào</h3>
+                        <p style="color:#64748b;">Hãy bắt đầu tìm việc và nộp hồ sơ ngay!</p>
+                    </div>`;
+                    return;
+                }
+                results.innerHTML = jobs.map(job => renderAppliedJobCard(job)).join('');
+                if (window.lucide) lucide.createIcons();
+                bindJobCardClicks();
+            })
+            .catch(() => {
+                const results = document.getElementById('appliedJobResults');
+                if (results) results.innerHTML = '<div style="text-align:center;padding:60px;color:#ef4444;">Lỗi khi tải dữ liệu.</div>';
+            });
+    }
+
+    function renderJobCard(job) {
+        const catColors = {
+            'IT & Lập trình': { bg: '#eff6ff', color: '#2563eb', icon: 'code-2' },
+            'Thiết kế & Đồ họa': { bg: '#ecfdf5', color: '#10b981', icon: 'palette' },
+            'Viết lách & Dịch thuật': { bg: '#fffbeb', color: '#f59e0b', icon: 'languages' },
+            'Sales & Marketing': { bg: '#fdf2f8', color: '#db2777', icon: 'megaphone' },
+            'Video & Photography': { bg: '#faf5ff', color: '#9333ea', icon: 'video' }
+        };
+        const info = catColors[job.category] || { bg: '#f1f5f9', color: '#64748b', icon: 'briefcase' };
+        const budget = (job.budget || 0).toLocaleString('vi-VN') + ' đ';
+        const savedClass = job.isSaved ? 'color:#f59e0b' : 'color:#94a3b8';
+        const appliedBadge = job.isApplied ? '<span style="background:#ecfdf5;color:#059669;font-size:0.7rem;font-weight:700;padding:2px 10px;border-radius:20px;margin-left:8px;">Đã ứng tuyển</span>' : '';
+        return `
+        <div class="job-card animate-in" data-job-id="${job.id}" style="background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:20px;display:flex;align-items:flex-start;gap:16px;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor='#cbd5e1';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.06)'" onmouseout="this.style.borderColor='#e2e8f0';this.style.boxShadow='none'">
+            <div style="background:${info.bg};color:${info.color};width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i data-lucide="${info.icon}" style="width:22px;height:22px;"></i>
+            </div>
+            <div style="flex:1;min-width:0;">
+                <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:6px;">
+                    <h3 class="job-title" data-job-id="${job.id}" style="font-size:1rem;font-weight:700;color:#1e293b;margin:0;">${escapeHtml(job.title || '')}</h3>${appliedBadge}
+                    <span style="margin-left:auto;background:#f8fafc;border:1px solid #e2e8f0;font-size:0.7rem;font-weight:700;padding:2px 10px;border-radius:20px;color:#475569;text-transform:uppercase;">${escapeHtml(job.category || '')}</span>
+                </div>
+                <p style="font-size:0.85rem;color:#64748b;margin:0 0 10px;line-height:1.5;">${escapeHtml((job.description || '').substring(0, 120))}${(job.description || '').length > 120 ? '...' : ''}</p>
+                <div style="display:flex;align-items:center;gap:16px;">
+                    <span style="font-size:1.05rem;font-weight:800;color:#10b981;">${budget}</span>
+                    <span style="font-size:0.8rem;color:#94a3b8;display:flex;align-items:center;gap:4px;"><i data-lucide="clock" style="width:13px;height:13px;"></i>${escapeHtml(job.deadline || '')}</span>
+                    <span style="font-size:0.8rem;color:#94a3b8;display:flex;align-items:center;gap:4px;"><i data-lucide="users" style="width:13px;height:13px;"></i>${job.applicantsCount || 0} ứng viên</span>
+                    <button class="btn-save-job ${job.isSaved ? 'saved' : ''}" data-job-id="${job.id}" title="Lưu">
+                        <i data-lucide="bookmark" style="width:18px;height:18px;"></i>
+                    </button>
+                </div>
+            </div>
+        </div>`;
+    }
+
+    function renderAppliedJobCard(job) {
+        const statusMap = {
+            'Pending': { label: 'Đang chờ', bg: '#fffbeb', color: '#f59e0b' },
+            'Accepted': { label: 'Được chấp nhận', bg: '#ecfdf5', color: '#059669' },
+            'Rejected': { label: 'Không phù hợp', bg: '#fef2f2', color: '#dc2626' },
+            'Reviewing': { label: 'Đang xem xét', bg: '#eff6ff', color: '#2563eb' }
+        };
+        const status = statusMap[job.status] || statusMap['Pending'];
+        const budget = (job.budget || 0).toLocaleString('vi-VN') + ' đ';
+        const appliedDate = job.appliedDate ? new Date(job.appliedDate).toLocaleDateString('vi-VN') : '';
+        return `
+        <div class="job-card animate-in" data-job-id="${job.id}" style="background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:20px;display:flex;align-items:flex-start;gap:16px;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor='#cbd5e1';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.06)'" onmouseout="this.style.borderColor='#e2e8f0';this.style.boxShadow='none'">
+            <div style="flex:1;min-width:0;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                    <h3 class="job-title" data-job-id="${job.id}" style="font-size:1rem;font-weight:700;color:#1e293b;margin:0;flex:1;">${escapeHtml(job.title || '')}</h3>
+                    <span style="background:${status.bg};color:${status.color};font-size:0.75rem;font-weight:700;padding:3px 12px;border-radius:20px;white-space:nowrap;">${status.label}</span>
+                </div>
+                <p style="font-size:0.85rem;color:#64748b;margin:0 0 10px;line-height:1.5;">${escapeHtml((job.description || '').substring(0, 100))}${(job.description || '').length > 100 ? '...' : ''}</p>
+                <div style="display:flex;align-items:center;gap:16px;">
+                    <span style="font-size:1rem;font-weight:800;color:#10b981;">${budget}</span>
+                    ${appliedDate ? `<span style="font-size:0.8rem;color:#94a3b8;display:flex;align-items:center;gap:4px;"><i data-lucide="calendar" style="width:13px;height:13px;"></i>Đã ứng tuyển: ${appliedDate}</span>` : ''}
+                    <span style="font-size:0.8rem;color:#94a3b8;display:flex;align-items:center;gap:4px;"><i data-lucide="building-2" style="width:13px;height:13px;"></i>${escapeHtml(job.businessName || '')}</span>
+                </div>
+            </div>
+        </div>`;
+    }
+
+    function bindJobCardClicks() {
+        document.querySelectorAll('.job-title[data-job-id]').forEach(el => {
+            el.addEventListener('click', function () {
+                const jobId = this.dataset.jobId;
+                const job = allJobs.find(j => String(j.id) === String(jobId));
+                if (job) openJobDetailModal(job);
+                else fetch('/Home/GetJobDetail/' + jobId).then(r => r.json()).then(j => openJobDetailModal(j)).catch(() => { });
+            });
+        });
+        document.querySelectorAll('.job-card[data-job-id]').forEach(el => {
+            el.addEventListener('click', function (e) {
+                if (e.target.closest('.btn-save-job')) return;
+                const jobId = this.dataset.jobId;
+                const job = allJobs.find(j => String(j.id) === String(jobId));
+                if (job) openJobDetailModal(job);
+                else fetch('/Home/GetJobDetail/' + jobId).then(r => r.json()).then(j => openJobDetailModal(j)).catch(() => { });
+            });
+        });
+        document.querySelectorAll('.btn-save-job').forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                const jobId = this.dataset.jobId;
+                toggleSaveJob(jobId, this);
+            });
+        });
     }
 
     function renderBusinessJobsManagement() {
@@ -3826,7 +4221,7 @@
 
                 const dbReviews = data.reviews || [];
                 const totalReviews = dbReviews.length;
-                const avgRating = totalReviews > 0 
+                const avgRating = totalReviews > 0
                     ? (dbReviews.reduce((s, r) => s + r.rating, 0) / totalReviews).toFixed(1)
                     : "0.0";
                 const roundedAvg = Math.round(Number(avgRating));
@@ -3859,16 +4254,16 @@
                         </div>
                         <div class="rating-bars">
                             ${[5, 4, 3, 2, 1].map(star => {
-                                const count = dbReviews.filter(r => r.rating === star).length;
-                                const pct = totalReviews > 0 ? (count / totalReviews * 100) : 0;
-                                return `
+                    const count = dbReviews.filter(r => r.rating === star).length;
+                    const pct = totalReviews > 0 ? (count / totalReviews * 100) : 0;
+                    return `
                                     <div class="rating-bar-row">
                                         <span class="bar-label">${star} ★</span>
                                         <div class="bar-track"><div class="bar-fill" style="width:${pct}%;"></div></div>
                                         <span class="bar-count">${count}</span>
                                     </div>
                                 `;
-                            }).join('')}
+                }).join('')}
                         </div>
                     </div>
 
@@ -3888,9 +4283,9 @@
                                 <p>Không có đánh giá nào phù hợp với bộ lọc đã chọn.</p>
                             </div>
                         ` : filteredReviews.map((r, i) => {
-                            const avatarColor = colors[i % colors.length];
-                            const initials = (r.reviewer || "KH").split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase();
-                            return `
+                    const avatarColor = colors[i % colors.length];
+                    const initials = (r.reviewer || "KH").split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                    return `
                                 <div class="review-card ${r.isReported ? 'reported-dimmed' : ''}" data-id="${r.id}">
                                     <div class="review-header">
                                         <div class="reviewer-info">
@@ -3954,7 +4349,7 @@
                                     `}
                                 </div>
                             `;
-                        }).join('')}
+                }).join('')}
                     </div>`;
 
                 if (window.lucide) lucide.createIcons();
@@ -4003,19 +4398,19 @@
                             method: 'POST',
                             body: formData
                         })
-                        .then(res => res.json())
-                        .then(resData => {
-                            if (resData.success) {
-                                showToast('✅ Gửi phản hồi thành công!', 'success');
-                                renderReviewsView();
-                            } else {
-                                showToast(resData.message || 'Lỗi khi gửi phản hồi.', 'error');
-                            }
-                        })
-                        .catch(err => {
-                            console.error(err);
-                            showToast('Không thể kết nối đến máy chủ.', 'error');
-                        });
+                            .then(res => res.json())
+                            .then(resData => {
+                                if (resData.success) {
+                                    showToast('✅ Gửi phản hồi thành công!', 'success');
+                                    renderReviewsView();
+                                } else {
+                                    showToast(resData.message || 'Lỗi khi gửi phản hồi.', 'error');
+                                }
+                            })
+                            .catch(err => {
+                                console.error(err);
+                                showToast('Không thể kết nối đến máy chủ.', 'error');
+                            });
                     });
                 });
 
@@ -4051,19 +4446,19 @@
                             method: 'POST',
                             body: formData
                         })
-                        .then(res => res.json())
-                        .then(resData => {
-                            if (resData.success) {
-                                showToast('🚩 Đã gửi báo cáo đánh giá! Ban quản trị sẽ xem xét trong 24h.', 'success');
-                                renderReviewsView();
-                            } else {
-                                showToast(resData.message || 'Lỗi khi gửi báo cáo.', 'error');
-                            }
-                        })
-                        .catch(err => {
-                            console.error(err);
-                            showToast('Không thể kết nối đến máy chủ.', 'error');
-                        });
+                            .then(res => res.json())
+                            .then(resData => {
+                                if (resData.success) {
+                                    showToast('🚩 Đã gửi báo cáo đánh giá! Ban quản trị sẽ xem xét trong 24h.', 'success');
+                                    renderReviewsView();
+                                } else {
+                                    showToast(resData.message || 'Lỗi khi gửi báo cáo.', 'error');
+                                }
+                            })
+                            .catch(err => {
+                                console.error(err);
+                                showToast('Không thể kết nối đến máy chủ.', 'error');
+                            });
                     });
                 });
             })
@@ -4150,50 +4545,6 @@
         });
     }
 
-    // ============================================
-    // RENDER: Bảng xếp hạng
-    // ============================================
-    function renderLeaderboardView() {
-        mainContent.innerHTML = `
-            <div class="page-header">
-                <h1 class="page-title"><i data-lucide="bar-chart-3" style="width:24px;height:24px;"></i> Bảng xếp hạng tháng 5/2026</h1>
-                <p class="page-subtitle">Top freelancer hoạt động tích cực nhất</p>
-            </div>
-            <div class="leaderboard-top3">
-                ${mockLeaderboard.slice(0, 3).map((u, i) => `
-                    <div class="top3-card top${i + 1}">
-                        <div class="top3-rank">${['🥇', '🥈', '🥉'][i]}</div>
-                        <div class="top3-avatar" style="background:${u.avatar ? 'none' : 'linear-gradient(135deg, #6366F1, #8B5CF6)'}">
-                            ${u.avatar ? `<img src="${u.avatar}" alt="" />` : u.name.split(' ').map(w => w[0]).join('').slice(0, 2)}
-                        </div>
-                        <div class="top3-name">${escapeHtml(u.name)}</div>
-                        <div class="top3-score">${u.score} điểm</div>
-                        <div class="top3-meta">★ ${u.rating} · ${u.jobs} dự án</div>
-                    </div>
-                `).join('')}
-            </div>
-            <div class="leaderboard-table">
-                <div class="lb-header-row">
-                    <span class="lb-col-rank">Hạng</span>
-                    <span class="lb-col-name">Freelancer</span>
-                    <span class="lb-col-score">Điểm</span>
-                    <span class="lb-col-jobs">Dự án</span>
-                    <span class="lb-col-rating">Rating</span>
-                    <span class="lb-col-trend">Xu hướng</span>
-                </div>
-                ${mockLeaderboard.map(u => `
-                    <div class="lb-row ${u.isCurrentUser ? 'current-user' : ''}">
-                        <span class="lb-col-rank">#${u.rank}</span>
-                        <span class="lb-col-name">${escapeHtml(u.name)} ${u.isCurrentUser ? '<span class="you-badge">Bạn</span>' : ''}</span>
-                        <span class="lb-col-score">${u.score}</span>
-                        <span class="lb-col-jobs">${u.jobs}</span>
-                        <span class="lb-col-rating">★ ${u.rating}</span>
-                        <span class="lb-col-trend trend-${u.trend === '↑' ? 'up' : u.trend === '↓' ? 'down' : 'same'}">${u.trend}</span>
-                    </div>
-                `).join('')}
-            </div>`;
-        if (window.lucide) lucide.createIcons();
-    }
 
 
     // ============================================
@@ -4313,7 +4664,7 @@
 
                     if (data.isSaved) {
                         btnEl.classList.add('saved');
-                        btnEl.innerHTML = '<i data-lucide="bookmark-check" style="width:18px;height:18px;"></i>';
+                        btnEl.innerHTML = '<i data-lucide="bookmark" style="width:18px;height:18px;"></i>';
                         showToast('🔖 Đã lưu việc làm!', 'success');
                     } else {
                         btnEl.classList.remove('saved');
@@ -4323,7 +4674,23 @@
                     if (window.lucide) lucide.createIcons();
 
                     if (currentSidebarMode === 'saved') {
-                        renderJobs(allJobs.filter(j => j.isSaved));
+                        const card = btnEl.closest('.job-card[data-job-id]');
+                        if (card) {
+                            card.style.opacity = '0';
+                            card.style.transform = 'scale(0.9)';
+                            card.style.transition = 'all 0.3s ease';
+                            setTimeout(() => {
+                                card.remove();
+                                const results = document.getElementById('savedJobResults');
+                                if (results && !results.querySelector('.job-card')) {
+                                    results.innerHTML = `<div style="text-align:center;padding:60px;">
+                                        <div style="font-size:3rem;margin-bottom:12px;">🔖</div>
+                                        <h3 style="color:#1e293b;font-weight:700;margin-bottom:8px;">Chưa có việc làm nào được lưu</h3>
+                                        <p style="color:#64748b;">Bấm vào icon bookmark trên các tin để lưu lại.</p>
+                                    </div>`;
+                                }
+                            }, 300);
+                        }
                     }
                 } else {
                     showToast(data.message || 'Lỗi khi thực hiện thao tác.', 'warning');
@@ -4487,7 +4854,7 @@
         }
     };
 
-    window.openTipModal = function(tipId) {
+    window.openTipModal = function (tipId) {
         const tip = tipData[tipId];
         if (!tip) return;
 
@@ -5116,9 +5483,11 @@
         document.getElementById('btnFindJobNow')?.addEventListener('click', () => {
             setActiveSidebar('find');
             currentSidebarMode = 'find';
-            restoreHomeView();
-            renderJobs(allJobs);
-            searchInput.focus();
+            if (!isBusinessAccount()) {
+                const rs = document.getElementById('rightSidebar');
+                if (rs) rs.style.display = 'none';
+            }
+            renderFindJobView();
         });
         document.getElementById('btnPostJobBanner')?.addEventListener('click', () => openPostJobModal());
     }

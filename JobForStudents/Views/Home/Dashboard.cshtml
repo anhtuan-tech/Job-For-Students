@@ -32,6 +32,44 @@
 
 <!-- Custom Styles for Business & Admin Views -->
 <style>
+    /* Custom Save Job Button Styles */
+    .btn-save-job {
+        margin-left: auto;
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 50% !important;
+        width: 38px !important;
+        height: 38px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease-in-out !important;
+        color: #64748b !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02) !important;
+        padding: 0 !important;
+    }
+    .btn-save-job:hover {
+        transform: scale(1.1) !important;
+        background: #f1f5f9 !important;
+        border-color: #cbd5e1 !important;
+        color: #334155 !important;
+    }
+    .btn-save-job.saved {
+        background: #fef3c7 !important;
+        border-color: #f59e0b !important;
+        color: #d97706 !important;
+        box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2) !important;
+    }
+    .btn-save-job.saved:hover {
+        background: #fde68a !important;
+        border-color: #d97706 !important;
+        color: #b45309 !important;
+    }
+    .btn-save-job.saved svg {
+        fill: #d97706 !important;
+    }
+
     /* Custom Wallet & Service Packages Styles */
     .bg-success-subtle {
         background-color: #d1fae5 !important;
@@ -1241,7 +1279,7 @@
                     <span class="item-icon"><i data-lucide="home" style="width:18px;height:18px;"></i></span>
                     Trang chủ
                 </a>
-                <a href="#" class="sidebar-item" data-nav="findJobs" id="navFindJob">
+                <a href="#" class="sidebar-item" data-nav="find" id="navFindJob">
                     <span class="item-icon"><i data-lucide="search" style="width:18px;height:18px;"></i></span>
                     Tìm việc
                 </a>
