@@ -185,10 +185,10 @@ public class ReviewController : Controller
             }
             return new {
                 contractId = c.Id,
-                jobTitle = c.JobPost?.Title ?? "Dự án không tên",
+                jobTitle = c.JobPost.Title,
                 studentId = c.StudentId,
-                studentName = c.StudentProfile?.FullName ?? "Sinh viên ẩn",
-                studentAvatar = c.StudentProfile?.AvatarUrl ?? "",
+                studentName = c.StudentProfile.FullName,
+                studentAvatar = c.StudentProfile.AvatarUrl ?? "",
                 completedAt = c.CompletedAt?.ToString("dd/MM/yyyy HH:mm") ?? "",
                 hasReview = review != null,
                 review = review == null ? null : new {

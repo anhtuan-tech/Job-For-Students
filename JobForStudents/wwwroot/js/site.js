@@ -91,6 +91,12 @@
             loadBusinessHomeData();
         }
 
+        // Remove the hide styles before saving original HTML to prevent them from being restored
+        const hideStylePre = document.getElementById('j4s-hide-main');
+        if (hideStylePre) hideStylePre.remove();
+        const hideStyleAdminPre = document.getElementById('j4s-hide-admin');
+        if (hideStyleAdminPre) hideStyleAdminPre.remove();
+
         // Save original main content for restoration
         if (mainContent) {
             originalMainHTML = mainContent.innerHTML;
@@ -192,11 +198,14 @@
         if (sidebar) {
             sidebar.innerHTML = `
                 <div class="sidebar-group">
-                    <div class="sidebar-label">NHÀ TUYỂN DỤNG</div>
+                    <div class="sidebar-label">TỔNG QUAN</div>
                     <a href="#" class="sidebar-item active" data-nav="home" id="navHome">
                         <span class="item-icon"><i data-lucide="home" style="width:18px;height:18px;"></i></span>
                         Trang chủ
                     </a>
+                </div>
+                <div class="sidebar-group">
+                    <div class="sidebar-label">QUẢN LÝ TUYỂN DỤNG</div>
                     <a href="#" class="sidebar-item" data-nav="businessJobs" id="navBusinessJobs">
                         <span class="item-icon"><i data-lucide="file-text" style="width:18px;height:18px;"></i></span>
                         Quản lý tin đăng
@@ -209,26 +218,32 @@
                         <span class="item-icon"><i data-lucide="users" style="width:18px;height:18px;"></i></span>
                         Ứng viên
                     </a>
+                </div>
+                <div class="sidebar-group">
+                    <div class="sidebar-label">CHI PHÍ & DỊCH VỤ</div>
+                    <a href="#" class="sidebar-item" data-nav="wallet-business" id="navBusinessWallet">
+                        <span class="item-icon"><i data-lucide="wallet" style="width:18px;height:18px;"></i></span>
+                        Ví doanh nghiệp
+                    </a>
                     <a href="#" class="sidebar-item has-chevron" data-nav="servicePackages" id="navServicePackages">
                         <span class="item-icon"><i data-lucide="credit-card" style="width:18px;height:18px;"></i></span>
                         Gói dịch vụ & Thanh toán
                         <i data-lucide="chevron-right" class="sidebar-chevron" style="width:15px;height:15px;"></i>
                     </a>
-                    <a href="#" class="sidebar-item" data-nav="wallet-business" id="navBusinessWallet">
-                        <span class="item-icon"><i data-lucide="wallet" style="width:18px;height:18px;"></i></span>
-                        Ví doanh nghiệp
-                    </a>
-                    <a href="#" class="sidebar-item" data-nav="reviews-business" id="navBusinessReviews">
-                        <span class="item-icon"><i data-lucide="star" style="width:18px;height:18px;"></i></span>
-                        Đánh giá sinh viên
+                </div>
+                <div class="sidebar-group">
+                    <div class="sidebar-label">TƯƠNG TÁC & ĐÁNH GIÁ</div>
+                    <a href="#" class="sidebar-item" data-nav="messages" id="navMessages">
+                        <span class="item-icon"><i data-lucide="message-square" style="width:18px;height:18px;"></i></span>
+                        Tin nhắn
                     </a>
                     <a href="#" class="sidebar-item" data-nav="notifications" id="navNotifications">
                         <span class="item-icon"><i data-lucide="bell" style="width:18px;height:18px;"></i></span>
                         Thông báo
                     </a>
-                    <a href="#" class="sidebar-item" data-nav="messages" id="navMessages">
-                        <span class="item-icon"><i data-lucide="message-square" style="width:18px;height:18px;"></i></span>
-                        Tin nhắn
+                    <a href="#" class="sidebar-item" data-nav="reviews-business" id="navBusinessReviews">
+                        <span class="item-icon"><i data-lucide="star" style="width:18px;height:18px;"></i></span>
+                        Đánh giá sinh viên
                     </a>
                 </div>
                 <div class="sidebar-group">
@@ -376,9 +391,18 @@
     // CATEGORY FILTER — Click cards
     // ============================================
     function bindCategoryCards() {
-        categoryCards.forEach(card => {
+        const cards = document.querySelectorAll('.category-card[data-category]');
+        cards.forEach(card => {
             card.addEventListener('click', function () {
                 const cat = this.dataset.category;
+                if (!isBusinessAccount()) {
+                    const findTab = document.getElementById('navFindJob');
+                    if (findTab) {
+                        window.pendingSearchCategory = cat;
+                        findTab.click();
+                    }
+                    return;
+                }
                 if (this.classList.contains('active')) {
                     this.classList.remove('active');
                     currentFilter = 'all';
@@ -410,8 +434,9 @@
     // DROPDOWN FILTER SELECT
     // ============================================
     function bindFilterSelect() {
-        if (!filterCategorySelect) return;
-        filterCategorySelect.addEventListener('change', function () {
+        const select = document.getElementById('filterCategory');
+        if (!select) return;
+        select.addEventListener('change', function () {
             const val = this.value;
             clearCategoryActive();
             searchInput.value = '';
@@ -588,39 +613,8 @@
         bindViewMoreBtn();
         bindViewProfileButtons();
         bindBannerButtons();
-        // Re-bind category cards
-        document.querySelectorAll('.category-card[data-category]').forEach(card => {
-            card.addEventListener('click', function () {
-                const cat = this.dataset.category;
-                if (this.classList.contains('active')) {
-                    this.classList.remove('active');
-                    currentFilter = 'all';
-                    renderJobs(allJobs);
-                    return;
-                }
-                clearCategoryActive();
-                this.classList.add('active');
-                currentFilter = cat;
-                searchInput.value = '';
-                fetch(`/Home/FilterByCategory?category=${encodeURIComponent(cat)}`)
-                    .then(r => r.json())
-                    .then(jobs => renderJobs(jobs))
-                    .catch(err => console.error('Filter error:', err));
-            });
-        });
-        // Re-bind filter select
-        const fs = document.getElementById('filterCategory');
-        if (fs) {
-            fs.addEventListener('change', function () {
-                const val = this.value;
-                clearCategoryActive();
-                if (val === 'Tất cả danh mục') { renderJobs(allJobs); return; }
-                fetch(`/Home/FilterByCategory?category=${encodeURIComponent(val)}`)
-                    .then(r => r.json())
-                    .then(jobs => renderJobs(jobs))
-                    .catch(err => console.error(err));
-            });
-        }
+        bindCategoryCards();
+        bindFilterSelect();
     }
 
     // ============================================
@@ -730,7 +724,10 @@
 
         function buildUrl() {
             const term = document.getElementById('fjKeyword')?.value.trim() || '';
-            const cat = document.getElementById('fjCategory')?.value || '';
+            let cat = document.getElementById('fjCategory')?.value || '';
+            if (!cat && window.pendingSearchCategory) {
+                cat = window.pendingSearchCategory;
+            }
             const budgetVal = document.getElementById('fjBudget')?.value || '';
             const daysAgo = document.getElementById('fjDaysAgo')?.value || '';
             const exp = document.getElementById('fjExperience')?.value || '';
@@ -754,7 +751,10 @@
             const container = document.getElementById('fjActiveFilters');
             if (!container) return;
             const tags = [];
-            const cat = document.getElementById('fjCategory')?.value;
+            let cat = document.getElementById('fjCategory')?.value;
+            if (!cat && window.pendingSearchCategory) {
+                cat = window.pendingSearchCategory;
+            }
             const budget = document.getElementById('fjBudget');
             const daysAgo = document.getElementById('fjDaysAgo');
             const exp = document.getElementById('fjExperience');
@@ -827,26 +827,42 @@
                 const select = document.getElementById('fjCategory');
                 if (!select) return;
                 let html = '<option value="">Tất cả ngành</option>';
-                const iconMap = {
-                    'IT & Lập trình': '💻',
-                    'Thiết kế & Đồ họa': '🎨',
-                    'Viết lách & Dịch thuật': '✍️',
-                    'Sales & Marketing': '📣',
-                    'Video & Photography': '🎬'
-                };
                 categories.forEach(cat => {
-                    const emoji = iconMap[cat] || '💼';
-                    html += `<option value="${escapeHtml(cat)}">${emoji} ${escapeHtml(cat)}</option>`;
+                    html += `<option value="${escapeHtml(cat)}">${escapeHtml(cat)}</option>`;
                 });
+
+                if (window.pendingSearchCategory) {
+                    const exists = categories.some(cat => cat.trim().toLowerCase() === window.pendingSearchCategory.trim().toLowerCase());
+                    if (!exists) {
+                        html += `<option value="${escapeHtml(window.pendingSearchCategory)}">${escapeHtml(window.pendingSearchCategory)}</option>`;
+                    }
+                }
                 select.innerHTML = html;
+
+                if (window.pendingSearchCategory) {
+                    const matchedOption = Array.from(select.options).find(opt =>
+                        opt.value.trim().toLowerCase() === window.pendingSearchCategory.trim().toLowerCase()
+                    );
+                    if (matchedOption) {
+                        select.value = matchedOption.value;
+                    } else {
+                        const matchedTextOption = Array.from(select.options).find(opt =>
+                            opt.text.toLowerCase().includes(window.pendingSearchCategory.toLowerCase())
+                        );
+                        if (matchedTextOption) {
+                            select.value = matchedTextOption.value;
+                        }
+                    }
+                    window.pendingSearchCategory = null;
+                }
+                doSearch();
             })
             .catch(err => {
                 console.error(err);
                 const select = document.getElementById('fjCategory');
                 if (select) select.innerHTML = '<option value="">Tất cả ngành</option>';
+                doSearch();
             });
-
-        doSearch();
     }
 
     function renderSavedJobsView() {
@@ -2574,7 +2590,6 @@
                             <strong>${candidate.expectedSalary > 0 ? formatVND(candidate.expectedSalary) : 'Thỏa thuận'}</strong>
                             <span>Mức lương mong muốn</span>
                             <button class="btn-sm btn-primary" data-action="view">Xem hồ sơ</button>
-                            <button class="btn-sm btn-outline" data-action="save">${candidate.isSaved ? 'Bỏ lưu' : 'Lưu ứng viên'}</button>
                         </div>
                     </article>
                 `).join('')}
@@ -2584,7 +2599,6 @@
         panel.querySelectorAll('.candidate-card').forEach(card => {
             const studentId = Number(card.dataset.candidateId);
             card.querySelector('[data-action="view"]')?.addEventListener('click', () => openCandidateProfileModal(studentId));
-            card.querySelector('[data-action="save"]')?.addEventListener('click', e => toggleSaveCandidate(studentId, e.currentTarget));
         });
     }
 
@@ -2614,7 +2628,6 @@
                                     <h2>${escapeHtml(candidate.name)}</h2>
                                     <p>${escapeHtml([candidate.major, candidate.university].filter(Boolean).join(' · ') || 'Chưa cập nhật ngành học')}</p>
                                 </div>
-                                <button class="btn-sm btn-outline" id="btnSaveCandidateFromModal">${candidate.isSaved ? 'Bỏ lưu' : 'Lưu ứng viên'}</button>
                             </div>
                             <div class="candidate-profile-stats">
                                 <div><strong>${Number(candidate.rating || 0).toFixed(1)}</strong><span>Đánh giá</span></div>
@@ -2674,10 +2687,6 @@
                 requestAnimationFrame(() => modal.classList.add('active'));
                 modal.querySelector('.modal-close').addEventListener('click', () => closeModal(modal));
                 modal.addEventListener('click', e => { if (e.target === modal) closeModal(modal); });
-                modal.querySelector('#btnSaveCandidateFromModal')?.addEventListener('click', e => {
-                    toggleSaveCandidate(studentId, e.currentTarget);
-                    closeModal(modal);
-                });
             })
             .catch(err => {
                 console.error(err);
@@ -6289,6 +6298,7 @@
             </div>`;
 
         document.body.appendChild(modal);
+        setupCurrencyInput(modal.querySelector('#postJobBudget'));
         if (window.lucide) lucide.createIcons();
         requestAnimationFrame(() => modal.classList.add('active'));
 
@@ -6314,7 +6324,8 @@
             const title = modal.querySelector('#postJobTitle').value.trim();
             const description = modal.querySelector('#postJobDesc').value.trim();
             const deadline = modal.querySelector('#postJobDeadline').value;
-            const budget = Number(modal.querySelector('#postJobBudget').value);
+            const budgetVal = modal.querySelector('#postJobBudget').value;
+            const budget = Number(budgetVal.replace(/\D/g, ''));
 
             if (!title) { showToast('Vui lòng nhập tiêu đề công việc.', 'warning'); return; }
             if (!saveAsDraft && !description) { showToast('Vui lòng nhập mô tả công việc.', 'warning'); return; }
@@ -6406,6 +6417,23 @@
         return new Intl.NumberFormat('vi-VN').format(amount) + ' đ';
     }
 
+    function formatCurrencyInput(value) {
+        let clean = value.toString().replace(/\D/g, '');
+        if (!clean) return '';
+        return new Intl.NumberFormat('vi-VN').format(clean) + ' đ';
+    }
+
+    function setupCurrencyInput(inputElement) {
+        if (!inputElement) return;
+        inputElement.type = 'text';
+        if (inputElement.value) {
+            inputElement.value = formatCurrencyInput(inputElement.value);
+        }
+        inputElement.addEventListener('input', function () {
+            this.value = formatCurrencyInput(this.value);
+        });
+    }
+
     function escapeHtml(str) {
         if (!str) return '';
         const div = document.createElement('div');
@@ -6423,95 +6451,95 @@
 
 
 
-window.setSelectCategory = function (selectId, wrapperId, inputId, categoryValue) {
-    const select = document.getElementById(selectId);
-    const wrapper = document.getElementById(wrapperId);
-    const input = document.getElementById(inputId);
-    if (!select) return;
+    window.setSelectCategory = function (selectId, wrapperId, inputId, categoryValue) {
+        const select = document.getElementById(selectId);
+        const wrapper = document.getElementById(wrapperId);
+        const input = document.getElementById(inputId);
+        if (!select) return;
 
-    const standardCategories = ['IT & Lập trình', 'Thiết kế & Đồ họa', 'Viết lách & Dịch thuật', 'Sales & Marketing', 'Video & Photography'];
-    if (!categoryValue) {
-        select.value = '';
-        if (wrapper) wrapper.style.display = 'none';
-        if (input) input.value = '';
-    } else if (standardCategories.includes(categoryValue)) {
-        select.value = categoryValue;
-        if (wrapper) wrapper.style.display = 'none';
-        if (input) input.value = '';
-    } else {
-        select.value = 'Khác';
-        if (wrapper) wrapper.style.display = 'block';
-        if (input) input.value = categoryValue;
-    }
-};
+        const standardCategories = ['IT & Lập trình', 'Thiết kế & Đồ họa', 'Viết lách & Dịch thuật', 'Sales & Marketing', 'Video & Photography'];
+        if (!categoryValue) {
+            select.value = '';
+            if (wrapper) wrapper.style.display = 'none';
+            if (input) input.value = '';
+        } else if (standardCategories.includes(categoryValue)) {
+            select.value = categoryValue;
+            if (wrapper) wrapper.style.display = 'none';
+            if (input) input.value = '';
+        } else {
+            select.value = 'Khác';
+            if (wrapper) wrapper.style.display = 'block';
+            if (input) input.value = categoryValue;
+        }
+    };
 
-document.addEventListener('DOMContentLoaded', () => {
-    const staticCategory = document.getElementById('jobCategory');
-    const staticWrapper = document.getElementById('staticCustomCategoryWrapper');
-    const staticInput = document.getElementById('jobCustomCategory');
-    if (staticCategory) {
-        staticCategory.addEventListener('change', () => {
-            if (staticCategory.value === 'Khác') {
-                if (staticWrapper) staticWrapper.style.display = 'block';
-                if (staticInput) staticInput.focus();
-            } else {
-                if (staticWrapper) staticWrapper.style.display = 'none';
-                if (staticInput) staticInput.value = '';
-            }
-        });
-    }
+    document.addEventListener('DOMContentLoaded', () => {
+        const staticCategory = document.getElementById('jobCategory');
+        const staticWrapper = document.getElementById('staticCustomCategoryWrapper');
+        const staticInput = document.getElementById('jobCustomCategory');
+        if (staticCategory) {
+            staticCategory.addEventListener('change', () => {
+                if (staticCategory.value === 'Khác') {
+                    if (staticWrapper) staticWrapper.style.display = 'block';
+                    if (staticInput) staticInput.focus();
+                } else {
+                    if (staticWrapper) staticWrapper.style.display = 'none';
+                    if (staticInput) staticInput.value = '';
+                }
+            });
+        }
 
-    const btnSubmitJob = document.getElementById('btnSubmitJob');
-    if (btnSubmitJob) {
-        btnSubmitJob.addEventListener('click', async () => {
-            const form = document.getElementById('postJobForm');
-            if (!form.checkValidity()) {
-                form.reportValidity();
-                return;
-            }
-            const formData = new FormData(form);
-            if (formData.get('category') === 'Khác') {
-                const customVal = document.getElementById('jobCustomCategory')?.value.trim() || 'Khác';
-                formData.set('category', customVal);
-            }
-            const mode = (formData.get('jobMode') || 'new').toString().toLowerCase();
-            const url = mode === 'edit' ? '/Home/UpdateJobPost' : '/Home/PostJob';
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
-                    }
-                });
-
-                if (!response.ok) {
-                    const text = await response.text();
-                    console.error("Server returned error:", response.status, text);
-                    showToast('Lỗi từ máy chủ: ' + response.status + '. Vui lòng xem F12 Console.', 'error');
+        const btnSubmitJob = document.getElementById('btnSubmitJob');
+        if (btnSubmitJob) {
+            btnSubmitJob.addEventListener('click', async () => {
+                const form = document.getElementById('postJobForm');
+                if (!form.checkValidity()) {
+                    form.reportValidity();
                     return;
                 }
-
-                const data = await response.json();
-                if (data.success) {
-                    showToast(data.message, 'success');
-                    const modalEl = document.getElementById('postJobModal');
-                    if (modalEl) {
-                        const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-                        modal.hide();
-                        form.reset();
-                    }
-                    window.preparePostJobForm?.();
-                    setTimeout(() => window.location.reload(), 1500);
-                } else {
-                    showToast(data.message || 'Lỗi khi đăng bài', 'error');
+                const formData = new FormData(form);
+                if (formData.get('category') === 'Khác') {
+                    const customVal = document.getElementById('jobCustomCategory')?.value.trim() || 'Khác';
+                    formData.set('category', customVal);
                 }
-            } catch (err) {
-                console.error("Lỗi fetch:", err);
-                showToast('Lỗi kết nối hoặc lỗi xử lý dữ liệu', 'error');
-            }
-        });
-    }
+                const mode = (formData.get('jobMode') || 'new').toString().toLowerCase();
+                const url = mode === 'edit' ? '/Home/UpdateJobPost' : '/Home/PostJob';
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                        }
+                    });
+
+                    if (!response.ok) {
+                        const text = await response.text();
+                        console.error("Server returned error:", response.status, text);
+                        showToast('Lỗi từ máy chủ: ' + response.status + '. Vui lòng xem F12 Console.', 'error');
+                        return;
+                    }
+
+                    const data = await response.json();
+                    if (data.success) {
+                        showToast(data.message, 'success');
+                        const modalEl = document.getElementById('postJobModal');
+                        if (modalEl) {
+                            const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                            modal.hide();
+                            form.reset();
+                        }
+                        window.preparePostJobForm?.();
+                        setTimeout(() => window.location.reload(), 1500);
+                    } else {
+                        showToast(data.message || 'Lỗi khi đăng bài', 'error');
+                    }
+                } catch (err) {
+                    console.error("Lỗi fetch:", err);
+                    showToast('Lỗi kết nối hoặc lỗi xử lý dữ liệu', 'error');
+                }
+            });
+        }
 
     });
 
@@ -6717,4 +6745,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.openReviewModal = openReviewModal;
     window.renderBusinessReviewsView = renderBusinessReviewsView;
+    window.formatCurrencyInput = formatCurrencyInput;
+    window.setupCurrencyInput = setupCurrencyInput;
 })();

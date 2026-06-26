@@ -1219,13 +1219,18 @@
              2B. SIDEBAR MẶC ĐỊNH / SINH VIÊN
              ============================================ -->
         <aside class="sidebar" id="sidebar">
-            <!-- Nhóm: VIỆC LÀM -->
+            <!-- Nhóm: TỔNG QUAN -->
             <div class="sidebar-group">
-                <div class="sidebar-label">Việc làm</div>
+                <div class="sidebar-label">TỔNG QUAN</div>
                 <a href="#" class="sidebar-item active" data-nav="home" id="navHome">
                     <span class="item-icon"><i data-lucide="home" style="width:18px;height:18px;"></i></span>
                     Trang chủ
                 </a>
+            </div>
+
+            <!-- Nhóm: TÌM KIẾM & THEO DÕI -->
+            <div class="sidebar-group">
+                <div class="sidebar-label">TÌM KIẾM & THEO DÕI</div>
                 <a href="#" class="sidebar-item" data-nav="find" id="navFindJob">
                     <span class="item-icon"><i data-lucide="search" style="width:18px;height:18px;"></i></span>
                     Tìm việc
@@ -1238,42 +1243,24 @@
                     <span class="item-icon"><i data-lucide="send" style="width:18px;height:18px;"></i></span>
                     Đã ứng tuyển
                 </a>
+            </div>
+
+            <!-- Nhóm: HỒ SƠ & DỰ ÁN -->
+            <div class="sidebar-group">
+                <div class="sidebar-label">HỒ SƠ & DỰ ÁN</div>
+                <a href="#" class="sidebar-item" data-nav="profile" id="navProfile">
+                    <span class="item-icon"><i data-lucide="user" style="width:18px;height:18px;"></i></span>
+                    Hồ sơ của tôi
+                </a>
                 <a href="#" class="sidebar-item" data-nav="projects" id="navProjects">
                     <span class="item-icon"><i data-lucide="folder-open" style="width:18px;height:18px;"></i></span>
                     Dự án của mình
                 </a>
             </div>
 
-            <!-- Nhóm: QUẢN LÝ -->
+            <!-- Nhóm: HỘP THƯ & TƯƠNG TÁC -->
             <div class="sidebar-group">
-                <div class="sidebar-label">Quản lý</div>
-                @if (User.IsInRole("Business"))
-                {
-                    <a href="#" class="sidebar-item" data-nav="businessJobs" id="navBusinessJobs">
-                        <span class="item-icon"><i data-lucide="briefcase-business" style="width:18px;height:18px;"></i></span>
-                        Quản lý tin đăng
-                    </a>
-                    <a href="#" class="sidebar-item" data-nav="approveCandidates" id="navApproveCandidates">
-                        <span class="item-icon"><i data-lucide="user-check" style="width:18px;height:18px;"></i></span>
-                        Duyệt ứng viên
-                    </a>
-                    <a href="#" class="sidebar-item" data-nav="servicePackages" id="navServicePackages">
-                        <span class="item-icon"><i data-lucide="package-check" style="width:18px;height:18px;"></i></span>
-                        Gói dịch vụ
-                    </a>
-                    <a href="#" class="sidebar-item" data-nav="candidateSearch" id="navCandidateSearch">
-                        <span class="item-icon"><i data-lucide="user-search" style="width:18px;height:18px;"></i></span>
-                        Tìm hồ sơ ứng viên
-                    </a>
-                }
-                <a href="#" class="sidebar-item" data-nav="notifications" id="navNotifications">
-                    <span class="item-icon"><i data-lucide="bell" style="width:18px;height:18px;"></i></span>
-                    Thông báo
-                </a>
-                <a href="#" class="sidebar-item" data-nav="profile" id="navProfile">
-                    <span class="item-icon"><i data-lucide="user" style="width:18px;height:18px;"></i></span>
-                    Hồ sơ của tôi
-                </a>
+                <div class="sidebar-label">HỘP THƯ & TƯƠNG TÁC</div>
                 <a href="#" class="sidebar-item" data-nav="messages" id="navMessages">
                     <span class="item-icon"><i data-lucide="message-circle" style="width:18px;height:18px;"></i></span>
                     Tin nhắn
@@ -1285,9 +1272,13 @@
                         <span class="sidebar-badge">@unreadMessages</span>
                     }
                 </a>
+                <a href="#" class="sidebar-item" data-nav="notifications" id="navNotifications">
+                    <span class="item-icon"><i data-lucide="bell" style="width:18px;height:18px;"></i></span>
+                    Thông báo
+                </a>
                 <a href="#" class="sidebar-item" data-nav="reviews" id="navReviews">
                     <span class="item-icon"><i data-lucide="star" style="width:18px;height:18px;"></i></span>
-                    Đánh giá
+                    Đánh giá của tôi
                 </a>
             </div>
 
@@ -2195,7 +2186,7 @@
 
             <div class="mb-4">
             <div class="input-group input-group-lg" style="border: 2px solid #e2e8f0; border-radius: 12px; overflow: hidden; background: #fff;">
-            <input type="number" id="depositAmountInput" class="form-control border-0 px-3 fw-bold text-slate-800" style="font-size: 1.5rem;" placeholder="Nhập số tiền..." min="50000" step="50000" value="200000">
+            <input type="text" id="depositAmountInput" class="form-control border-0 px-3 fw-bold text-slate-800" style="font-size: 1.5rem;" placeholder="Nhập số tiền..." value="200.000 đ">
             <span class="input-group-text border-0 bg-transparent fw-bold text-slate-500 pe-3" style="font-size:1.25rem;">đ</span>
             </div>
             <div class="invalid-feedback d-none" id="amountError" style="font-size: 0.85rem; margin-top: 4px;">Số tiền nạp phải là bội số của 50.000 đ.</div>
@@ -2245,12 +2236,17 @@
             `;
 
             if (window.lucide) lucide.createIcons();
+
+            const depositInput = document.getElementById('depositAmountInput');
+            if (depositInput && typeof window.setupCurrencyInput === 'function') {
+                window.setupCurrencyInput(depositInput);
+            }
             }
 
             window.setDepositAmount = function(amount) {
             const input = document.getElementById('depositAmountInput');
             if (input) {
-            input.value = amount;
+            input.value = typeof window.formatCurrencyInput === 'function' ? window.formatCurrencyInput(amount) : amount;
             document.getElementById('amountError')?.classList.add('d-none');
             }
             }
@@ -2259,7 +2255,7 @@
             const input = document.getElementById('depositAmountInput');
             if (!input) return;
 
-            const amount = parseInt(input.value);
+            const amount = parseInt(input.value.replace(/\D/g, ''));
             const errorEl = document.getElementById('amountError');
 
             if (isNaN(amount) || amount <= 0 || amount % 50000 !== 0) {

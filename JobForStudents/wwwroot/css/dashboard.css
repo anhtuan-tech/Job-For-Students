@@ -6504,6 +6504,12 @@ body.sidebar-collapsed .main-content {
     max-width: 100% !important;
 }
 
+body.sidebar-collapsed .layout-admin .main-content-wrapper {
+    margin-left: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
 @media (max-width: 860px) {
     .layout-admin .main-content-wrapper {
         margin-left: 0 !important;
