@@ -6718,7 +6718,7 @@
                     ` : `
                         ${isStudent ? `<div class="dropdown-menu-item" data-action="profile"><i data-lucide="user" style="width:16px;height:16px;"></i> Hồ sơ của tôi</div>` : ''}
                         ${isStudent ? `<div class="dropdown-menu-item" data-action="account"><i data-lucide="settings" style="width:16px;height:16px;"></i> Thiết lập tài khoản</div>` : ''}
-                        <div class="dropdown-menu-item" data-action="privacy"><i data-lucide="shield" style="width:16px;height:16px;"></i> Bảo mật & Quyền riêng tư</div>
+                        <div class="dropdown-menu-item" data-action="privacy"><i data-lucide="shield" style="width:16px;height:16px;"></i> Điều khoản & Chính sách</div>
                     `}
                     <div class="dropdown-divider"></div>
                     <div class="dropdown-menu-item danger" data-action="logout"><i data-lucide="log-out" style="width:16px;height:16px;"></i> Đăng xuất</div>
@@ -6812,11 +6812,11 @@
                             <li>Doanh nghiệp/Nhà tuyển dụng chịu trách nhiệm về tính pháp lý và thông tin tuyển dụng của dự án/công việc đăng tải.</li>
                             <li>Nghiêm cấm chia sẻ tài khoản hoặc sử dụng thông tin giả mạo.</li>
                         </ul>
-                        <h4 style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-top: 16px; margin-bottom: 8px;">2. Quy trình làm việc và Thanh toán (Escrow)</h4>
+                        <h4 style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-top: 16px; margin-bottom: 8px;">2. Quy trình làm việc và Thanh toán</h4>
                         <ul style="padding-left: 20px;">
-                            <li>Tất cả các giao dịch thanh toán dự án phải được thực hiện thông qua hệ thống giữ tiền trung gian (Escrow) của J4S để đảm bảo quyền lợi cho cả hai bên.</li>
-                            <li>Doanh nghiệp cần nạp đủ ngân sách công việc trước khi freelancer bắt đầu thực hiện dự án.</li>
-                            <li>Freelancer nhận thanh toán sau khi doanh nghiệp xác nhận nghiệm thu sản phẩm đạt yêu cầu.</li>
+                            <li>Doanh nghiệp và sinh viên tự chủ động thỏa thuận và thống nhất mức ngân sách công việc trước khi bắt đầu thực hiện dự án.</li>
+                            <li>Hệ thống J4S hỗ trợ nạp tiền và thực hiện thanh toán trực tiếp qua ví nội bộ dựa trên sự đồng thuận của hai bên.</li>
+                            <li>Sinh viên nhận thanh toán sau khi hoàn thành công việc và được phía doanh nghiệp nghiệm thu, xác nhận trực tiếp trên hệ thống.</li>
                         </ul>
                         <h4 style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-top: 16px; margin-bottom: 8px;">3. Quyền và nghĩa vụ</h4>
                         <ul style="padding-left: 20px;">
@@ -6838,7 +6838,7 @@
                         <h4 style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-top: 16px; margin-bottom: 8px;">2. Sử dụng thông tin</h4>
                         <ul style="padding-left: 20px;">
                             <li>Thông tin liên hệ (Email, Số điện thoại) được sử dụng để thông báo trạng thái dự án, giao dịch ví, hoặc các cập nhật quan trọng từ nền tảng.</li>
-                            <li>Hồ sơ năng lực, kỹ năng và CV của sinh viên sẽ được hiển thị công khai cho các nhà tuyển dụng tìm kiếm nhân sự phù hợp.</li>
+                            <li>Hồ sơ năng lực và kỹ năng của sinh viên sẽ được hiển thị công khai cho các nhà tuyển dụng tìm kiếm nhân sự phù hợp.</li>
                         </ul>
                         <h4 style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-top: 16px; margin-bottom: 8px;">3. Bảo mật dữ liệu</h4>
                         <ul style="padding-left: 20px;">
