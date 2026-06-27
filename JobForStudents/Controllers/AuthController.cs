@@ -314,6 +314,13 @@ public class AuthController : Controller
             return Json(new { success = false, message = "Email không hợp lệ." });
         }
 
+        // Rate limiting: block if a request was already sent in the last 60 seconds
+        var rateLimitKey = $"OTP_RateLimit_{request.Email.ToLower().Trim()}";
+        if (_cache.TryGetValue(rateLimitKey, out _))
+        {
+            return Json(new { success = false, message = "Bạn vừa yêu cầu gửi mã OTP. Vui lòng chờ ít nhất 60 giây trước khi thử lại." });
+        }
+
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email && !u.IsDeleted);
         if (user == null)
         {
@@ -326,8 +333,14 @@ public class AuthController : Controller
         }
 
         var otp = new Random().Next(100000, 999999).ToString();
+        var sentAt = DateTime.UtcNow;
+
+        // Store OTP with timestamp (expires from cache after 5 minutes as a safety net)
         var cacheKey = $"OTP_Reset_{request.Email}";
-        _cache.Set(cacheKey, otp, TimeSpan.FromMinutes(5));
+        _cache.Set(cacheKey, (Otp: otp, SentAt: sentAt), TimeSpan.FromMinutes(5));
+
+        // Set rate limit: block re-send for 60 seconds
+        _cache.Set(rateLimitKey, true, TimeSpan.FromSeconds(60));
 
         // For development purpose, print to output console and return OTP
         System.Diagnostics.Debug.WriteLine($"[FORGOT PASSWORD] OTP for {request.Email}: {otp}");
@@ -343,7 +356,7 @@ public class AuthController : Controller
                 <div style='background-color: #f1f5f9; padding: 15px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 4px; color: #1e293b; border-radius: 6px; margin: 20px 0;'>
                     {otp}
                 </div>
-                <p style='color: #ef4444; font-weight: 500;'>Mã OTP này có hiệu lực trong vòng 5 phút.</p>
+                <p style='color: #ef4444; font-weight: 500;'>Mã OTP này có hiệu lực trong vòng <strong>5 phút</strong>.</p>
                 <p>Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email này để bảo vệ tài khoản.</p>
                 <hr style='border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;' />
                 <p style='font-size: 12px; color: #64748b; text-align: center;'>Đây là email tự động từ hệ thống J4S Platform. Vui lòng không phản hồi email này.</p>
@@ -365,9 +378,22 @@ public class AuthController : Controller
         }
 
         var cacheKey = $"OTP_Reset_{request.Email}";
-        if (!_cache.TryGetValue(cacheKey, out string? cachedOtp) || cachedOtp != request.Otp)
+        if (!_cache.TryGetValue(cacheKey, out (string Otp, DateTime SentAt) record))
         {
-            return Json(new { success = false, message = "Mã OTP không chính xác hoặc đã hết hạn." });
+            return Json(new { success = false, message = "Mã OTP không chính xác hoặc đã hết hạn. Vui lòng yêu cầu mã mới." });
+        }
+
+        // Check OTP value
+        if (record.Otp != request.Otp)
+        {
+            return Json(new { success = false, message = "Mã OTP không chính xác." });
+        }
+
+        // Check explicit 5-minute expiry
+        if ((DateTime.UtcNow - record.SentAt).TotalMinutes > 5)
+        {
+            _cache.Remove(cacheKey);
+            return Json(new { success = false, message = "Mã OTP đã hết hạn (quá 5 phút). Vui lòng yêu cầu mã mới." });
         }
 
         return Json(new { success = true, message = "Mã OTP xác thực thành công!" });
@@ -385,9 +411,22 @@ public class AuthController : Controller
         }
 
         var cacheKey = $"OTP_Reset_{request.Email}";
-        if (!_cache.TryGetValue(cacheKey, out string? cachedOtp) || cachedOtp != request.Otp)
+        if (!_cache.TryGetValue(cacheKey, out (string Otp, DateTime SentAt) record))
         {
-            return Json(new { success = false, message = "Mã OTP không chính xác hoặc đã hết hạn." });
+            return Json(new { success = false, message = "Mã OTP không chính xác hoặc đã hết hạn. Vui lòng yêu cầu mã mới." });
+        }
+
+        // Check OTP value
+        if (record.Otp != request.Otp)
+        {
+            return Json(new { success = false, message = "Mã OTP không chính xác." });
+        }
+
+        // Check explicit 5-minute expiry
+        if ((DateTime.UtcNow - record.SentAt).TotalMinutes > 5)
+        {
+            _cache.Remove(cacheKey);
+            return Json(new { success = false, message = "Mã OTP đã hết hạn (quá 5 phút). Vui lòng yêu cầu mã mới." });
         }
 
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email && !u.IsDeleted);
@@ -405,7 +444,9 @@ public class AuthController : Controller
         user.PasswordHash = newPasswordHash;
         await _context.SaveChangesAsync();
 
+        // Clean up both OTP and rate limit entries after successful reset
         _cache.Remove(cacheKey);
+        _cache.Remove($"OTP_RateLimit_{request.Email.ToLower().Trim()}");
 
         return Json(new { success = true, message = "Đặt lại mật khẩu thành công!" });
     }
