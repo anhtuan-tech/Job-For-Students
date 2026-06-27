@@ -1861,7 +1861,8 @@
         const activeJobs = jobs.filter(job => job.status === 'Open');
         const expiringJobs = activeJobs.filter(job => {
             if (!job.deadline) return false;
-            const deadline = new Date(`${job.deadline}T00:00:00`);
+            const parts = job.deadline.split('/');
+            const deadline = parts.length === 3 ? new Date(parts[2], parts[1] - 1, parts[0]) : new Date(job.deadline);
             const daysLeft = Math.ceil((deadline - today) / 86400000);
             return daysLeft >= 0 && daysLeft <= 3;
         });
@@ -1946,16 +1947,29 @@
                     <button class="text-link-button" id="btnAllRecentJobs">Xem tất cả</button>
                 </div>
                 <div class="recent-job-list">
-                    ${recentJobs.length ? recentJobs.map(job => `
-                        <article class="recent-job-item">
-                            <div class="recent-job-icon"><i data-lucide="file-text"></i></div>
-                            <div>
-                                <strong>${escapeHtml(job.title)}</strong>
-                                <p><span><i data-lucide="eye"></i> 0</span><span><i data-lucide="user"></i> ${job.applicantsCount}</span><span>${newApplicantsByJob[job.id] || 0} mới</span></p>
-                                <span class="job-warning-badge">Sắp hết hạn</span>
-                            </div>
-                        </article>
-                    `).join('') : '<div class="business-empty-row">Chưa có tin đang hiển thị.</div>'}
+                    ${recentJobs.length ? recentJobs.map(job => {
+            let warningBadge = '';
+            if (job.deadline) {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const parts = job.deadline.split('/');
+                const deadline = parts.length === 3 ? new Date(parts[2], parts[1] - 1, parts[0]) : new Date(job.deadline);
+                const daysLeft = Math.ceil((deadline - today) / 86400000);
+                if (daysLeft >= 0 && daysLeft <= 3) {
+                    warningBadge = '<span class="job-warning-badge">Sắp hết hạn</span>';
+                }
+            }
+            return `
+                            <article class="recent-job-item">
+                                <div class="recent-job-icon"><i data-lucide="file-text"></i></div>
+                                <div>
+                                    <strong>${escapeHtml(job.title)}</strong>
+                                    <p><span><i data-lucide="eye"></i> 0</span><span><i data-lucide="user"></i> ${job.applicantsCount}</span><span>${newApplicantsByJob[job.id] || 0} mới</span></p>
+                                    ${warningBadge}
+                                </div>
+                            </article>
+                        `;
+        }).join('') : '<div class="business-empty-row">Chưa có tin đang hiển thị.</div>'}
                 </div>
                 <button class="btn-business-outline full" id="btnManageRecentJobs">Quản lý tin đăng</button>
             </section>
