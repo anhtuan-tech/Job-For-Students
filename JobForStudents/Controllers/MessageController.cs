@@ -24,6 +24,55 @@ public class MessageController : Controller
         return null;
     }
 
+    [HttpGet]
+    public async Task<IActionResult> GetContacts()
+    {
+        var currentUserId = GetCurrentUserId();
+        if (currentUserId == null) return Unauthorized();
+
+        var sentUserIds = await _context.Messages
+            .Where(m => m.SenderId == currentUserId.Value)
+            .Select(m => m.ReceiverId)
+            .Distinct()
+            .ToListAsync();
+
+        var receivedUserIds = await _context.Messages
+            .Where(m => m.ReceiverId == currentUserId.Value)
+            .Select(m => m.SenderId)
+            .Distinct()
+            .ToListAsync();
+
+        var contactUserIds = sentUserIds.Union(receivedUserIds).ToList();
+
+        var contacts = await _context.Users
+            .Include(u => u.StudentProfile)
+            .Include(u => u.BusinessProfile)
+            .Where(u => contactUserIds.Contains(u.Id))
+            .Select(u => new 
+            {
+                Id = u.Id,
+                FullName = u.Role == UserRole.Student ? (u.StudentProfile != null ? u.StudentProfile.FullName : "Sinh viên") : (u.BusinessProfile != null ? u.BusinessProfile.CompanyName : "Doanh nghiệp"),
+                Role = u.Role.ToString(),
+                UnreadCount = _context.Messages.Count(m => m.SenderId == u.Id && m.ReceiverId == currentUserId.Value && !m.IsRead),
+                AvatarUrl = u.Role == UserRole.Student ? (u.StudentProfile != null ? u.StudentProfile.AvatarUrl : null) : (u.BusinessProfile != null ? u.BusinessProfile.LogoUrl : null)
+            })
+            .ToListAsync();
+
+        return Json(new { success = true, contacts });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetUnreadCount()
+    {
+        var currentUserId = GetCurrentUserId();
+        if (currentUserId == null) return Unauthorized();
+
+        var unreadCount = await _context.Messages
+            .CountAsync(m => m.ReceiverId == currentUserId.Value && !m.IsRead);
+
+        return Json(new { success = true, unreadCount });
+    }
+
     public async Task<IActionResult> Index(int? userId)
     {
         var currentUserId = GetCurrentUserId();
@@ -110,6 +159,30 @@ public class MessageController : Controller
         var currentUserId = GetCurrentUserId();
         if (currentUserId == null) return Unauthorized();
         if (string.IsNullOrWhiteSpace(content)) return BadRequest();
+        
+        var trimmedContent = content.Trim();
+        if (trimmedContent.Length > 4000)
+        {
+            return Json(new { success = false, message = "Độ dài tin nhắn không được vượt quá 4000 ký tự." });
+        }
+
+        // Verify receiver is active and not deleted
+        var receiver = await _context.Users.FirstOrDefaultAsync(u => u.Id == receiverId && !u.IsDeleted);
+        if (receiver == null || receiver.Status != UserStatus.Active)
+        {
+            return Json(new { success = false, message = "Không thể gửi tin nhắn. Người nhận không tồn tại hoặc tài khoản đã bị khóa." });
+        }
+
+        var oneMinuteAgo = DateTime.UtcNow.AddMinutes(-1);
+        var messageCountInLastMinute = await _context.Messages
+            .CountAsync(m => m.SenderId == currentUserId.Value && m.SentAt >= oneMinuteAgo);
+
+        if (messageCountInLastMinute >= 30)
+        {
+            return Json(new { success = false, message = "Bạn đã gửi quá giới hạn 30 tin nhắn trong vòng 1 phút. Vui lòng thử lại sau." });
+        }
+
+        content = trimmedContent;
 
         var message = new Message
         {

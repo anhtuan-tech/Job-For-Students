@@ -267,6 +267,8 @@
                         });
                 }
 
+                window.loadMainChatMessages = loadMessages;
+
                 loadMessages();
                 setInterval(loadMessages, 5000);
 
@@ -288,6 +290,15 @@
                         if (data.success) {
                             messageInput.value = '';
                             loadMessages();
+                            if (typeof window.loadBubbleChatMessages === 'function') {
+                                window.loadBubbleChatMessages();
+                            }
+                        } else {
+                            if (typeof showToast === 'function') {
+                                showToast(data.message || 'Gửi tin nhắn thất bại.', 'error');
+                            } else {
+                                alert(data.message || 'Gửi tin nhắn thất bại.');
+                            }
                         }
                     });
                 });

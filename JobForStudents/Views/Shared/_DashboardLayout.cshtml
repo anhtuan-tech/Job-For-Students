@@ -61,6 +61,211 @@
             font-size: 0.875rem;
             font-weight: 500;
         }
+
+        /* Floating Chat Bubble widget */
+        .chat-bubble-widget {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            font-family: 'Inter', sans-serif;
+        }
+        .chat-bubble-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0ea5e9, #2563eb);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+        }
+        .chat-bubble-btn:hover {
+            transform: scale(1.08) translateY(-2px);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.6);
+        }
+        .chat-bubble-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            background: #ef4444;
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid white;
+        }
+        .chat-bubble-panel {
+            width: 360px;
+            height: 480px;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+            margin-bottom: 16px;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+            transform: scale(0.9);
+            transform-origin: bottom right;
+            opacity: 0;
+        }
+        .chat-bubble-panel.show {
+            display: flex;
+            transform: scale(1);
+            opacity: 1;
+        }
+        .chat-panel-header {
+            background: linear-gradient(135deg, #0ea5e9, #2563eb);
+            color: white;
+            padding: 16px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .chat-panel-title {
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .chat-panel-close, .chat-panel-back {
+            background: transparent;
+            border: none;
+            color: white;
+            cursor: pointer;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+            display: flex;
+            align-items: center;
+        }
+        .chat-panel-close:hover, .chat-panel-back:hover {
+            opacity: 1;
+        }
+        .chat-panel-body {
+            flex-grow: 1;
+            overflow-y: auto;
+            background: #f8fafc;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-bubble-contact-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .chat-bubble-contact-item:hover {
+            background: #f0f9ff;
+        }
+        .chat-bubble-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 13px;
+        }
+        .chat-bubble-contact-info {
+            flex-grow: 1;
+            overflow: hidden;
+        }
+        .chat-bubble-contact-name {
+            font-weight: 600;
+            font-size: 13.5px;
+            color: #1e293b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .chat-bubble-contact-role {
+            font-size: 11px;
+            color: #64748b;
+        }
+        .chat-bubble-messages-list {
+            flex-grow: 1;
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .bubble-msg {
+            max-width: 80%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+        .bubble-msg.mine {
+            background: #0ea5e9;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 3px;
+        }
+        .bubble-msg.theirs {
+            background: #ffffff;
+            color: #1e293b;
+            align-self: flex-start;
+            border-bottom-left-radius: 3px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        }
+        .bubble-msg-time {
+            font-size: 9px;
+            opacity: 0.6;
+            margin-top: 4px;
+            text-align: right;
+        }
+        .chat-bubble-input-area {
+            padding: 12px;
+            background: #ffffff;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .chat-bubble-input {
+            flex-grow: 1;
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            outline: none;
+            font-size: 13px;
+        }
+        .chat-bubble-send-btn {
+            background: #0ea5e9;
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -130,6 +335,250 @@
             }
         });
     </script>
+
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <!-- Chat Bubble Widget -->
+        <div class="chat-bubble-widget" id="chatBubbleWidget">
+            <div class="chat-bubble-panel" id="chatBubblePanel">
+                <div class="chat-panel-header">
+                    <button class="chat-panel-back" id="chatPanelBack" style="display:none;">
+                        <i data-lucide="chevron-left" style="width:18px;height:18px;"></i>
+                    </button>
+                    <div class="chat-panel-title" id="chatPanelTitle">
+                        <i data-lucide="message-square" style="width:18px;height:18px;"></i> Tin nhắn J4S
+                    </div>
+                    <button class="chat-panel-close" id="chatPanelClose">
+                        <i data-lucide="x" style="width:18px;height:18px;"></i>
+                    </button>
+                </div>
+                <div class="chat-panel-body" id="chatPanelBody">
+                    <!-- Loaded via AJAX -->
+                </div>
+                <div class="chat-bubble-input-area" id="chatBubbleInputArea" style="display:none;">
+                    <input type="text" class="chat-bubble-input" id="chatBubbleMessageInput" placeholder="Nhập tin nhắn..." autocomplete="off" />
+                    <button class="chat-bubble-send-btn" id="chatBubbleSendBtn">
+                        <i data-lucide="send" style="width:14px;height:14px;"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="chat-bubble-btn" id="chatBubbleBtn">
+                <i data-lucide="message-circle" style="width:28px;height:28px;"></i>
+                <div class="chat-bubble-badge" id="chatBubbleBadge" style="display:none;"></div>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const bubbleBtn = document.getElementById('chatBubbleBtn');
+                const panel = document.getElementById('chatBubblePanel');
+                const panelClose = document.getElementById('chatPanelClose');
+                const panelBack = document.getElementById('chatPanelBack');
+                const panelTitle = document.getElementById('chatPanelTitle');
+                const panelBody = document.getElementById('chatPanelBody');
+                const inputArea = document.getElementById('chatBubbleInputArea');
+                const messageInput = document.getElementById('chatBubbleMessageInput');
+                const sendBtn = document.getElementById('chatBubbleSendBtn');
+
+                if (!bubbleBtn) return;
+
+                let activeContactId = null;
+                let activeContactName = '';
+                let pollingInterval = null;
+
+                // Poll unread messages count every 15 seconds
+                function updateUnreadBadge() {
+                    fetch('/Message/GetUnreadCount')
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                const badgeEl = document.getElementById('chatBubbleBadge');
+                                if (badgeEl) {
+                                    if (data.unreadCount > 0) {
+                                        badgeEl.textContent = data.unreadCount > 99 ? '99+' : data.unreadCount;
+                                        badgeEl.style.display = 'flex';
+                                    } else {
+                                        badgeEl.style.display = 'none';
+                                    }
+                                }
+                            }
+                        })
+                        .catch(err => console.error('Error fetching unread count:', err));
+                }
+
+                updateUnreadBadge();
+                setInterval(updateUnreadBadge, 15000);
+
+                // Toggle panel visibility
+                bubbleBtn.addEventListener('click', () => {
+                    if (panel.classList.contains('show')) {
+                        closeChatPanel();
+                    } else {
+                        panel.style.display = 'flex';
+                        setTimeout(() => {
+                            panel.classList.add('show');
+                        }, 10);
+                        loadBubbleContacts();
+                    }
+                });
+
+                panelClose.addEventListener('click', closeChatPanel);
+
+                panelBack.addEventListener('click', () => {
+                    activeContactId = null;
+                    activeContactName = '';
+                    if (pollingInterval) clearInterval(pollingInterval);
+                    loadBubbleContacts();
+                    panelBack.style.display = 'none';
+                    inputArea.style.display = 'none';
+                    panelTitle.innerHTML = '<i data-lucide="message-square" style="width:18px;height:18px;"></i> Tin nhắn J4S';
+                    lucide.createIcons();
+                    updateUnreadBadge();
+                });
+
+                function closeChatPanel() {
+                    panel.classList.remove('show');
+                    if (pollingInterval) clearInterval(pollingInterval);
+                    setTimeout(() => {
+                        panel.style.display = 'none';
+                    }, 300);
+                    updateUnreadBadge();
+                }
+
+                function loadBubbleContacts() {
+                    panelBody.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100%;color:#64748b;"><div class="spinner-border spinner-border-sm text-primary" role="status"></div></div>';
+                    fetch('/Message/GetContacts')
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                if (data.contacts.length === 0) {
+                                    panelBody.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:#94a3b8;padding:24px;text-align:center;"><i data-lucide="message-square-off" style="width:36px;height:36px;margin-bottom:8px;opacity:0.6;"></i>Chưa có cuộc hội thoại nào.</div>';
+                                    lucide.createIcons();
+                                    return;
+                                }
+
+                                panelBody.innerHTML = '';
+                                data.contacts.forEach(c => {
+                                    const initials = c.fullName.substring(0, 2).toUpperCase();
+                                    const avatarContent = c.avatarUrl ? `<img src="${c.avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />` : initials;
+                                    const unreadDot = c.unreadCount > 0 ? `<div style="background:#ef4444;color:white;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;margin-left:auto;flex-shrink:0;">${c.unreadCount}</div>` : '';
+                                    const itemHTML = `
+                                        <div class="chat-bubble-contact-item" data-id="${c.id}" data-name="${c.fullName}" data-avatar="${c.avatarUrl || ''}">
+                                            <div class="chat-bubble-avatar">${avatarContent}</div>
+                                            <div class="chat-bubble-contact-info" style="display:flex;align-items:center;width:100%;gap:8px;">
+                                                <div style="flex-grow:1;min-width:0;">
+                                                    <div class="chat-bubble-contact-name" style="${c.unreadCount > 0 ? 'font-weight: 800;' : ''}">${c.fullName}</div>
+                                                    <div class="chat-bubble-contact-role">${c.role === 'Student' ? 'Sinh viên' : 'Doanh nghiệp'}</div>
+                                                </div>
+                                                ${unreadDot}
+                                            </div>
+                                        </div>
+                                    `;
+                                    panelBody.insertAdjacentHTML('beforeend', itemHTML);
+                                });
+
+                                panelBody.querySelectorAll('.chat-bubble-contact-item').forEach(item => {
+                                    item.addEventListener('click', () => {
+                                        activeContactId = item.dataset.id;
+                                        activeContactName = item.dataset.name;
+                                        startBubbleConversation();
+                                    });
+                                });
+                                lucide.createIcons();
+                            }
+                        });
+                }
+
+                function startBubbleConversation() {
+                    panelBack.style.display = 'block';
+                    inputArea.style.display = 'flex';
+                    
+                    const item = panelBody.querySelector(`.chat-bubble-contact-item[data-id="${activeContactId}"]`);
+                    const avatarUrl = item ? item.dataset.avatar : '';
+                    const initials = activeContactName.substring(0, 2).toUpperCase();
+                    const avatarHTML = avatarUrl ? `<img src="${avatarUrl}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;" />` : `<div class="chat-bubble-avatar" style="width:28px;height:28px;font-size:11px;">${initials}</div>`;
+
+                    panelTitle.innerHTML = `
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            ${avatarHTML}
+                            <span style="font-weight:700;">${activeContactName}</span>
+                        </div>
+                    `;
+                    
+                    loadBubbleMessages();
+                    pollingInterval = setInterval(loadBubbleMessages, 5000);
+                }
+
+                function loadBubbleMessages() {
+                    if (!activeContactId) return;
+                    fetch(`/Message/GetMessages?contactId=${activeContactId}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                let list = panelBody.querySelector('.chat-bubble-messages-list');
+                                if (!list) {
+                                    panelBody.innerHTML = '<div class="chat-bubble-messages-list"></div>';
+                                    list = panelBody.querySelector('.chat-bubble-messages-list');
+                                }
+
+                                list.innerHTML = '';
+                                data.messages.forEach(msg => {
+                                    const msgClass = msg.isMine ? 'mine' : 'theirs';
+                                    const msgHTML = `
+                                        <div class="bubble-msg ${msgClass}">
+                                            <div>${msg.content}</div>
+                                            <div class="bubble-msg-time">${msg.sentAt}</div>
+                                        </div>
+                                    `;
+                                    list.insertAdjacentHTML('beforeend', msgHTML);
+                                });
+                                list.scrollTop = list.scrollHeight;
+                                updateUnreadBadge();
+                            }
+                        });
+                }
+
+                window.loadBubbleChatMessages = loadBubbleMessages;
+
+                function sendBubbleMessage() {
+                    const content = messageInput.value.trim();
+                    if (!content || !activeContactId) return;
+
+                    const formData = new FormData();
+                    formData.append('receiverId', activeContactId);
+                    formData.append('content', content);
+
+                    fetch('/Message/SendMessage', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            messageInput.value = '';
+                            loadBubbleMessages();
+                            if (typeof window.loadMainChatMessages === 'function') {
+                                window.loadMainChatMessages();
+                            }
+                        } else {
+                            if (typeof showToast === 'function') {
+                                showToast(data.message || 'Gửi tin nhắn thất bại.', 'error');
+                            } else {
+                                alert(data.message || 'Gửi tin nhắn thất bại.');
+                            }
+                        }
+                    });
+                }
+
+                sendBtn.addEventListener('click', sendBubbleMessage);
+                messageInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        sendBubbleMessage();
+                    }
+                });
+            });
+        </script>
+    }
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
