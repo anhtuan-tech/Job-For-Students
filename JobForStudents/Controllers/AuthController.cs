@@ -1,12 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Security.Claims;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using JobForStudents.Data;
 using JobForStudents.Helpers;
 using JobForStudents.Models;
@@ -19,12 +22,20 @@ public class AuthController : Controller
     private readonly AppDbContext _context;
     private readonly IMemoryCache _cache;
     private readonly IEmailService _emailService;
+    private readonly IConfiguration _configuration;
+    private readonly IHttpClientFactory _httpClientFactory;
 
-    public AuthController(AppDbContext context, IMemoryCache cache, IEmailService emailService)
+    private const int MaxLoginFailures = 5;
+    private const int LoginLockWindowMinutes = 15;
+
+    public AuthController(AppDbContext context, IMemoryCache cache, IEmailService emailService,
+        IConfiguration configuration, IHttpClientFactory httpClientFactory)
     {
         _context = context;
         _cache = cache;
         _emailService = emailService;
+        _configuration = configuration;
+        _httpClientFactory = httpClientFactory;
     }
 
     [HttpGet]
@@ -35,6 +46,7 @@ public class AuthController : Controller
             return RedirectToAction("Index", "Home");
         }
         ViewData["ReturnUrl"] = returnUrl;
+        ViewData["RecaptchaSiteKey"] = _configuration["GoogleReCaptcha:SiteKey"];
         return View();
     }
 
@@ -43,9 +55,34 @@ public class AuthController : Controller
     public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
     {
         ViewData["ReturnUrl"] = returnUrl;
+        ViewData["RecaptchaSiteKey"] = _configuration["GoogleReCaptcha:SiteKey"];
+
         if (!ModelState.IsValid)
         {
+            var fails0 = GetLoginFailCount(model.Email);
+            ViewData["ShowCaptcha"] = fails0 >= MaxLoginFailures;
             return View(model);
+        }
+
+        var failCacheKey = $"Login_Fail_{model.Email.ToLower().Trim()}";
+        var currentFailCount = GetLoginFailCount(model.Email);
+
+        // Require reCAPTCHA verification after MaxLoginFailures failures
+        if (currentFailCount >= MaxLoginFailures)
+        {
+            ViewData["ShowCaptcha"] = true;
+            if (string.IsNullOrWhiteSpace(model.RecaptchaToken))
+            {
+                ModelState.AddModelError(string.Empty, "Vui lòng xác nhận bạn không phải robot trước khi đăng nhập.");
+                return View(model);
+            }
+
+            var captchaValid = await VerifyReCaptchaAsync(model.RecaptchaToken);
+            if (!captchaValid)
+            {
+                ModelState.AddModelError(string.Empty, "Xác minh reCAPTCHA không hợp lệ. Vui lòng thử lại.");
+                return View(model);
+            }
         }
 
         var passwordHash = PasswordHasher.HashPassword(model.Password);
@@ -56,7 +93,20 @@ public class AuthController : Controller
 
         if (user == null)
         {
-            ModelState.AddModelError(string.Empty, "Email hoặc mật khẩu không chính xác.");
+            // Increment failure counter
+            var newCount = currentFailCount + 1;
+            _cache.Set(failCacheKey, newCount, TimeSpan.FromMinutes(LoginLockWindowMinutes));
+
+            var remaining = MaxLoginFailures - newCount;
+            if (remaining > 0)
+            {
+                ModelState.AddModelError(string.Empty, $"Email hoặc mật khẩu không chính xác. Bạn còn {remaining} lần thử trước khi cần xác minh captcha.");
+            }
+            else
+            {
+                ModelState.AddModelError(string.Empty, "Email hoặc mật khẩu không chính xác. Vui lòng xác minh captcha để tiếp tục.");
+                ViewData["ShowCaptcha"] = true;
+            }
             return View(model);
         }
 
@@ -65,6 +115,9 @@ public class AuthController : Controller
             ModelState.AddModelError(string.Empty, "Tài khoản của bạn đã bị khóa.");
             return View(model);
         }
+
+        // Success — clear failure counter
+        _cache.Remove(failCacheKey);
 
         var userName = user.Role == UserRole.Student 
             ? user.StudentProfile?.FullName ?? user.Email 
@@ -370,5 +423,31 @@ public class AuthController : Controller
         if (text.Any(c => dangerousChars.Contains(c))) return true;
 
         return false;
+    }
+
+    private int GetLoginFailCount(string email)
+    {
+        var key = $"Login_Fail_{email.ToLower().Trim()}";
+        return _cache.TryGetValue(key, out int count) ? count : 0;
+    }
+
+    private async Task<bool> VerifyReCaptchaAsync(string token)
+    {
+        try
+        {
+            var secretKey = _configuration["GoogleReCaptcha:SecretKey"];
+            var client = _httpClientFactory.CreateClient();
+            var response = await client.PostAsync(
+                $"https://www.google.com/recaptcha/api/siteverify?secret={secretKey}&response={token}",
+                null);
+
+            var json = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<JsonElement>(json);
+            return result.TryGetProperty("success", out var successProp) && successProp.GetBoolean();
+        }
+        catch
+        {
+            return false;
+        }
     }
 }

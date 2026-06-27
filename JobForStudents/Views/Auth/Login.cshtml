@@ -113,8 +113,22 @@
                     </label>
                 </div>
 
+                <!-- reCAPTCHA Widget (shown after 5 failed attempts) -->
+                @if (ViewData["ShowCaptcha"] is true)
+                {
+                    <div class="mb-4">
+                        <div class="g-recaptcha" 
+                             data-sitekey="@ViewData["RecaptchaSiteKey"]"
+                             data-callback="onRecaptchaSuccess"
+                             data-expired-callback="onRecaptchaExpired"
+                             style="transform: scale(0.96); transform-origin: 0 0;"></div>
+                        <input type="hidden" name="RecaptchaToken" id="recaptchaTokenInput" />
+                        <span class="text-danger small mt-1 d-block" id="captchaError" style="display:none !important;"></span>
+                    </div>
+                }
+
                 <!-- Submit Button -->
-                <button type="submit" class="btn-auth-submit">
+                <button type="submit" class="btn-auth-submit" id="loginSubmitBtn">
                     Đăng nhập
                 </button>
 
@@ -128,11 +142,43 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    @if (ViewData["ShowCaptcha"] is true)
+    {
+        <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    }
     <script>
+        // reCAPTCHA callbacks
+        function onRecaptchaSuccess(token) {
+            document.getElementById('recaptchaTokenInput').value = token;
+            var err = document.getElementById('captchaError');
+            if (err) err.style.display = 'none';
+        }
+        function onRecaptchaExpired() {
+            document.getElementById('recaptchaTokenInput').value = '';
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
+            // Validate captcha before submit
+            var form = document.querySelector('form');
+            var captchaInput = document.getElementById('recaptchaTokenInput');
+            if (form && captchaInput !== null) {
+                form.addEventListener('submit', function(e) {
+                    if (!captchaInput.value) {
+                        e.preventDefault();
+                        var err = document.getElementById('captchaError');
+                        if (err) {
+                            err.textContent = 'Vui lòng tích vào ô "Tôi không phải robot" trước khi đăng nhập.';
+                            err.style.display = 'block';
+                        }
+                        // Scroll to captcha
+                        document.querySelector('.g-recaptcha')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                });
+            }
+
+            // Show toast for validation errors
             var summary = document.getElementById('loginValidationSummary');
             if (summary && summary.textContent.trim().length > 0) {
-                // Determine error text
                 var errorMsg = "";
                 var ul = summary.querySelector('ul');
                 if (ul && ul.children.length > 0) {
@@ -140,10 +186,7 @@
                 } else {
                     errorMsg = summary.textContent.trim();
                 }
-
-                // Call the toast notification system
                 if (window.showToast && errorMsg) {
-                    // Slight delay to ensure icons are loaded and UI is ready
                     setTimeout(function() {
                         window.showToast(errorMsg, 'error');
                     }, 100);

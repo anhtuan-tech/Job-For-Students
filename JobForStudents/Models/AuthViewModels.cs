@@ -13,6 +13,9 @@ public class LoginViewModel
     public string Password { get; set; } = string.Empty;
 
     public bool RememberMe { get; set; }
+
+    // Populated by reCAPTCHA widget when captcha is required
+    public string? RecaptchaToken { get; set; }
 }
 
 public class RegisterViewModel

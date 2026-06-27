@@ -132,6 +132,7 @@
         updateNotificationBadge();
         updateUnreadMessagesBadge();
         setInterval(updateUnreadMessagesBadge, 10000);
+        setInterval(pollActiveChat, 4000);
 
         try {
             if (isBusiness) {
@@ -5355,6 +5356,9 @@
                     showToast(data.message || 'Không thể tải tin nhắn.', 'error');
                     return;
                 }
+                if (!window.activeChatMsgCounts) window.activeChatMsgCounts = {};
+                window.activeChatMsgCounts[userId] = (data.messages || []).length;
+
                 renderBusinessChat(data.user, data.messages || []);
                 updateUnreadMessagesBadge();
                 loadBusinessConversations();
@@ -5369,6 +5373,11 @@
         const chatPanel = document.getElementById('chatPanel');
         if (!chatPanel) return;
 
+        // Preserve current typed text and focus state
+        const chatInputOld = document.getElementById('chatInput');
+        const typedText = chatInputOld ? chatInputOld.value : '';
+        const wasFocused = chatInputOld && document.activeElement === chatInputOld;
+
         chatPanel.innerHTML = `
             <div class="chat-header">
                 <div class="chat-user-info">
@@ -5377,7 +5386,7 @@
                     </div>
                     <div>
                         <div class="chat-user-name">${escapeHtml(user.name)}</div>
-                        <div class="chat-status">Ứng viên</div>
+                        <div class="chat-status">Trò chuyện</div>
                     </div>
                 </div>
             </div>
@@ -5394,6 +5403,15 @@
                 <button class="chat-send-btn" id="chatSendBtn"><i data-lucide="send" style="width:18px;height:18px;"></i></button>
             </div>`;
         if (window.lucide) lucide.createIcons();
+
+        // Restore typed text and focus
+        const chatInputNew = document.getElementById('chatInput');
+        if (chatInputNew) {
+            chatInputNew.value = typedText;
+            if (wasFocused) {
+                chatInputNew.focus();
+            }
+        }
 
         const chatMessages = document.getElementById('chatMessages');
         if (chatMessages) chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -6503,6 +6521,34 @@
                 }
             })
             .catch(err => console.error('Error fetching unread message count:', err));
+    }
+
+    function pollActiveChat() {
+        const chatPanel = document.getElementById('chatPanel');
+        if (!chatPanel) return;
+
+        const selectedItem = document.querySelector('.message-item.selected');
+        if (selectedItem) {
+            const userId = Number(selectedItem.dataset.userId);
+            fetch(`/Home/GetConversationMessages?userId=${userId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.success) {
+                        const msgCount = (data.messages || []).length;
+                        if (!window.activeChatMsgCounts) window.activeChatMsgCounts = {};
+                        const prevCount = window.activeChatMsgCounts[userId];
+                        if (prevCount !== msgCount) {
+                            renderBusinessChat(data.user, data.messages || []);
+                            window.activeChatMsgCounts[userId] = msgCount;
+                            updateUnreadMessagesBadge();
+                            loadBusinessConversations();
+                        }
+                    }
+                })
+                .catch(err => console.warn('Chat poll error:', err));
+        } else {
+            loadBusinessConversations();
+        }
     }
 
     function bindNotificationBtn() {
