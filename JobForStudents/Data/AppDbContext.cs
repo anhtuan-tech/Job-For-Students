@@ -259,28 +259,28 @@ public class AppDbContext : DbContext
                     DurationDays = 14,
                     JobPostLimit = 3,
                     Benefits = "3 tin tuyển dụng;Trang tuyển dụng công khai;Nhận ứng viên cơ bản",
-                    IsActive = true
+                    IsActive = false
                 },
                 new ServicePlan
                 {
                     Id = 2,
-                    Name = "Business Growth",
-                    Description = "Gói tăng trưởng cho doanh nghiệp tuyển nhiều vị trí.",
-                    Price = 299000,
+                    Name = "Business Premium",
+                    Description = "Gói tối ưu cho doanh nghiệp vừa và nhỏ, nâng cao hiển thị.",
+                    Price = 99000,
                     DurationDays = 30,
-                    JobPostLimit = 15,
-                    Benefits = "15 tin tuyển dụng;Ưu tiên hiển thị tin;Xem ứng viên từng tin;Thông báo tuyển dụng nâng cao",
+                    JobPostLimit = 10,
+                    Benefits = "10 tin tuyển dụng;Xem duyệt ứng viên;Truy cập hồ sơ ứng viên không giới hạn",
                     IsActive = true
                 },
                 new ServicePlan
                 {
                     Id = 3,
-                    Name = "Business Pro",
-                    Description = "Gói chuyên nghiệp cho chiến dịch tuyển dụng liên tục.",
-                    Price = 799000,
-                    DurationDays = 90,
-                    JobPostLimit = 60,
-                    Benefits = "60 tin tuyển dụng;Ưu tiên cao;Trang doanh nghiệp nổi bật;Lịch sử thanh toán chi tiết",
+                    Name = "Business VIP",
+                    Description = "Đăng 1 bài với độ ưu tiên cao nhất, giới hạn trong 7 ngày.",
+                    Price = 30000,
+                    DurationDays = 7,
+                    JobPostLimit = 1,
+                    Benefits = "1 tin tuyển dụng với độ ưu tiên cao nhất;Bài đăng giới hạn 7 ngày;Sử dụng 1 lần",
                     IsActive = true
                 });
         });

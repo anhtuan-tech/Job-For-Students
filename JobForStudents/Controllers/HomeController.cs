@@ -43,9 +43,10 @@ public class HomeController : Controller
             jobPostsQuery = jobPostsQuery.Where(j => j.IsApproved);
         }
 
-        var jobPosts = await jobPostsQuery
-            .OrderByDescending(j => j.CreatedAt)
-            .ToListAsync();
+        var jobPosts = await jobPostsQuery.ToListAsync();
+        var vipJobs = jobPosts.Where(j => j.IsVip).OrderBy(j => j.CreatedAt).ToList();
+        var normalJobs = jobPosts.Where(j => !j.IsVip).OrderByDescending(j => j.CreatedAt).ToList();
+        jobPosts = vipJobs.Concat(normalJobs).ToList();
 
         // 2. Fetch User's Saved and Applied job IDs (if logged in)
         var savedJobIds = new HashSet<int>();
@@ -84,6 +85,7 @@ public class HomeController : Controller
             HiredCount = _context.JobBids.Count(b => b.JobPostId == j.Id && b.Status == BidStatus.Hired),
             IsSaved = savedJobIds.Contains(j.Id),
             IsApplied = appliedJobIds.Contains(j.Id),
+            IsVip = j.IsVip,
             BudgetType = j.BudgetType.ToString(),
             ExperienceLevel = j.ExperienceLevelRequired.ToString(),
             CreatedAt = j.CreatedAt
@@ -141,7 +143,8 @@ public class HomeController : Controller
                     Id = j.Id,
                     Title = j.Title,
                     CompanyName = j.BusinessProfile?.CompanyName ?? "Unknown",
-                    CreatedAt = j.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                    CreatedAt = j.CreatedAt.ToString("dd/MM/yyyy HH:mm"),
+                    IsVip = j.IsVip
                 }).ToList();
             }
             else if (isStudent)
@@ -213,6 +216,9 @@ public class HomeController : Controller
                         dashboard.CurrentUserName = businessProfile.CompanyName;
                     }
                 }
+
+                var activeSubscription = await GetCurrentBusinessSubscription(currentUserId.Value, createFreePlanIfMissing: false);
+                dashboard.HasActivePackage = activeSubscription != null;
             }
         }
 
@@ -237,7 +243,10 @@ public class HomeController : Controller
             jobQuery = jobQuery.Where(j => j.JobPostSkills.Any(jps => jps.Skill.Category == category));
         }
 
-        var jobPosts = await jobQuery.OrderByDescending(j => j.CreatedAt).ToListAsync();
+        var jobPosts = await jobQuery.ToListAsync();
+        var vipJobs = jobPosts.Where(j => j.IsVip).OrderBy(j => j.CreatedAt).ToList();
+        var normalJobs = jobPosts.Where(j => !j.IsVip).OrderByDescending(j => j.CreatedAt).ToList();
+        jobPosts = vipJobs.Concat(normalJobs).ToList();
 
         var savedJobIds = new HashSet<int>();
         var appliedJobIds = new HashSet<int>();
@@ -261,7 +270,8 @@ public class HomeController : Controller
             Quantity = j.Quantity,
             HiredCount = _context.JobBids.Count(b => b.JobPostId == j.Id && b.Status == BidStatus.Hired),
             IsSaved = savedJobIds.Contains(j.Id),
-            IsApplied = appliedJobIds.Contains(j.Id)
+            IsApplied = appliedJobIds.Contains(j.Id),
+            IsVip = j.IsVip
         }).ToList();
 
         return Json(jobsList);
@@ -322,16 +332,20 @@ public class HomeController : Controller
             jobQuery = jobQuery.Where(j => j.ExperienceLevelRequired == expLevel);
         }
 
-        // Sort
-        jobQuery = (sortBy ?? "newest") switch
+        var jobPosts = await jobQuery.ToListAsync();
+
+        var vipJobs = jobPosts.Where(j => j.IsVip).OrderBy(j => j.CreatedAt).ToList();
+        var normalJobsQuery = jobPosts.Where(j => !j.IsVip);
+
+        var sortedNormalJobs = (sortBy ?? "newest") switch
         {
-            "budget_asc" => jobQuery.OrderBy(j => j.Budget),
-            "budget_desc" => jobQuery.OrderByDescending(j => j.Budget),
-            "applicants" => jobQuery.OrderByDescending(j => j.JobBids.Count),
-            _ => jobQuery.OrderByDescending(j => j.CreatedAt)
+            "budget_asc" => normalJobsQuery.OrderBy(j => j.Budget),
+            "budget_desc" => normalJobsQuery.OrderByDescending(j => j.Budget),
+            "applicants" => normalJobsQuery.OrderByDescending(j => j.JobBids.Count),
+            _ => normalJobsQuery.OrderByDescending(j => j.CreatedAt)
         };
 
-        var jobPosts = await jobQuery.ToListAsync();
+        var finalJobs = vipJobs.Concat(sortedNormalJobs).ToList();
 
         var savedJobIds = new HashSet<int>();
         var appliedJobIds = new HashSet<int>();
@@ -342,7 +356,7 @@ public class HomeController : Controller
             appliedJobIds = new HashSet<int>(await _context.JobBids.Where(jb => jb.StudentId == currentUserId.Value).Select(jb => jb.JobPostId).ToListAsync());
         }
 
-        var jobsList = jobPosts.Select(j => new JobViewModel
+        var jobsList = finalJobs.Select(j => new JobViewModel
         {
             Id = j.Id.ToString(),
             Title = j.Title,
@@ -356,6 +370,7 @@ public class HomeController : Controller
             HiredCount = _context.JobBids.Count(b => b.JobPostId == j.Id && b.Status == BidStatus.Hired),
             IsSaved = savedJobIds.Contains(j.Id),
             IsApplied = appliedJobIds.Contains(j.Id),
+            IsVip = j.IsVip,
             BudgetType = j.BudgetType.ToString(),
             ExperienceLevel = j.ExperienceLevelRequired.ToString(),
             CreatedAt = j.CreatedAt
@@ -670,6 +685,7 @@ public class HomeController : Controller
         var isStudent = User.IsInRole("Student");
 
         var job = await _context.JobPosts
+            .Include(j => j.BusinessProfile)
             .Include(j => j.JobPostSkills)
                 .ThenInclude(jps => jps.Skill)
             .FirstOrDefaultAsync(j => j.Id == id && !j.IsDeleted);
@@ -700,7 +716,9 @@ public class HomeController : Controller
             tags = job.JobPostSkills.Select(jps => jps.Skill.Name).ToList(),
             budgetType = job.BudgetType.ToString(),
             experienceLevel = job.ExperienceLevelRequired.ToString(),
-            requirements = job.Requirements
+            requirements = job.Requirements,
+            benefits = job.Benefits,
+            companyName = job.BusinessProfile?.CompanyName ?? "N/A"
         });
     }
 
@@ -851,7 +869,8 @@ public class HomeController : Controller
                 pendingApplicantsCount = j.JobBids.Count(b => b.Status == BidStatus.Pending),
                 viewCount = j.ViewCount,
                 status = j.Status.ToString(),
-                isApproved = j.IsApproved
+                isApproved = j.IsApproved,
+                isVip = j.IsVip
             })
             .ToListAsync();
 
@@ -1119,7 +1138,7 @@ public class HomeController : Controller
         var openJobEntities = await _context.JobPosts
             .Include(j => j.JobPostSkills)
                 .ThenInclude(jps => jps.Skill)
-            .Where(j => j.BusinessId == id && !j.IsDeleted && j.Status == JobStatus.Open)
+            .Where(j => j.BusinessId == id && !j.IsDeleted && j.Status == JobStatus.Open && j.IsApproved)
             .OrderByDescending(j => j.CreatedAt)
             .ToListAsync();
 
@@ -1753,32 +1772,59 @@ public class HomeController : Controller
             return Json(new { success = false, message = "Chưa đăng nhập." });
         }
 
-        var subscription = await GetCurrentBusinessSubscription(currentUserId.Value, createFreePlanIfMissing: true);
+        var today = DateTime.UtcNow;
+        var premiumSub = await _context.BusinessSubscriptions
+            .Include(bs => bs.ServicePlan)
+            .Where(bs => bs.BusinessId == currentUserId.Value && bs.Status == SubscriptionStatus.Active && bs.ServicePlanId == 2 && bs.EndDate > today)
+            .FirstOrDefaultAsync();
+
+        var vipSub = await _context.BusinessSubscriptions
+            .Include(bs => bs.ServicePlan)
+            .Where(bs => bs.BusinessId == currentUserId.Value && bs.Status == SubscriptionStatus.Active && bs.ServicePlanId == 3 && bs.EndDate > today)
+            .FirstOrDefaultAsync();
+
+        var primarySub = premiumSub ?? vipSub;
         var wallet = await _context.Wallets.FirstOrDefaultAsync(w => w.UserId == currentUserId.Value);
         var plans = await _context.ServicePlans
             .Where(p => p.IsActive)
-            .OrderBy(p => p.Price)
+            .OrderByDescending(p => p.Price)
             .ToListAsync();
 
         return Json(new
         {
             success = true,
             balance = wallet?.Balance ?? 0m,
-            currentPackage = subscription == null ? null : new
+            currentPackage = primarySub == null ? null : new
             {
-                id = subscription.Id,
-                planId = subscription.ServicePlanId,
-                planName = subscription.ServicePlan != null ? subscription.ServicePlan.Name : "Gói dịch vụ",
-                description = subscription.ServicePlan != null ? subscription.ServicePlan.Description : "",
-                price = subscription.ServicePlan != null ? subscription.ServicePlan.Price : 0m,
-                jobPostLimit = subscription.ServicePlan != null ? subscription.ServicePlan.JobPostLimit : 0,
-                startDate = subscription.StartDate.ToString("dd/MM/yyyy"),
-                endDate = subscription.EndDate.ToString("dd/MM/yyyy"),
-                daysLeft = Math.Max(0, (int)Math.Ceiling((subscription.EndDate - DateTime.UtcNow).TotalDays)),
-                remainingJobPosts = subscription.RemainingJobPosts,
-                status = subscription.Status.ToString(),
-                benefits = subscription.ServicePlan != null ? SplitBenefits(subscription.ServicePlan.Benefits) : new List<string>()
+                id = primarySub.Id,
+                planId = primarySub.ServicePlanId,
+                planName = primarySub.ServicePlan != null ? primarySub.ServicePlan.Name : "Gói dịch vụ",
+                description = primarySub.ServicePlan != null ? primarySub.ServicePlan.Description : "",
+                price = primarySub.ServicePlan != null ? primarySub.ServicePlan.Price : 0m,
+                jobPostLimit = primarySub.ServicePlan != null ? primarySub.ServicePlan.JobPostLimit : 0,
+                startDate = primarySub.StartDate.ToString("dd/MM/yyyy"),
+                endDate = primarySub.EndDate.ToString("dd/MM/yyyy"),
+                daysLeft = Math.Max(0, (int)Math.Ceiling((primarySub.EndDate - DateTime.UtcNow).TotalDays)),
+                remainingJobPosts = primarySub.RemainingJobPosts,
+                status = primarySub.Status.ToString(),
+                benefits = primarySub.ServicePlan != null ? SplitBenefits(primarySub.ServicePlan.Benefits) : new List<string>(),
+                hasVipActive = vipSub != null
             },
+            vipPackage = (premiumSub != null && vipSub != null) ? new
+            {
+                id = vipSub.Id,
+                planId = vipSub.ServicePlanId,
+                planName = vipSub.ServicePlan != null ? vipSub.ServicePlan.Name : "Gói dịch vụ VIP",
+                description = vipSub.ServicePlan != null ? vipSub.ServicePlan.Description : "",
+                price = vipSub.ServicePlan != null ? vipSub.ServicePlan.Price : 0m,
+                jobPostLimit = vipSub.ServicePlan != null ? vipSub.ServicePlan.JobPostLimit : 0,
+                startDate = vipSub.StartDate.ToString("dd/MM/yyyy"),
+                endDate = vipSub.EndDate.ToString("dd/MM/yyyy"),
+                daysLeft = Math.Max(0, (int)Math.Ceiling((vipSub.EndDate - DateTime.UtcNow).TotalDays)),
+                remainingJobPosts = vipSub.RemainingJobPosts,
+                status = vipSub.Status.ToString(),
+                benefits = vipSub.ServicePlan != null ? SplitBenefits(vipSub.ServicePlan.Benefits) : new List<string>()
+            } : null,
             plans = plans.Select(p => new
             {
                 id = p.Id,
@@ -1814,22 +1860,31 @@ public class HomeController : Controller
             return Json(new { success = false, message = "Không tìm thấy ví doanh nghiệp." });
         }
 
-        var currentSubscription = await GetCurrentBusinessSubscription(currentUserId.Value, createFreePlanIfMissing: false);
-        if (currentSubscription != null)
-        {
-            var currentPlan = currentSubscription.ServicePlan;
-            var isSamePlan = currentPlan.Id == plan.Id;
-            var isLowerOrEqualPlan = plan.Price < currentPlan.Price
-                || (plan.Price == currentPlan.Price && plan.JobPostLimit <= currentPlan.JobPostLimit);
+        // Check Premium & VIP dependencies
+        var activePremium = await _context.BusinessSubscriptions
+            .Where(bs => bs.BusinessId == currentUserId.Value && bs.ServicePlanId == 2 && bs.Status == SubscriptionStatus.Active && bs.EndDate > DateTime.UtcNow)
+            .FirstOrDefaultAsync();
 
-            if (isSamePlan)
+        if (plan.Id == 3) // Buying VIP
+        {
+            if (activePremium == null)
             {
-                return Json(new { success = false, message = "Bạn đang sử dụng gói này. Nếu muốn thêm thời hạn hoặc lượt đăng, hãy dùng chức năng gia hạn gói." });
+                return Json(new { success = false, message = "Bạn cần sở hữu gói Business Premium đang hoạt động trước khi đăng ký gói Business VIP." });
             }
 
-            if (isLowerOrEqualPlan)
+            var activeVip = await _context.BusinessSubscriptions
+                .Where(bs => bs.BusinessId == currentUserId.Value && bs.ServicePlanId == 3 && bs.Status == SubscriptionStatus.Active && bs.EndDate > DateTime.UtcNow)
+                .FirstOrDefaultAsync();
+            if (activeVip != null)
             {
-                return Json(new { success = false, message = "Không thể chuyển xuống gói thấp hơn hoặc ngang cấp. Doanh nghiệp chỉ có thể nâng cấp lên gói cao hơn." });
+                return Json(new { success = false, message = "Bạn đang có gói Business VIP hoạt động chưa sử dụng." });
+            }
+        }
+        else // Buying Premium (or others)
+        {
+            if (activePremium != null)
+            {
+                return Json(new { success = false, message = "Bạn đang sử dụng gói Business Premium. Nếu muốn thêm lượt hoặc thời hạn, vui lòng dùng chức năng gia hạn gói." });
             }
         }
 
@@ -1842,10 +1897,16 @@ public class HomeController : Controller
         wallet.Balance -= plan.Price;
         wallet.UpdatedAt = now;
 
-        if (currentSubscription != null)
+        if (plan.Id != 3) // If not buying VIP, expire the previous active Premium subscription
         {
-            currentSubscription.Status = SubscriptionStatus.Expired;
-            currentSubscription.UpdatedAt = now;
+            var prevPremium = await _context.BusinessSubscriptions
+                .Where(bs => bs.BusinessId == currentUserId.Value && bs.ServicePlanId == 2 && bs.Status == SubscriptionStatus.Active)
+                .FirstOrDefaultAsync();
+            if (prevPremium != null)
+            {
+                prevPremium.Status = SubscriptionStatus.Expired;
+                prevPremium.UpdatedAt = now;
+            }
         }
 
         var subscription = new BusinessSubscription
@@ -1853,7 +1914,7 @@ public class HomeController : Controller
             BusinessId = currentUserId.Value,
             ServicePlanId = plan.Id,
             StartDate = now,
-            EndDate = now.AddDays(plan.DurationDays),
+            EndDate = plan.Id == 3 && activePremium != null ? activePremium.EndDate : now.AddDays(plan.DurationDays),
             RemainingJobPosts = plan.JobPostLimit,
             Status = SubscriptionStatus.Active,
             CreatedAt = now,
@@ -1886,10 +1947,14 @@ public class HomeController : Controller
             return Json(new { success = false, message = "Chưa đăng nhập." });
         }
 
-        var subscription = await GetCurrentBusinessSubscription(currentUserId.Value, createFreePlanIfMissing: true);
+        var subscription = await _context.BusinessSubscriptions
+            .Include(bs => bs.ServicePlan)
+            .Where(bs => bs.BusinessId == currentUserId.Value && bs.ServicePlanId == 2 && bs.Status == SubscriptionStatus.Active)
+            .FirstOrDefaultAsync();
+
         if (subscription == null)
         {
-            return Json(new { success = false, message = "Doanh nghiệp chưa có gói dịch vụ." });
+            return Json(new { success = false, message = "Bạn chưa có gói Business Premium đang hoạt động để thực hiện gia hạn." });
         }
 
         var plan = subscription.ServicePlan;
@@ -1978,8 +2043,13 @@ public class HomeController : Controller
             .Include(j => j.JobBids)
             .Include(j => j.JobContracts)
             .Where(j => j.BusinessId == currentUserId.Value && !j.IsDeleted)
-            .OrderByDescending(j => j.CreatedAt)
             .ToListAsync();
+
+        jobs = jobs
+            .OrderBy(j => j.IsVip ? 0 : 1)
+            .ThenBy(j => j.Status == JobStatus.In_Progress ? 1 : (j.IsApproved && j.Status == JobStatus.Open ? 2 : (!j.IsApproved ? 3 : (j.Status == JobStatus.Closed ? 4 : 5))))
+            .ThenByDescending(j => j.CreatedAt)
+            .ToList();
 
         var allBids = jobs.SelectMany(j => j.JobBids).ToList();
 
@@ -1995,6 +2065,7 @@ public class HomeController : Controller
             {
                 id = j.Id,
                 title = j.Title,
+                isVip = j.IsVip,
                 description = j.Description,
                 requirements = j.Requirements ?? "",
                 benefits = j.Benefits ?? "",
@@ -2081,8 +2152,8 @@ public class HomeController : Controller
 
         var deadline = DateTime.SpecifyKind(parsedDeadline.Date.AddHours(23).AddMinutes(59), DateTimeKind.Utc);
         JobPost job;
-        BusinessSubscription? activeSubscription = null;
         var shouldConsumeJobPost = false;
+        var isVipPosting = request.IsVip && !request.SaveAsDraft;
 
         if (request.Id.HasValue)
         {
@@ -2097,18 +2168,14 @@ public class HomeController : Controller
 
             job = existingJob;
             shouldConsumeJobPost = !request.SaveAsDraft && existingJob.Status == JobStatus.Draft;
+            if (shouldConsumeJobPost)
+            {
+                isVipPosting = request.IsVip || existingJob.IsVip;
+            }
         }
         else
         {
             shouldConsumeJobPost = !request.SaveAsDraft;
-            activeSubscription = shouldConsumeJobPost
-                ? await GetCurrentBusinessSubscription(currentUserId.Value, createFreePlanIfMissing: true)
-                : null;
-            if (shouldConsumeJobPost && (activeSubscription == null || activeSubscription.RemainingJobPosts <= 0))
-            {
-                return Json(new { success = false, message = "Gói dịch vụ hiện tại đã hết số lượng tin đăng. Vui lòng nâng cấp hoặc gia hạn gói." });
-            }
-
             job = new JobPost
             {
                 BusinessId = currentUserId.Value,
@@ -2116,6 +2183,40 @@ public class HomeController : Controller
                 Status = request.SaveAsDraft ? JobStatus.Draft : JobStatus.Open
             };
             _context.JobPosts.Add(job);
+        }
+
+        if (shouldConsumeJobPost)
+        {
+            var premiumSub = await _context.BusinessSubscriptions
+                .Include(bs => bs.ServicePlan)
+                .Where(bs => bs.BusinessId == currentUserId.Value && bs.Status == SubscriptionStatus.Active && bs.ServicePlanId == 2 && bs.EndDate > DateTime.UtcNow)
+                .FirstOrDefaultAsync();
+
+            var vipSub = await _context.BusinessSubscriptions
+                .Include(bs => bs.ServicePlan)
+                .Where(bs => bs.BusinessId == currentUserId.Value && bs.Status == SubscriptionStatus.Active && bs.ServicePlanId == 3 && bs.EndDate > DateTime.UtcNow)
+                .FirstOrDefaultAsync();
+
+            if (isVipPosting)
+            {
+                if (premiumSub == null || premiumSub.RemainingJobPosts <= 0)
+                {
+                    return Json(new { success = false, message = "Bạn đã hết lượt đăng tin của gói Business Premium. Vui lòng gia hạn gói Premium trước khi đăng tin VIP." });
+                }
+                if (vipSub == null || vipSub.RemainingJobPosts <= 0)
+                {
+                    return Json(new { success = false, message = "Bạn không có gói Business VIP hoạt động hoặc đã hết lượt đăng tin VIP." });
+                }
+                job.IsVip = true;
+                deadline = DateTime.SpecifyKind(DateTime.Today.AddDays(7).Date.AddHours(23).AddMinutes(59), DateTimeKind.Utc);
+            }
+            else
+            {
+                if (premiumSub == null || premiumSub.RemainingJobPosts <= 0)
+                {
+                    return Json(new { success = false, message = "Gói dịch vụ hiện tại đã hết số lượng tin đăng hoặc bạn chưa đăng ký gói. Vui lòng nâng cấp hoặc gia hạn gói Premium." });
+                }
+            }
         }
 
         job.Title = request.Title.Trim();
@@ -2134,15 +2235,36 @@ public class HomeController : Controller
         job.Deadline = deadline;
         job.Status = request.SaveAsDraft ? JobStatus.Draft : JobStatus.Open;
         job.Category = request.Category?.Trim();
+        job.IsVip = request.IsVip;
         job.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
         await SyncJobSkills(job.Id, request.Category ?? "Khác", request.Skills);
 
-        if (shouldConsumeJobPost && activeSubscription != null)
+        if (shouldConsumeJobPost)
         {
-            activeSubscription.RemainingJobPosts = Math.Max(0, activeSubscription.RemainingJobPosts - 1);
-            activeSubscription.UpdatedAt = DateTime.UtcNow;
+            var premiumSub = await _context.BusinessSubscriptions
+                .Where(bs => bs.BusinessId == currentUserId.Value && bs.Status == SubscriptionStatus.Active && bs.ServicePlanId == 2 && bs.EndDate > DateTime.UtcNow)
+                .FirstOrDefaultAsync();
+
+            var vipSub = await _context.BusinessSubscriptions
+                .Where(bs => bs.BusinessId == currentUserId.Value && bs.Status == SubscriptionStatus.Active && bs.ServicePlanId == 3 && bs.EndDate > DateTime.UtcNow)
+                .FirstOrDefaultAsync();
+
+            if (premiumSub != null)
+            {
+                premiumSub.RemainingJobPosts = Math.Max(0, premiumSub.RemainingJobPosts - 1);
+                premiumSub.UpdatedAt = DateTime.UtcNow;
+            }
+
+            if (isVipPosting && vipSub != null)
+            {
+                vipSub.RemainingJobPosts = 0;
+                vipSub.Status = SubscriptionStatus.Expired;
+                vipSub.UpdatedAt = DateTime.UtcNow;
+            }
+
+            await _context.SaveChangesAsync();
         }
 
         _context.Notifications.Add(new Notification
@@ -2995,28 +3117,6 @@ public class HomeController : Controller
             subscription = null;
         }
 
-        if (subscription == null && createFreePlanIfMissing)
-        {
-            var freePlan = await _context.ServicePlans.FirstOrDefaultAsync(p => p.Price == 0 && p.IsActive);
-            if (freePlan != null)
-            {
-                subscription = new BusinessSubscription
-                {
-                    BusinessId = businessId,
-                    ServicePlanId = freePlan.Id,
-                    ServicePlan = freePlan,
-                    StartDate = now,
-                    EndDate = now.AddDays(freePlan.DurationDays),
-                    RemainingJobPosts = freePlan.JobPostLimit,
-                    Status = SubscriptionStatus.Active,
-                    CreatedAt = now,
-                    UpdatedAt = now
-                };
-                _context.BusinessSubscriptions.Add(subscription);
-                await _context.SaveChangesAsync();
-            }
-        }
-
         return subscription;
     }
 
@@ -3320,42 +3420,30 @@ public class HomeController : Controller
             .ToListAsync();
 
         // Calculate active package info
-        var activePackageName = "Gói Thường";
-        var activePackageExpiry = "Vĩnh viễn";
+        var activePackageName = "Chưa đăng ký gói";
+        var activePackageExpiry = "Chưa đăng ký";
         var activePackageUsedCount = 0;
-        var activePackageMaxCount = 1;
+        var activePackageMaxCount = 0;
+        var remainingJobPosts = 0;
         var today = DateTime.UtcNow;
 
-        var latestPkgTx = await _context.Transactions
-            .Where(t => t.WalletId == wallet.Id && t.Type == TransactionType.Withdraw && t.Status == TransactionStatus.Success && t.Description != null && t.Description.Contains("gói dịch vụ"))
-            .OrderByDescending(t => t.CreatedAt)
+        var premiumSub = await _context.BusinessSubscriptions
+            .Include(bs => bs.ServicePlan)
+            .Where(bs => bs.BusinessId == currentUserId.Value && bs.Status == SubscriptionStatus.Active && bs.ServicePlanId == 2 && bs.EndDate > today)
             .FirstOrDefaultAsync();
 
-        if (latestPkgTx != null && latestPkgTx.CreatedAt.AddDays(30) > today)
-        {
-            var isPremium = latestPkgTx.Description?.Contains("Premium") ?? false;
-            var isVip = latestPkgTx.Description?.Contains("VIP") ?? false;
+        var vipSub = await _context.BusinessSubscriptions
+            .Include(bs => bs.ServicePlan)
+            .Where(bs => bs.BusinessId == currentUserId.Value && bs.Status == SubscriptionStatus.Active && bs.ServicePlanId == 3 && bs.EndDate > today)
+            .FirstOrDefaultAsync();
 
-            if (isPremium)
-            {
-                activePackageName = "Gói Premium";
-                activePackageExpiry = latestPkgTx.CreatedAt.AddDays(30).ToString("dd/MM/yyyy");
-                activePackageMaxCount = 20;
-            }
-            else if (isVip)
-            {
-                activePackageName = "Gói VIP";
-                activePackageExpiry = latestPkgTx.CreatedAt.AddDays(30).ToString("dd/MM/yyyy");
-                activePackageMaxCount = 5;
-            }
-
-            activePackageUsedCount = await _context.JobPosts
-                .CountAsync(j => j.BusinessId == currentUserId.Value && !j.IsDeleted && j.CreatedAt >= latestPkgTx.CreatedAt);
-        }
-        else
+        if (premiumSub != null)
         {
-            activePackageUsedCount = await _context.JobPosts
-                .CountAsync(j => j.BusinessId == currentUserId.Value && !j.IsDeleted);
+            activePackageName = vipSub != null ? "Gói Premium + VIP" : "Gói Premium";
+            activePackageExpiry = premiumSub.EndDate.ToString("dd/MM/yyyy");
+            activePackageMaxCount = premiumSub.ServicePlan.JobPostLimit;
+            remainingJobPosts = premiumSub.RemainingJobPosts;
+            activePackageUsedCount = Math.Max(0, activePackageMaxCount - remainingJobPosts);
         }
 
         return Json(new
@@ -3366,7 +3454,8 @@ public class HomeController : Controller
             activePackageName = activePackageName,
             activePackageExpiry = activePackageExpiry,
             activePackageUsedCount = activePackageUsedCount,
-            activePackageMaxCount = activePackageMaxCount
+            activePackageMaxCount = activePackageMaxCount,
+            remainingJobPosts = remainingJobPosts
         });
     }
 
@@ -4186,6 +4275,7 @@ public class BusinessJobPostRequest
     public int Quantity { get; set; } = 1;
     public string Deadline { get; set; } = string.Empty;
     public bool SaveAsDraft { get; set; }
+    public bool IsVip { get; set; }
 }
 
 public class ChangeJobStatusRequest

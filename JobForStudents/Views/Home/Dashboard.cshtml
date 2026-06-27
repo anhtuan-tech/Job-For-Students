@@ -1133,7 +1133,7 @@
 
             <!-- User Menu Dropdown -->
             <div class="dropdown">
-                <div class="user-profile" id="userProfile" data-email="@User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value" data-user-id="@Model.CurrentUserId" data-user-role="@Model.CurrentUserRole">
+                <div class="user-profile" id="userProfile" data-email="@User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value" data-user-id="@Model.CurrentUserId" data-user-role="@Model.CurrentUserRole" data-has-active-package="@Model.HasActivePackage.ToString().ToLower()">
                     <div class="user-avatar" style="background: @(string.IsNullOrEmpty(Model.CurrentUserAvatarUrl) ? "linear-gradient(135deg, #0ea5e9, #38bdf8)" : "none");">
                         @if (!string.IsNullOrEmpty(Model.CurrentUserAvatarUrl))
                         {
@@ -1851,7 +1851,7 @@
             document.getElementById('navProjects')?.click();
             });
             document.getElementById('btnUpgradePackage')?.addEventListener('click', () => {
-            document.getElementById('navWalletCurrent')?.click();
+            document.getElementById('navServicePackages')?.click();
             });
             document.getElementById('navBusinessWallet')?.addEventListener('click', (e) => {
             e.preventDefault();
@@ -1904,254 +1904,58 @@
             const pkgCard = document.getElementById('sidebarServicePkgCard');
             if (!pkgCard) return;
 
-            let contentHtml = '';
-            if (activePackageName === "Gói Premium") {
-            const progress = Math.min(100, (activePackageUsedCount * 100) / 20);
-            contentHtml = `
-            <div class="service-pkg-header">
-            <span class="service-pkg-name"><i data-lucide="star" style="width:18px;height:18px;color:#f59e0b;fill:#f59e0b;"></i> Gói Premium</span>
-            <span class="service-pkg-status active" style="background:#d1fae5; color:#065f46; padding:2px 8px; border-radius:12px; font-size:0.75rem; font-weight:600;">Đang hoạt động</span>
-            </div>
-            <div class="service-pkg-expiry">Hiệu lực đến: ${activePackageExpiry}</div>
-            <div class="service-pkg-bullets">
-            <div class="service-pkg-bullet"><i data-lucide="check" style="width:14px;height:14px;"></i> <span>Đăng tối đa 20 tin tuyển dụng</span></div>
-            <div class="service-pkg-bullet"><i data-lucide="check" style="width:14px;height:14px;"></i> <span>Hiển thị tin ưu tiên</span></div>
-            <div class="service-pkg-bullet" style="padding-left: 22px;"><span>Truy cập hồ sơ ứng viên không giới hạn</span></div>
-            <div class="service-pkg-bullet"><i data-lucide="check" style="width:14px;height:14px;"></i> <span>Hỗ trợ tuyển dụng ưu tiên</span></div>
-            </div>
-            <div class="service-pkg-usage">
-            <span>Đã sử dụng</span>
-            <span>${activePackageUsedCount}/20 tin</span>
-            </div>
-            <div class="service-pkg-progress-bar">
-            <div class="service-pkg-progress-fill" style="width: ${progress}%;"></div>
-            </div>
-            `;
-            } else if (activePackageName === "Gói VIP") {
-            const progress = Math.min(100, (activePackageUsedCount * 100) / 5);
-            contentHtml = `
-            <div class="service-pkg-header">
-            <span class="service-pkg-name"><i data-lucide="star" style="width:18px;height:18px;color:#f59e0b;fill:#f59e0b;"></i> Gói VIP</span>
-            <span class="service-pkg-status active" style="background:#fef3c7; color:#92400e; padding:2px 8px; border-radius:12px; font-size:0.75rem; font-weight:600;">Đang hoạt động</span>
-            </div>
-            <div class="service-pkg-expiry">Hiệu lực đến: ${activePackageExpiry}</div>
-            <div class="service-pkg-bullets">
-            <div class="service-pkg-bullet"><i data-lucide="check" style="width:14px;height:14px;"></i> <span>Đăng tối đa 5 tin tuyển dụng</span></div>
-            <div class="service-pkg-bullet"><i data-lucide="check" style="width:14px;height:14px;"></i> <span>Hiển thị nhãn VIP nổi bật</span></div>
-            <div class="service-pkg-bullet"><i data-lucide="check" style="width:14px;height:14px;"></i> <span>Duyệt tin nhanh trong 1 giờ</span></div>
-            </div>
-            <div class="service-pkg-usage">
-            <span>Đã sử dụng</span>
-            <span>${activePackageUsedCount}/5 tin</span>
-            </div>
-            <div class="service-pkg-progress-bar">
-            <div class="service-pkg-progress-fill" style="width: ${progress}%;"></div>
-            </div>
-            `;
-            } else {
-            const progress = activePackageUsedCount >= 1 ? 100 : 0;
-            contentHtml = `
-            <div class="service-pkg-header">
-            <span class="service-pkg-name"><i data-lucide="briefcase" style="width:18px;height:18px;color:#64748b;"></i> Gói Thường</span>
-            <span class="service-pkg-status text-muted" style="background:#f1f5f9; padding:2px 8px; border-radius:12px; font-size:0.75rem; font-weight:600;">Mặc định</span>
-            </div>
-            <div class="service-pkg-expiry">Hiệu lực: Vĩnh viễn</div>
-            <div class="service-pkg-bullets">
-            <div class="service-pkg-bullet"><i data-lucide="check" style="width:14px;height:14px;"></i> <span>Đăng tối đa 1 tin tuyển dụng</span></div>
-            <div class="service-pkg-bullet"><i data-lucide="check" style="width:14px;height:14px;"></i> <span>Hiển thị chuẩn trên trang chủ</span></div>
-            </div>
-            <div class="service-pkg-usage">
-            <span>Đã sử dụng</span>
-            <span>${activePackageUsedCount}/1 tin</span>
-            </div>
-            <div class="service-pkg-progress-bar">
-            <div class="service-pkg-progress-fill" style="width: ${progress}%;"></div>
-            </div>
-            `;
-            }
+            const hasPlan = activePackageName !== "Gói Thường" && activePackageName !== "Chưa đăng ký gói" && !!activePackageName;
+            const limit = activePackageMaxCount || 10;
+            const progress = limit > 0 ? Math.min(100, Math.round((activePackageUsedCount * 100) / limit)) : 0;
+            
+            let name = activePackageName;
+            if (name === "Gói Premium") name = "Business Premium";
+            if (name === "Gói Premium + VIP") name = "Business Premium + VIP";
+            if (name === "Gói VIP") name = "Business VIP";
+            if (!hasPlan) name = "Chưa đăng ký gói";
 
+            let contentHtml = `
+                <span class="side-eyebrow">GÓI DỊCH VỤ HIỆN TẠI</span>
+                <div class="current-plan-head">
+                    <div class="plan-star" style="${hasPlan ? '' : 'background:#e2e8f0;color:#94a3b8;'}">
+                        <i data-lucide="${hasPlan ? 'star' : 'shield-alert'}"></i>
+                    </div>
+                    <div>
+                        <h3>${name}</h3>
+                        ${hasPlan ? '<span class="active-plan-badge">Đang hoạt động</span>' : '<span class="active-plan-badge" style="background:#f1f5f9;color:#64748b;">Chưa kích hoạt</span>'}
+                    </div>
+                </div>
+                <p class="plan-expiry">
+                    ${hasPlan ? `Hiệu lực đến: <strong>${activePackageExpiry}</strong>` : 'Đăng ký gói để sử dụng tính năng'}
+                </p>
+                <div class="plan-checklist">
+                    ${hasPlan ? `
+                        <span><i data-lucide="check"></i>10 tin tuyển dụng</span>
+                        <span><i data-lucide="check"></i>Xem duyệt ứng viên</span>
+                        <span><i data-lucide="check"></i>Truy cập hồ sơ ứng viên không giới hạn</span>
+                        ${activePackageName.includes("VIP") ? `
+                            <span><i data-lucide="check" style="color:#f59e0b;"></i>Đăng tin VIP (1 lần, 7 ngày)</span>
+                        ` : ''}
+                    ` : `
+                        <span><i data-lucide="check"></i>Đăng tối đa 1 tin tuyển dụng</span>
+                        <span><i data-lucide="x" style="color:#ef4444;"></i>Không có nhãn nổi bật</span>
+                        <span><i data-lucide="x" style="color:#ef4444;"></i>Không có đặc quyền Premium</span>
+                    `}
+                </div>
+                <div class="plan-progress-row" style="${hasPlan ? '' : 'display:none;'}">
+                    <span>Đã sử dụng ${activePackageUsedCount}/${limit} tin</span>
+                    <div class="plan-progress"><div style="width: ${progress}%;"></div></div>
+                </div>
+            `;
             pkgCard.innerHTML = contentHtml;
             if (window.lucide) lucide.createIcons();
             }
 
             window.renderBusinessWalletCurrent = async function() {
-            if (window.depositCountdownInterval) {
-            clearInterval(window.depositCountdownInterval);
-            }
-            const mainContent = document.getElementById('mainContent');
-            if (!mainContent) return;
-
-            mainContent.innerHTML = `
-            <div class="d-flex justify-content-center align-items-center py-5">
-            <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Đang tải...</span>
-            </div>
-            </div>
-            `;
-
-            const walletData = await getWalletData();
-            if (!walletData || !walletData.success) {
-            mainContent.innerHTML = `
-            <div class="alert alert-danger" role="alert">
-            Không thể tải thông tin ví. Vui lòng thử lại sau.
-            </div>
-            `;
-            return;
-            }
-
-            let currentPkg = walletData.activePackageName || "Gói Thường";
-            let pkgBadge = '<span class="badge bg-secondary">Miễn phí</span>';
-            if (currentPkg === "Gói Premium") {
-            pkgBadge = '<span class="badge bg-success" style="background:#d1fae5; color:#065f46; padding:4px 8px; border-radius:12px; font-size:0.75rem; font-weight:600;"><i data-lucide="star" style="width:12px;height:12px;margin-right:2px;fill:#f59e0b;color:#f59e0b;"></i> Premium</span>';
-            } else if (currentPkg === "Gói VIP") {
-            pkgBadge = '<span class="badge bg-warning text-dark"><i data-lucide="star" style="width:12px;height:12px;margin-right:2px;"></i> VIP</span>';
-            }
-
-            mainContent.innerHTML = `
-            <div class="page-header mb-4">
-            <h1 class="page-title"><i data-lucide="package" style="width:24px;height:24px;"></i> Gói dịch vụ hiện tại</h1>
-            <p class="page-subtitle">Nâng cấp tài khoản để tiếp cận nhiều ứng viên chất lượng hơn</p>
-            </div>
-
-            <div class="card mb-4 border-0 shadow-sm" style="border-radius: 16px;">
-            <div class="card-body p-4" style="background: linear-gradient(135deg, #f8fafc, #edf2f7); border-radius: 16px;">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-            <div>
-            <div class="text-muted small uppercase fw-bold mb-1">Tài khoản của bạn</div>
-            <h4 class="mb-1 fw-bold text-slate-800 d-flex align-items-center gap-2">
-            ${currentPkg} ${pkgBadge}
-            </h4>
-            <p class="text-muted mb-0 small">Sử dụng dịch vụ đăng tin và tuyển dụng tối ưu trên J4S</p>
-            </div>
-            <div class="text-end">
-            <div class="text-muted small fw-bold mb-1">Số dư khả dụng</div>
-            <h3 class="mb-0 fw-extrabold text-indigo-600">${new Intl.NumberFormat('vi-VN').format(walletData.balance)} đ</h3>
-            </div>
-            </div>
-            </div>
-            </div>
-
-            <h3 class="section-title mb-3" style="font-weight: 700; color: #1e293b;">Bảng giá gói dịch vụ tuyển dụng</h3>
-            <div class="row g-4">
-            <!-- Free Package -->
-            <div class="col-md-4">
-            <div class="card h-100 border-0 shadow-sm hover-up" style="border-radius: 16px; border: 1px solid #e2e8f0 !important;">
-            <div class="card-body p-4 d-flex flex-column">
-            <div class="mb-3">
-            <span class="badge bg-light text-muted fw-semibold px-3 py-2" style="border-radius: 20px;">Gói Thường</span>
-            </div>
-            <h2 class="fw-extrabold mb-3 text-slate-800">Mặc định <span style="font-size: 1rem; font-weight: normal; color: #64748b;">/ Vĩnh viễn</span></h2>
-            <p class="text-muted small mb-4">Phù hợp cho doanh nghiệp nhỏ trải nghiệm ứng dụng.</p>
-            <hr class="my-3 text-muted">
-            <ul class="list-unstyled flex-grow-1 mb-4" style="line-height: 2;">
-            <li class="small"><i data-lucide="check" class="text-success me-2" style="width:16px;height:16px;"></i>Đăng tối đa 1 tin tuyển dụng</li>
-            <li class="small"><i data-lucide="check" class="text-success me-2" style="width:16px;height:16px;"></i>Hiển thị chuẩn trên trang chủ</li>
-            <li class="small text-muted"><i data-lucide="x" class="text-danger me-2" style="width:16px;height:16px;"></i>Không ưu tiên duyệt bài</li>
-            <li class="small text-muted"><i data-lucide="x" class="text-danger me-2" style="width:16px;height:16px;"></i>Không có nhãn nổi bật</li>
-            </ul>
-            <button class="btn btn-outline-secondary w-100 py-2.5 fw-bold mt-auto" style="border-radius: 10px;" disabled>Đang hoạt động</button>
-            </div>
-            </div>
-            </div>
-
-            <!-- VIP Package -->
-            <div class="col-md-4">
-            <div class="card h-100 border-0 shadow-sm hover-up position-relative" style="border-radius: 16px; border: ${currentPkg === 'Gói VIP' ? '2px solid #f59e0b' : '1px solid #e2e8f0'} !important;">
-            ${currentPkg === 'Gói VIP' ? '<span class="position-absolute top-0 start-50 translate-middle badge bg-warning text-dark px-3 py-1.5 fw-bold" style="border-radius: 20px;">Gói đang dùng</span>' : ''}
-            <div class="card-body p-4 d-flex flex-column">
-            <div class="mb-3">
-            <span class="badge bg-warning text-dark fw-semibold px-3 py-2" style="border-radius: 20px;"><i data-lucide="star" style="width:14px;height:14px;margin-right:4px;"></i>Gói VIP</span>
-            </div>
-            <h2 class="fw-extrabold mb-3 text-warning">30.000 đ <span style="font-size: 1rem; font-weight: normal; color: #64748b;">/ 30 ngày</span></h2>
-            <p class="text-muted small mb-4">Gói dịch vụ tăng tương tác, đăng nhiều tin hơn và duyệt tin nhanh chóng.</p>
-            <hr class="my-3 text-muted">
-            <ul class="list-unstyled flex-grow-1 mb-4" style="line-height: 2;">
-            <li class="small"><i data-lucide="check" class="text-success me-2" style="width:16px;height:16px;"></i>Đăng tối đa 5 tin tuyển dụng</li>
-            <li class="small"><i data-lucide="check" class="text-success me-2" style="width:16px;height:16px;"></i>Hiển thị nhãn VIP trên bài đăng</li>
-            <li class="small"><i data-lucide="check" class="text-success me-2" style="width:16px;height:16px;"></i>Duyệt tin nhanh trong 1 giờ</li>
-            <li class="small text-muted"><i data-lucide="x" class="text-danger me-2" style="width:16px;height:16px;"></i>Không ghim tin lên đầu trang</li>
-            </ul>
-            <button class="btn btn-warning w-100 py-2.5 fw-bold text-dark mt-auto" style="border-radius: 10px;"
-            onclick="purchaseServicePackage('VIP', 30000, ${walletData.balance})"
-            ${currentPkg === 'Gói VIP' ? 'disabled' : ''}>
-            ${currentPkg === 'Gói VIP' ? 'Đang hoạt động' : 'Kích hoạt gói VIP'}
-            </button>
-            </div>
-            </div>
-            </div>
-
-            <!-- Premium Package -->
-            <div class="col-md-4">
-            <div class="card h-100 border-0 shadow-sm hover-up position-relative" style="border-radius: 16px; border: ${currentPkg === 'Gói Premium' ? '2px solid #6366f1' : '1px solid #e2e8f0'} !important;">
-            ${currentPkg === 'Gói Premium' ? '<span class="position-absolute top-0 start-50 translate-middle badge bg-indigo text-white px-3 py-1.5 fw-bold" style="border-radius: 20px;">Gói đang dùng</span>' : ''}
-            <div class="card-body p-4 d-flex flex-column">
-            <div class="mb-3 d-flex justify-content-between align-items-center">
-            <span class="badge bg-indigo text-white fw-semibold px-3 py-2" style="border-radius: 20px;"><i data-lucide="award" style="width:14px;height:14px;margin-right:4px;"></i>Gói Premium</span>
-            <span class="badge bg-danger px-2 py-1 small rounded-pill">Bán chạy nhất</span>
-            </div>
-            <h2 class="fw-extrabold mb-3 text-indigo-600">99.000 đ <span style="font-size: 1rem; font-weight: normal; color: #64748b;">/ 30 ngày</span></h2>
-            <p class="text-muted small mb-4">Gói tối ưu nhất cho doanh nghiệp tuyển dụng lớn, ghim bài hàng đầu.</p>
-            <hr class="my-3 text-muted">
-            <ul class="list-unstyled flex-grow-1 mb-4" style="line-height: 2;">
-            <li class="small"><i data-lucide="check" class="text-success me-2" style="width:16px;height:16px;"></i>Đăng tin tuyển dụng không giới hạn</li>
-            <li class="small"><i data-lucide="check" class="text-success me-2" style="width:16px;height:16px;"></i>Hiển thị nhãn Premium nổi bật</li>
-            <li class="small"><i data-lucide="check" class="text-success me-2" style="width:16px;height:16px;"></i>Ghim bài đăng lên đầu trang chủ</li>
-            <li class="small"><i data-lucide="check" class="text-success me-2" style="width:16px;height:16px;"></i>Truy cập hồ sơ ứng viên không giới hạn</li>
-            </ul>
-            <button class="btn btn-indigo w-100 py-2.5 fw-bold text-white mt-auto" style="border-radius: 10px;"
-            onclick="purchaseServicePackage('Premium', 99000, ${walletData.balance})"
-            ${currentPkg === 'Gói Premium' ? 'disabled' : ''}>
-            ${currentPkg === 'Gói Premium' ? 'Đang hoạt động' : 'Kích hoạt gói Premium'}
-            </button>
-            </div>
-            </div>
-            </div>
-            </div>
-            `;
-            if (window.lucide) lucide.createIcons();
-            }
-
-            window.purchaseServicePackage = async function(packageName, price, currentBalance) {
-            if (currentBalance < price) {
-            showToast('Số dư tài khoản không đủ. Vui lòng nạp thêm tiền!', 'warning');
-            setTimeout(() => {
-            document.getElementById('navWalletDeposit')?.click();
-            }, 1000);
-            return;
-            }
-
-            const executePurchase = async () => {
-                try {
-                    const response = await fetch('/Home/PurchasePackage', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
-                        },
-                        body: JSON.stringify({ PackageName: packageName })
-                    });
-
-                    const data = await response.json();
-                    if (data.success) {
-                        showToast(`Chúc mừng! Bạn đã mua thành công gói ${packageName}!`, 'success');
-                        window.renderBusinessWalletCurrent();
-                    } else {
-                        showToast(data.message || 'Có lỗi xảy ra khi mua gói.', 'error');
-                    }
-                } catch (e) {
-                    console.error(e);
-                    showToast('Có lỗi xảy ra khi kết nối máy chủ.', 'error');
+                if (typeof window.renderBusinessWalletDeposit === 'function') {
+                    await window.renderBusinessWalletDeposit();
                 }
             };
-
-            if (window.showConfirmModal) {
-                window.showConfirmModal(`Bạn có chắc chắn muốn mua gói dịch vụ ${packageName} với giá ${new Intl.NumberFormat('vi-VN').format(price)} đ không?`, executePurchase, 'Xác nhận mua gói');
-            } else {
-                if (confirm(`Bạn có chắc chắn muốn mua gói dịch vụ ${packageName} với giá ${new Intl.NumberFormat('vi-VN').format(price)} đ không?`)) {
-                    executePurchase();
-                }
-            }
-            }
 
             window.renderBusinessWalletDeposit = async function() {
             if (window.depositCountdownInterval) {
@@ -2731,7 +2535,7 @@
 
             window.triggerReloadAdminList = function(listKey) {
                 if (listKey === 'users') renderAdminUsers(true);
-                else if (listKey === 'pendingJobs' || listKey === 'allJobs') renderAdminJobs(true);
+                else if (listKey === 'pendingJobs' || listKey === 'pendingJobsVip' || listKey === 'pendingJobsNormal' || listKey === 'allJobs') renderAdminJobs(true);
                 else if (listKey === 'txs') renderAdminTxs(true);
                 else if (listKey === 'support') renderAdminSupport(true);
                 else if (listKey === 'feedback') renderAdminFeedback(true);
@@ -3224,6 +3028,116 @@
                 }, "Xác nhận đổi trạng thái");
             }
 
+            window.showAdminJobDetails = async function(jobId) {
+                try {
+                    const res = await fetch(`/Home/GetJobDetail/${jobId}`);
+                    const job = await res.json();
+                    if (job.error) {
+                        showToast(job.error, "error");
+                        return;
+                    }
+
+                    document.getElementById('adminJobDetailsModal')?.remove();
+
+                    const modalHTML = `
+                        <div class="modal fade" id="adminJobDetailsModal" tabindex="-1" aria-hidden="true" style="z-index: 1070;">
+                            <style>
+                                .btn-admin-modal-close {
+                                    border: none;
+                                    background: transparent;
+                                    color: #64748b;
+                                    padding: 8px;
+                                    border-radius: 50%;
+                                    transition: all 0.25s ease;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    cursor: pointer;
+                                }
+                                .btn-admin-modal-close:hover {
+                                    background-color: #fee2e2 !important;
+                                    color: #ef4444 !important;
+                                    transform: rotate(90deg);
+                                }
+                            </style>
+                            <div class="modal-dialog modal-dialog-centered modal-lg">
+                                <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
+                                    <div class="modal-header border-0 pb-0" style="padding: 24px 24px 8px; display: flex; justify-content: space-between; align-items: center;">
+                                        <h4 class="modal-title fw-bold text-slate-800" style="font-size: 1.35rem;">Chi tiết tin tuyển dụng</h4>
+                                        <button type="button" class="btn-admin-modal-close shadow-none" data-bs-dismiss="modal" aria-label="Close">
+                                            <i data-lucide="x" style="width: 22px; height: 22px;"></i>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body" style="padding: 16px 24px 24px; max-height: 70vh; overflow-y: auto;">
+                                        <div style="background: #f8fafc; border-radius: 12px; padding: 16px; margin-bottom: 20px; border: 1px solid #e2e8f0;">
+                                            <h5 class="fw-bold text-primary mb-2">${escapeHtml(job.title)}</h5>
+                                            <div style="font-size: 0.85rem; color: #64748b; display: flex; flex-wrap: wrap; gap: 16px; row-gap: 8px;">
+                                                <span><strong style="color:#475569;">Doanh nghiệp:</strong> ${escapeHtml(job.companyName || 'N/A')}</span>
+                                                <span><strong style="color:#475569;">Ngân sách:</strong> <span class="text-emerald-600 font-bold">${new Intl.NumberFormat('vi-VN').format(job.budget)} đ</span> (${job.budgetType === 'Hourly' ? 'Theo giờ' : 'Gói cố định'})</span>
+                                                <span><strong style="color:#475569;">Thời hạn duyệt:</strong> ${job.deadline}</span>
+                                                <span><strong style="color:#475569;">Số lượng tuyển:</strong> ${job.quantity}</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="row g-4">
+                                            <div class="col-md-6">
+                                                <div class="mb-3 h-100 p-3" style="background:#fdfdfd; border: 1px solid #f1f5f9; border-radius:8px;">
+                                                    <h6 class="fw-bold text-slate-800" style="font-size: 0.95rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 10px;">
+                                                        <i data-lucide="file-text" style="width:16px;height:16px;margin-right:6px;vertical-align:middle;color:#0ea5e9;"></i>Mô tả công việc
+                                                    </h6>
+                                                    <div style="font-size: 0.875rem; color: #475569; line-height: 1.6; white-space: pre-wrap;">${escapeHtml(job.description)}</div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3 h-100 p-3" style="background:#fdfdfd; border: 1px solid #f1f5f9; border-radius:8px;">
+                                                    <h6 class="fw-bold text-slate-800" style="font-size: 0.95rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 10px;">
+                                                        <i data-lucide="check-square" style="width:16px;height:16px;margin-right:6px;vertical-align:middle;color:#10b981;"></i>Yêu cầu ứng viên
+                                                    </h6>
+                                                    <div style="font-size: 0.875rem; color: #475569; line-height: 1.6; white-space: pre-wrap;">${escapeHtml(job.requirements || 'Không có yêu cầu cụ thể.')}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="mt-3 p-3" style="background:#fdfdfd; border: 1px solid #f1f5f9; border-radius:8px;">
+                                            <h6 class="fw-bold text-slate-800" style="font-size: 0.95rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 10px;">
+                                                <i data-lucide="gift" style="width:16px;height:16px;margin-right:6px;vertical-align:middle;color:#f59e0b;"></i>Quyền lợi & Phúc lợi
+                                            </h6>
+                                            <div style="font-size: 0.875rem; color: #475569; line-height: 1.6; white-space: pre-wrap;">${escapeHtml(job.benefits || 'Theo thỏa thuận.')}</div>
+                                        </div>
+
+                                        <div class="mt-3 p-3" style="background:#fdfdfd; border: 1px solid #f1f5f9; border-radius:8px;">
+                                            <h6 class="fw-bold text-slate-800" style="font-size: 0.95rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 10px;">
+                                                <i data-lucide="tag" style="width:16px;height:16px;margin-right:6px;vertical-align:middle;color:#6366f1;"></i>Kỹ năng yêu cầu
+                                            </h6>
+                                            <div class="d-flex flex-wrap gap-2">
+                                                ${(job.tags || []).length > 0 
+                                                    ? job.tags.map(t => `<span class="badge text-primary" style="background:#e0f2fe; border: 1px solid #bae6fd; font-size: 0.8rem; font-weight: 600; border-radius: 6px; padding: 4px 8px;">${escapeHtml(t)}</span>`).join('') 
+                                                    : '<span class="text-muted small">Không yêu cầu tag kỹ năng.</span>'
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    document.body.insertAdjacentHTML('beforeend', modalHTML);
+                    const modalEl = document.getElementById('adminJobDetailsModal');
+                    const modal = new bootstrap.Modal(modalEl);
+                    modal.show();
+
+                    if (window.lucide) lucide.createIcons();
+
+                    modalEl.addEventListener('hidden.bs.modal', () => {
+                        modalEl.remove();
+                    }, { once: true });
+                } catch (err) {
+                    console.error(err);
+                    showToast("Không thể tải thông tin chi tiết công việc.", "error");
+                }
+            };
+
             async function renderAdminJobs(isPagedReload = false) {
                 const title = document.getElementById('adminSectionTitle');
                 const body = document.getElementById('adminSectionBody');
@@ -3244,18 +3158,44 @@
                 }
 
                 body.innerHTML = `
-                    <h4 class="mb-3 fw-bold" style="color: #0f172a;">Tin tuyển dụng chờ duyệt</h4>
-                    <div id="pendingJobsContainer" class="mb-5"></div>
+                    <div class="row g-4 mb-4">
+                        <div class="col-lg-6">
+                            <div class="card border-0 shadow-sm p-4 h-100" style="border-radius: 16px; background: #ffffff;">
+                                <h4 class="mb-3 fw-bold d-flex align-items-center gap-2" style="color: #d97706; font-size: 1.2rem;">
+                                    <i data-lucide="star" style="width:20px;height:20px;fill:#f59e0b;color:#f59e0b;"></i> Duyệt tin ưu tiên (VIP)
+                                </h4>
+                                <div id="pendingVipJobsContainer"></div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="card border-0 shadow-sm p-4 h-100" style="border-radius: 16px; background: #ffffff;">
+                                <h4 class="mb-3 fw-bold d-flex align-items-center gap-2" style="color: #0f172a; font-size: 1.2rem;">
+                                    <i data-lucide="briefcase" style="width:20px;height:20px;color:#2563eb;"></i> Duyệt tin bình thường
+                                </h4>
+                                <div id="pendingNormalJobsContainer"></div>
+                            </div>
+                        </div>
+                    </div>
                     
-                    <h4 class="mb-3 fw-bold" style="color: #0f172a;">Tất cả tin tuyển dụng</h4>
-                    <div id="allJobsContainer"></div>
+                    <div class="card border-0 shadow-sm p-4" style="border-radius: 16px; background: #ffffff;">
+                        <h4 class="mb-3 fw-bold d-flex align-items-center gap-2" style="color: #0f172a; font-size: 1.2rem;">
+                            <i data-lucide="layers" style="width:20px;height:20px;color:#64748b;"></i> Tất cả tin tuyển dụng
+                        </h4>
+                        <div id="allJobsContainer"></div>
+                    </div>
                 `;
+
+                if (window.lucide) lucide.createIcons();
 
                 // 1. Render pending jobs
                 const pendingHeaders = ['Tiêu đề công việc', 'Doanh nghiệp đăng', 'Ngày tạo', 'Thao tác'];
                 const pendingRowRenderer = (j, globalIndex) => {
                     return `
-                        <td class="fw-semibold">${escapeHtml(j.title)}</td>
+                        <td class="fw-semibold">
+                            <a href="javascript:void(0)" onclick="showAdminJobDetails(${j.id})" style="color: #2563eb; text-decoration: none; font-weight: 600;">
+                                ${escapeHtml(j.title)}
+                            </a>
+                        </td>
                         <td>${escapeHtml(j.companyName)}</td>
                         <td>${j.createdAt}</td>
                         <td>
@@ -3264,7 +3204,12 @@
                         </td>
                     `;
                 };
-                window.renderAdminTable('pendingJobs', window.adminDataCache.pendingJobs, pendingHeaders, pendingRowRenderer, 'pendingJobsContainer');
+
+                const pendingVipJobs = window.adminDataCache.pendingJobs.filter(j => j.isVip);
+                const pendingNormalJobs = window.adminDataCache.pendingJobs.filter(j => !j.isVip);
+
+                window.renderAdminTable('pendingJobsVip', pendingVipJobs, pendingHeaders, pendingRowRenderer, 'pendingVipJobsContainer');
+                window.renderAdminTable('pendingJobsNormal', pendingNormalJobs, pendingHeaders, pendingRowRenderer, 'pendingNormalJobsContainer');
 
                 // 2. Render all jobs
                 const allJobsHeaders = ['Tiêu đề công việc', 'Doanh nghiệp đăng', 'Ngân sách', 'Thời hạn', 'Ngày tạo', 'Trạng thái', 'Thao tác'];
@@ -3276,7 +3221,11 @@
                         : '<span class="admin-badge" style="background:#e2e8f0; color:#334155;">Đóng</span>';
 
                     return `
-                        <td class="fw-semibold">${escapeHtml(j.title)}</td>
+                        <td class="fw-semibold">
+                            <a href="javascript:void(0)" onclick="showAdminJobDetails(${j.id})" style="color: #2563eb; text-decoration: none; font-weight: 600;">
+                                ${escapeHtml(j.title)}
+                            </a>
+                        </td>
                         <td>${escapeHtml(j.businessName)}</td>
                         <td class="text-primary fw-bold">${new Intl.NumberFormat('vi-VN').format(j.budget)} đ</td>
                         <td>${j.deadline}</td>

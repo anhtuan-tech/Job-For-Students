@@ -712,6 +712,15 @@ body.sidebar-collapsed .main-content {
     box-shadow: var(--shadow-md);
 }
 
+.job-card.job-card-vip {
+    border: 1px solid #fcd34d;
+    background: #fffbeb;
+}
+.job-card.job-card-vip:hover {
+    border-color: #f59e0b;
+    box-shadow: 0 8px 24px rgba(245, 158, 11, 0.1);
+}
+
 .job-icon {
     width: 48px;
     height: 48px;
@@ -2331,6 +2340,9 @@ body.sidebar-collapsed .main-content {
 .chat-panel {
     display: flex;
     flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .chat-placeholder {
@@ -2383,6 +2395,8 @@ body.sidebar-collapsed .main-content {
     font-size: 14px;
     line-height: 1.5;
     position: relative;
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 .chat-bubble p {
@@ -5479,12 +5493,17 @@ body.sidebar-collapsed .main-content {
 }
 
 .service-plan-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 14px;
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    max-width: 900px;
+    margin: 0 auto;
 }
 
 .service-plan-card {
+    flex: 1;
+    min-width: 280px;
+    max-width: 420px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;

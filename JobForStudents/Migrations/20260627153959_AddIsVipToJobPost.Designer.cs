@@ -3,6 +3,7 @@ using System;
 using JobForStudents.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace JobForStudents.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260627153959_AddIsVipToJobPost")]
+    partial class AddIsVipToJobPost
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -629,7 +632,7 @@ namespace JobForStudents.Migrations
                         new
                         {
                             Id = 2,
-                            Benefits = "10 tin tuyển dụng;Xem duyệt ứng viên;Truy cập hồ sơ ứng viên không giới hạn",
+                            Benefits = "10 tin tuyển dụng;Hiển thị nhãn Premium nổi bật;Ghim bài đăng lên đầu trang chủ;Truy cập hồ sơ ứng viên không giới hạn",
                             Description = "Gói tối ưu cho doanh nghiệp vừa và nhỏ, nâng cao hiển thị.",
                             DurationDays = 30,
                             IsActive = true,

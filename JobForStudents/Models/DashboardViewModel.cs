@@ -10,6 +10,7 @@ public class DashboardViewModel
     public string CurrentUserRole { get; set; } = string.Empty;
     public string CurrentUserName { get; set; } = "Khách";
     public string CurrentUserAvatarUrl { get; set; } = string.Empty;
+    public bool HasActivePackage { get; set; }
 
     // Business Dashboard statistics
     public int BusinessActiveJobsCount { get; set; }
@@ -56,6 +57,7 @@ public class AdminPendingJobViewModel
     public string Title { get; set; } = string.Empty;
     public string CompanyName { get; set; } = string.Empty;
     public string CreatedAt { get; set; } = string.Empty;
+    public bool IsVip { get; set; }
 }
 
 public class BusinessRecentJobViewModel

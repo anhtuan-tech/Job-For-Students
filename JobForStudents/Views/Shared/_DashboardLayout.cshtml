@@ -217,6 +217,8 @@
             border-radius: 12px;
             font-size: 13px;
             line-height: 1.4;
+            word-break: break-word;
+            overflow-wrap: break-word;
         }
         .bubble-msg.mine {
             background: #0ea5e9;
@@ -336,7 +338,7 @@
         });
     </script>
 
-    @if (User.Identity?.IsAuthenticated == true)
+    @if (User.Identity?.IsAuthenticated == true && !User.IsInRole("Admin"))
     {
         <!-- Chat Bubble Widget -->
         <div class="chat-bubble-widget" id="chatBubbleWidget">

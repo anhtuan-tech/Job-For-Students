@@ -21,6 +21,7 @@ public class JobPost
     public JobStatus Status { get; set; } = JobStatus.Open;
     public bool IsDeleted { get; set; }
     public bool IsApproved { get; set; } = false;
+    public bool IsVip { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 

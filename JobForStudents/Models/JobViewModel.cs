@@ -14,6 +14,7 @@ public class JobViewModel
     public int HiredCount { get; set; }
     public bool IsSaved { get; set; }
     public bool IsApplied { get; set; }
+    public bool IsVip { get; set; }
     public string BudgetType { get; set; } = string.Empty;
     public string ExperienceLevel { get; set; } = string.Empty;
     public System.DateTime CreatedAt { get; set; }

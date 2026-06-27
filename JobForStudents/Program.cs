@@ -62,6 +62,14 @@ using (var scope = app.Services.CreateScope())
         dbContext.Wallets.Add(wallet);
         dbContext.SaveChanges();
     }
+
+    // Đồng bộ quyền lợi mới cho Business Premium
+    var premiumPlan = dbContext.ServicePlans.Find(2);
+    if (premiumPlan != null)
+    {
+        premiumPlan.Benefits = "10 tin tuyển dụng;Xem duyệt ứng viên;Truy cập hồ sơ ứng viên không giới hạn";
+        dbContext.SaveChanges();
+    }
 }
 
 

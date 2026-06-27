@@ -15,6 +15,7 @@
     let originalBannerHTML = '';
     let originalCategoriesHTML = '';
     let pendingChatUserId = null;
+    let activeChatUserId = null;
     let reviewsFilter = 'all';
     let studentProjectsPage = 1;
     let studentProjectsPageSize = Number(localStorage.getItem('j4s_pagesize_studentProjects')) || 10;
@@ -185,6 +186,10 @@
         }
     }
 
+    function hasActivePackage() {
+        return document.getElementById('userProfile')?.dataset.hasActivePackage === 'true';
+    }
+
     function setupBusinessDashboardShell() {
         document.body.classList.add('business-dashboard-shell');
 
@@ -199,13 +204,14 @@
 
         const navRight = document.querySelector('.nav-right');
         const userProfile = document.getElementById('userProfile');
-        const userId = userProfile?.dataset.userId;
         if (navRight && userProfile && !document.getElementById('btnBusinessPublicJobs')) {
+            const userId = userProfile.dataset.userId;
             const publicJobsBtn = document.createElement('a');
-            publicJobsBtn.id = 'btnBusinessPublicJobs';
-            publicJobsBtn.className = 'business-public-jobs-btn';
             publicJobsBtn.href = userId ? `/business/${userId}/jobs` : '#';
-            publicJobsBtn.innerHTML = '<i data-lucide="external-link" style="width:16px;height:16px;"></i><span>Xem trang việc làm</span>';
+            publicJobsBtn.className = 'btn-find-freelancer me-2';
+            publicJobsBtn.id = 'btnBusinessPublicJobs';
+            publicJobsBtn.style.textDecoration = 'none';
+            publicJobsBtn.innerHTML = '<i data-lucide="briefcase" style="width:14px;height:14px;"></i> Xem trang việc làm';
             navRight.insertBefore(publicJobsBtn, userProfile.closest('.dropdown'));
         }
 
@@ -214,77 +220,113 @@
 
         const sidebar = document.getElementById('sidebar');
         if (sidebar) {
-            sidebar.innerHTML = `
-                <div class="sidebar-group">
-                    <div class="sidebar-label">TỔNG QUAN</div>
-                    <a href="#" class="sidebar-item active" data-nav="home" id="navHome">
-                        <span class="item-icon"><i data-lucide="home" style="width:18px;height:18px;"></i></span>
-                        Trang chủ
-                    </a>
-                    <a href="#" class="sidebar-item" data-nav="profile" id="navBusinessProfile">
-                        <span class="item-icon"><i data-lucide="building-2" style="width:18px;height:18px;"></i></span>
-                        Hồ sơ doanh nghiệp
-                    </a>
-                </div>
-                <div class="sidebar-group">
-                    <div class="sidebar-label">QUẢN LÝ TUYỂN DỤNG</div>
-                    <a href="#" class="sidebar-item" data-nav="businessJobs" id="navBusinessJobs">
-                        <span class="item-icon"><i data-lucide="file-text" style="width:18px;height:18px;"></i></span>
-                        Quản lý tin đăng
-                    </a>
-                    <a href="#" class="sidebar-item" data-nav="approveCandidates" id="navApproveCandidates">
-                        <span class="item-icon"><i data-lucide="user-check" style="width:18px;height:18px;"></i></span>
-                        Duyệt ứng viên
-                    </a>
-                    <a href="#" class="sidebar-item" data-nav="candidateSearch" id="navCandidateSearch">
-                        <span class="item-icon"><i data-lucide="users" style="width:18px;height:18px;"></i></span>
-                        Ứng viên
-                    </a>
-                </div>
-                <div class="sidebar-group">
-                    <div class="sidebar-label">CHI PHÍ & DỊCH VỤ</div>
-                    <a href="#" class="sidebar-item" data-nav="wallet-business" id="navBusinessWallet">
-                        <span class="item-icon"><i data-lucide="wallet" style="width:18px;height:18px;"></i></span>
-                        Ví doanh nghiệp
-                    </a>
-                    <a href="#" class="sidebar-item has-chevron" data-nav="servicePackages" id="navServicePackages">
-                        <span class="item-icon"><i data-lucide="credit-card" style="width:18px;height:18px;"></i></span>
-                        Gói dịch vụ & Thanh toán
-                        <i data-lucide="chevron-right" class="sidebar-chevron" style="width:15px;height:15px;"></i>
-                    </a>
-                </div>
-                <div class="sidebar-group">
-                    <div class="sidebar-label">TƯƠNG TÁC & ĐÁNH GIÁ</div>
-                    <a href="#" class="sidebar-item" data-nav="messages" id="navMessages">
-                        <span class="item-icon"><i data-lucide="message-square" style="width:18px;height:18px;"></i></span>
-                        Tin nhắn
-                    </a>
-                    <a href="#" class="sidebar-item" data-nav="notifications" id="navNotifications">
-                        <span class="item-icon"><i data-lucide="bell" style="width:18px;height:18px;"></i></span>
-                        Thông báo
-                    </a>
-                    <a href="#" class="sidebar-item" data-nav="reviews-business" id="navBusinessReviews">
-                        <span class="item-icon"><i data-lucide="star" style="width:18px;height:18px;"></i></span>
-                        Đánh giá
-                    </a>
-                </div>
-                <div class="sidebar-group">
-                    <div class="sidebar-label">HỖ TRỢ</div>
-                    <a href="#" class="sidebar-item" data-nav="support" id="navSupport">
-                        <span class="item-icon"><i data-lucide="circle-help" style="width:18px;height:18px;"></i></span>
-                        Trung tâm hỗ trợ
-                    </a>
-                    <a href="#" class="sidebar-item" data-nav="feedback" id="navFeedback">
-                        <span class="item-icon"><i data-lucide="bug" style="width:18px;height:18px;"></i></span>
-                        Phản hồi & Báo lỗi
-                    </a>
-                </div>
-                <div class="sidebar-bottom">
-                    <button class="btn-post-job" id="btnPostJob" style="background:linear-gradient(135deg,#2563eb,#0ea5e9);color:#fff;border:none;">
-                        <i data-lucide="plus" style="width:18px;height:18px;"></i>
-                        Đăng tin tuyển dụng
-                    </button>
-                </div>`;
+            const activePkg = hasActivePackage();
+            if (!activePkg) {
+                sidebar.innerHTML = `
+                    <div class="sidebar-group">
+                        <div class="sidebar-label">TỔNG QUAN</div>
+                        <a href="#" class="sidebar-item active" data-nav="home" id="navHome">
+                            <span class="item-icon"><i data-lucide="home" style="width:18px;height:18px;"></i></span>
+                            Trang chủ
+                        </a>
+                    </div>
+                    <div class="sidebar-group">
+                        <div class="sidebar-label">CHI PHÍ & DỊCH VỤ</div>
+                        <a href="#" class="sidebar-item" data-nav="wallet-business" id="navBusinessWallet">
+                            <span class="item-icon"><i data-lucide="wallet" style="width:18px;height:18px;"></i></span>
+                            Ví doanh nghiệp
+                        </a>
+                        <a href="#" class="sidebar-item has-chevron" data-nav="servicePackages" id="navServicePackages">
+                            <span class="item-icon"><i data-lucide="credit-card" style="width:18px;height:18px;"></i></span>
+                            Gói dịch vụ & Thanh toán
+                            <i data-lucide="chevron-right" class="sidebar-chevron" style="width:15px;height:15px;"></i>
+                        </a>
+                    </div>
+                    <div class="sidebar-group">
+                        <div class="sidebar-label">HỖ TRỢ</div>
+                        <a href="#" class="sidebar-item" data-nav="support" id="navSupport">
+                            <span class="item-icon"><i data-lucide="circle-help" style="width:18px;height:18px;"></i></span>
+                            Trung tâm hỗ trợ
+                        </a>
+                        <a href="#" class="sidebar-item" data-nav="feedback" id="navFeedback">
+                            <span class="item-icon"><i data-lucide="bug" style="width:18px;height:18px;"></i></span>
+                            Phản hồi & Báo lỗi
+                        </a>
+                    </div>`;
+            }
+            else {
+                sidebar.innerHTML = `
+                    <div class="sidebar-group">
+                        <div class="sidebar-label">TỔNG QUAN</div>
+                        <a href="#" class="sidebar-item active" data-nav="home" id="navHome">
+                            <span class="item-icon"><i data-lucide="home" style="width:18px;height:18px;"></i></span>
+                            Trang chủ
+                        </a>
+                        <a href="#" class="sidebar-item" data-nav="profile" id="navBusinessProfile">
+                            <span class="item-icon"><i data-lucide="building-2" style="width:18px;height:18px;"></i></span>
+                            Hồ sơ doanh nghiệp
+                        </a>
+                    </div>
+                    <div class="sidebar-group">
+                        <div class="sidebar-label">QUẢN LÝ TUYỂN DỤNG</div>
+                        <a href="#" class="sidebar-item" data-nav="businessJobs" id="navBusinessJobs">
+                            <span class="item-icon"><i data-lucide="file-text" style="width:18px;height:18px;"></i></span>
+                            Quản lý tin đăng
+                        </a>
+                        <a href="#" class="sidebar-item" data-nav="approveCandidates" id="navApproveCandidates">
+                            <span class="item-icon"><i data-lucide="user-check" style="width:18px;height:18px;"></i></span>
+                            Duyệt ứng viên
+                        </a>
+                        <a href="#" class="sidebar-item" data-nav="candidateSearch" id="navCandidateSearch">
+                            <span class="item-icon"><i data-lucide="users" style="width:18px;height:18px;"></i></span>
+                            Ứng viên
+                        </a>
+                    </div>
+                    <div class="sidebar-group">
+                        <div class="sidebar-label">CHI PHÍ & DỊCH VỤ</div>
+                        <a href="#" class="sidebar-item" data-nav="wallet-business" id="navBusinessWallet">
+                            <span class="item-icon"><i data-lucide="wallet" style="width:18px;height:18px;"></i></span>
+                            Ví doanh nghiệp
+                        </a>
+                        <a href="#" class="sidebar-item has-chevron" data-nav="servicePackages" id="navServicePackages">
+                            <span class="item-icon"><i data-lucide="credit-card" style="width:18px;height:18px;"></i></span>
+                            Gói dịch vụ & Thanh toán
+                            <i data-lucide="chevron-right" class="sidebar-chevron" style="width:15px;height:15px;"></i>
+                        </a>
+                    </div>
+                    <div class="sidebar-group">
+                        <div class="sidebar-label">TƯƠNG TÁC & ĐÁNH GIÁ</div>
+                        <a href="#" class="sidebar-item" data-nav="messages" id="navMessages">
+                            <span class="item-icon"><i data-lucide="message-square" style="width:18px;height:18px;"></i></span>
+                            Tin nhắn
+                        </a>
+                        <a href="#" class="sidebar-item" data-nav="notifications" id="navNotifications">
+                            <span class="item-icon"><i data-lucide="bell" style="width:18px;height:18px;"></i></span>
+                            Thông báo
+                        </a>
+                        <a href="#" class="sidebar-item" data-nav="reviews-business" id="navBusinessReviews">
+                            <span class="item-icon"><i data-lucide="star" style="width:18px;height:18px;"></i></span>
+                            Đánh giá
+                        </a>
+                    </div>
+                    <div class="sidebar-group">
+                        <div class="sidebar-label">HỖ TRỢ</div>
+                        <a href="#" class="sidebar-item" data-nav="support" id="navSupport">
+                            <span class="item-icon"><i data-lucide="circle-help" style="width:18px;height:18px;"></i></span>
+                            Trung tâm hỗ trợ
+                        </a>
+                        <a href="#" class="sidebar-item" data-nav="feedback" id="navFeedback">
+                            <span class="item-icon"><i data-lucide="bug" style="width:18px;height:18px;"></i></span>
+                            Phản hồi & Báo lỗi
+                        </a>
+                    </div>
+                    <div class="sidebar-bottom">
+                        <button class="btn-post-job" id="btnPostJob" style="background:linear-gradient(135deg,#2563eb,#0ea5e9);color:#fff;border:none;">
+                            <i data-lucide="plus" style="width:18px;height:18px;"></i>
+                            Đăng tin tuyển dụng
+                        </button>
+                    </div>`;
+            }
         }
 
         if (window.lucide) lucide.createIcons();
@@ -1258,7 +1300,7 @@
             </div>
             <div style="flex:1;min-width:0;">
                 <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:6px;">
-                    <h3 class="job-title" data-job-id="${job.id}" style="font-size:1rem;font-weight:700;color:#1e293b;margin:0;">${escapeHtml(job.title || '')}</h3>${appliedBadge}
+                    <h3 class="job-title" data-job-id="${job.id}" style="font-size:1rem;font-weight:700;color:#1e293b;margin:0;display:inline-flex;align-items:center;gap:8px;">${escapeHtml(job.title || '')}${job.isVip ? ' <span style="background:#f59e0b; color:#fff; font-size:0.65rem; font-weight:700; padding:2px 8px; border-radius:4px; vertical-align:middle; display:inline-block;">VIP</span>' : ''}</h3>${appliedBadge}
                     <span style="margin-left:auto;background:#f8fafc;border:1px solid #e2e8f0;font-size:0.7rem;font-weight:700;padding:2px 10px;border-radius:20px;color:#475569;text-transform:uppercase;">${escapeHtml(job.category || '')}</span>
                 </div>
                 <p style="font-size:0.85rem;color:#64748b;margin:0 0 10px;line-height:1.5;">${escapeHtml((job.description || '').substring(0, 120))}${(job.description || '').length > 120 ? '...' : ''}</p>
@@ -1365,7 +1407,7 @@
             <div style="display:flex;align-items:flex-start;gap:16px;width:100%;">
                 <div style="flex:1;min-width:0;">
                     <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-                        <h3 class="job-title" data-job-id="${job.id}" style="font-size:1rem;font-weight:700;color:#1e293b;margin:0;flex:1;">${escapeHtml(job.title || '')}</h3>
+                        <h3 class="job-title" data-job-id="${job.id}" style="font-size:1rem;font-weight:700;color:#1e293b;margin:0;flex:1;display:inline-flex;align-items:center;gap:8px;">${escapeHtml(job.title || '')}${job.isVip ? ' <span style="background:#f59e0b; color:#fff; font-size:0.65rem; font-weight:700; padding:2px 8px; border-radius:4px; vertical-align:middle; display:inline-block;">VIP</span>' : ''}</h3>
                         <span style="background:${status.bg};color:${status.color};font-size:0.75rem;font-weight:700;padding:3px 12px;border-radius:20px;white-space:nowrap;">${status.label}</span>
                     </div>
                     <p style="font-size:0.85rem;color:#64748b;margin:0 0 10px;line-height:1.5;">${escapeHtml((job.description || '').substring(0, 100))}${(job.description || '').length > 100 ? '...' : ''}</p>
@@ -1514,6 +1556,31 @@
                     return;
                 }
                 managedJobsList = data.jobs || [];
+
+                // Sort jobs: VIP first, then by Status (In_Progress -> Approved Open -> Pending Approval -> Closed)
+                managedJobsList.sort((a, b) => {
+                    if (a.isVip && !b.isVip) return -1;
+                    if (!a.isVip && b.isVip) return 1;
+
+                    const getStatusPriority = (job) => {
+                        if (job.status === 'In_Progress') return 1;
+                        if (job.isApproved && job.status === 'Open') return 2;
+                        if (!job.isApproved) return 3;
+                        if (job.status === 'Closed') return 4;
+                        return 5;
+                    };
+
+                    const priorityA = getStatusPriority(a);
+                    const priorityB = getStatusPriority(b);
+
+                    if (priorityA !== priorityB) {
+                        return priorityA - priorityB;
+                    }
+
+                    // If same status, sort by ID descending (newest first)
+                    return b.id - a.id;
+                });
+
                 managedJobsSummary = data.summary || {};
                 renderBusinessJobsPage();
             })
@@ -1569,6 +1636,7 @@
                             </div>
                         </div>
                         <div class="managed-job-side">
+                            ${job.isVip ? `<span style="background:#f59e0b; color:#fff; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:4px; margin-bottom:4px; display:inline-block;">VIP</span>` : ''}
                             <strong>${formatVND(job.budget)}</strong>
                             <span>${escapeHtml(job.location || 'Linh hoạt')}</span>
                             <span>${job.quantity} vị trí</span>
@@ -1641,8 +1709,41 @@
     function renderBusinessEmployerHome() {
         if (!mainContent) return;
 
-        const userProfile = document.getElementById('userProfile');
-        const userName = document.querySelector('#userProfile .user-name')?.textContent?.trim() || 'Huỳnh Khang';
+        const activePkg = hasActivePackage();
+        const userName = document.querySelector('#userProfile .user-name')?.textContent?.trim() || 'Nhà tuyển dụng';
+
+        if (!activePkg) {
+            mainContent.innerHTML = `
+                <div class="welcome-box-business" style="padding: 24px; margin-bottom: 24px; border-radius: 16px; background: linear-gradient(135deg, #2563eb, #0ea5e9); color: #fff;">
+                    <h1 class="welcome-title" style="margin: 0 0 8px; font-size: 1.75rem; font-weight: 800; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,0.15);">Xin chào, ${escapeHtml(userName)} 👋</h1>
+                    <p class="welcome-desc" style="margin: 0; color: rgba(255,255,255,0.90); font-size: 1rem; font-weight: 500;">Chào mừng bạn đến với hệ thống quản lý tuyển dụng J4S.</p>
+                </div>
+                <div class="card border-0 shadow-sm text-center animate-in" style="border-radius: 16px; background: #ffffff; padding: 48px; border: 1px solid #e2e8f0; text-align: center;">
+                    <div style="max-width: 500px; margin: 0 auto; display: flex; flex-direction: column; align-items: center;">
+                        <i data-lucide="shield-alert" style="width: 56px; height: 56px; color: #f59e0b; margin-bottom: 16px;"></i>
+                        <h2 style="font-weight: 700; font-size: 1.5rem; color: #1e293b; margin: 0 0 12px;">Tính năng tuyển dụng bị giới hạn</h2>
+                        <p style="color: #64748b; line-height: 1.6; margin: 0 0 24px; font-size: 0.95rem;">
+                            Tài khoản của bạn hiện chưa đăng ký gói dịch vụ đang hoạt động (hoặc gói cũ đã hết hạn). Vui lòng đăng ký gói <strong>Business Premium</strong> để mở khóa các tính năng tuyển dụng, quản lý tin đăng, duyệt hồ sơ ứng viên.
+                        </p>
+                        <button class="btn btn-primary fw-bold" id="btnPaywallUpgrade" style="border-radius: 10px; background: linear-gradient(135deg,#2563eb,#0ea5e9); border: none; color: #fff; padding: 12px 24px; font-size: 0.95rem; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px;">
+                            <i data-lucide="credit-card" style="width:18px;height:18px;"></i> Nâng cấp gói dịch vụ ngay
+                        </button>
+                    </div>
+                </div>`;
+            document.getElementById('btnPaywallUpgrade')?.addEventListener('click', () => {
+                const navBtn = document.getElementById('navServicePackages');
+                if (navBtn) {
+                    navBtn.click();
+                } else {
+                    currentSidebarMode = 'servicePackages';
+                    renderServicePackagesView();
+                }
+            });
+            renderBusinessRightSidebarLoading();
+            loadBusinessHomeData();
+            if (window.lucide) lucide.createIcons();
+            return;
+        }
 
         mainContent.innerHTML = `
             <section class="business-welcome-card animate-in">
@@ -1735,6 +1836,12 @@
                 const jobs = jobsData.jobs || [];
                 const applicants = applicantsData.success ? (applicantsData.applicants || []) : [];
                 const pkg = packageData.success ? packageData : null;
+                const hasPlan = !!pkg?.currentPackage;
+                const userProfileEl = document.getElementById('userProfile');
+                if (userProfileEl) {
+                    userProfileEl.dataset.hasActivePackage = hasPlan ? 'true' : 'false';
+                }
+
                 renderBusinessHomeStats(jobs, jobsData.summary || {}, applicantsData.success ? applicantsData.totalNewApplicants || 0 : 0);
                 renderBusinessLatestCandidates(applicants);
                 renderBusinessRightSidebar(jobs, applicants, pkg);
@@ -1827,12 +1934,13 @@
             return acc;
         }, {});
         const current = packageData?.currentPackage;
-        const planLimit = current?.jobPostLimit || ((current?.remainingJobPosts || 0) + activeJobs.length) || 1;
-        const usedPosts = Math.max(0, planLimit - (current?.remainingJobPosts ?? 0));
-        const progress = Math.max(0, Math.min(100, Math.round((usedPosts / Math.max(1, planLimit)) * 100)));
+        const hasPlan = !!current;
+        const planLimit = hasPlan ? (current.jobPostLimit || ((current.remainingJobPosts || 0) + activeJobs.length) || 1) : 0;
+        const usedPosts = hasPlan ? Math.max(0, planLimit - (current.remainingJobPosts ?? 0)) : 0;
+        const progress = planLimit > 0 ? Math.max(0, Math.min(100, Math.round((usedPosts / planLimit) * 100))) : 0;
 
         rightSidebar.innerHTML = `
-            <section class="business-side-card">
+            <section class="business-side-card" style="${hasActivePackage() ? '' : 'display:none;'}">
                 <div class="business-side-heading">
                     <h3>Tin đăng gần đây</h3>
                     <button class="text-link-button" id="btnAllRecentJobs">Xem tất cả</button>
@@ -1852,22 +1960,29 @@
                 <button class="btn-business-outline full" id="btnManageRecentJobs">Quản lý tin đăng</button>
             </section>
 
-            <section class="business-side-card">
+            <section class="business-side-card" id="sidebarServicePkgCard">
                 <span class="side-eyebrow">GÓI DỊCH VỤ HIỆN TẠI</span>
                 <div class="current-plan-head">
-                    <div class="plan-star"><i data-lucide="star"></i></div>
+                    <div class="plan-star" style="${hasPlan ? '' : 'background:#e2e8f0;color:#94a3b8;'}"><i data-lucide="${hasPlan ? 'star' : 'shield-alert'}"></i></div>
                     <div>
-                        <h3>${escapeHtml(current?.planName || 'Chưa có gói')}</h3>
-                        <span class="active-plan-badge">Đang hoạt động</span>
+                        <h3>${hasPlan ? (current.planName === 'Gói Premium' ? 'Business Premium' : (current.planName === 'Gói VIP' ? 'Business VIP' : current.planName)) : 'Chưa đăng ký gói'}${packageData?.vipPackage ? ' + VIP' : ''}</h3>
+                        ${hasPlan ? '<span class="active-plan-badge">Đang hoạt động</span>' : '<span class="active-plan-badge" style="background:#f1f5f9;color:#64748b;">Chưa kích hoạt</span>'}
                     </div>
                 </div>
-                <p class="plan-expiry">Hiệu lực đến: <strong>${escapeHtml(current?.endDate || '--')}</strong></p>
+                <p class="plan-expiry">
+                    ${hasPlan ? `Hiệu lực đến: <strong>${escapeHtml(current.endDate || '--')}</strong>` : 'Đăng ký gói để sử dụng tính năng'}
+                </p>
                 <div class="plan-checklist">
-                    ${(current?.benefits || ['Trang tuyển dụng công khai', 'Quản lý ứng viên', 'Thông báo tuyển dụng', 'Lịch sử thanh toán']).slice(0, 4).map(item => `
-                        <span><i data-lucide="check"></i>${escapeHtml(item)}</span>
-                    `).join('')}
+                    ${hasPlan ? `
+                        <span><i data-lucide="check"></i>10 tin tuyển dụng</span>
+                        <span><i data-lucide="check"></i>Xem duyệt ứng viên</span>
+                        <span><i data-lucide="check"></i>Truy cập hồ sơ ứng viên không giới hạn</span>
+                        ${packageData?.vipPackage ? `
+                            <span><i data-lucide="check" style="color:#f59e0b;"></i>Đăng tin VIP (1 lần, 7 ngày)</span>
+                        ` : ''}
+                    ` : ''}
                 </div>
-                <div class="plan-progress-row">
+                <div class="plan-progress-row" style="${hasPlan ? '' : 'display:none;'}">
                     <span>Đã sử dụng ${usedPosts}/${planLimit} tin</span>
                     <div class="plan-progress"><div style="width:${progress}%"></div></div>
                 </div>
@@ -2066,15 +2181,11 @@
                         <div class="d-grid gap-3" style="color:#475569;">
                             <div class="d-flex align-items-center gap-2">
                                 <i data-lucide="mail" style="width:18px;height:18px;color:#2563eb;flex-shrink:0;"></i>
-                                <div><strong>Email:</strong> support@jobforstudents.vn</div>
+                                <div><strong>Email:</strong> <a href="https://mail.google.com/mail/?view=cm&fs=1&to=j4s.job4stu@gmail.com" target="_blank" style="color:inherit;text-decoration:none;">j4s.job4stu@gmail.com</a></div>
                             </div>
                             <div class="d-flex align-items-center gap-2">
-                                <i data-lucide="phone" style="width:18px;height:18px;color:#2563eb;flex-shrink:0;"></i>
-                                <div><strong>Hotline:</strong> 1900 6868</div>
-                            </div>
-                            <div class="d-flex align-items-center gap-2">
-                                <i data-lucide="clock" style="width:18px;height:18px;color:#2563eb;flex-shrink:0;"></i>
-                                <div><strong>Giờ làm việc:</strong> 08:00 - 17:30, Thứ 2 - Thứ 6</div>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+                                <div><strong>Fanpage:</strong> <a href="https://www.facebook.com/job4stu" target="_blank" style="color:#2563eb;text-decoration:none;font-weight:600;">www.facebook.com/job4stu</a></div>
                             </div>
                         </div>
                     </div>
@@ -2211,7 +2322,12 @@
         postJson('/Home/ChangeBusinessJobStatus', { jobId, status })
             .then(data => {
                 showToast(data.message || 'Đã cập nhật trạng thái tin.', data.success ? 'success' : 'error');
-                if (data.success) loadBusinessJobs();
+                if (data.success) {
+                    loadBusinessJobs();
+                    if (typeof loadBusinessHomeData === 'function') {
+                        loadBusinessHomeData();
+                    }
+                }
             })
             .catch(err => {
                 console.error(err);
@@ -2227,7 +2343,12 @@
             postJson('/Home/ExtendBusinessJobPost', { jobId, days })
                 .then(data => {
                     showToast(data.message || 'Đã gia hạn tin.', data.success ? 'success' : 'error');
-                    if (data.success) loadBusinessJobs();
+                    if (data.success) {
+                        loadBusinessJobs();
+                        if (typeof loadBusinessHomeData === 'function') {
+                            loadBusinessHomeData();
+                        }
+                    }
                 })
                 .catch(err => {
                     console.error(err);
@@ -2252,6 +2373,9 @@
                 if (data.success) {
                     showToast(data.message || 'Đã xóa tin.', 'success');
                     loadBusinessJobs();
+                    if (typeof loadBusinessHomeData === 'function') {
+                        loadBusinessHomeData();
+                    }
                 } else {
                     showToast(data.message || 'Không thể xóa tin.', 'error');
                 }
@@ -2593,17 +2717,20 @@
     }
 
     function renderServicePackagesView() {
-        mainContent.innerHTML = `
-            <div class="page-header animate-in">
-                <h1 class="page-title"><i data-lucide="package-check" style="width:24px;height:24px;"></i> Gói dịch vụ</h1>
-                <p class="page-subtitle">Xem gói đang sử dụng, nâng cấp, gia hạn và theo dõi lịch sử thanh toán.</p>
-            </div>
-            <div id="servicePackagesPanel">
-                <div style="display:flex;align-items:center;justify-content:center;min-height:240px;color:var(--text-secondary);font-weight:600;">
-                    <span class="spinner-border spinner-border-sm" style="margin-right:8px;"></span> Đang tải gói dịch vụ...
+        const panel = document.getElementById('servicePackagesPanel');
+        if (!panel) {
+            mainContent.innerHTML = `
+                <div class="page-header animate-in">
+                    <h1 class="page-title"><i data-lucide="package-check" style="width:24px;height:24px;"></i> Gói dịch vụ</h1>
+                    <p class="page-subtitle">Xem gói đang sử dụng, nâng cấp, gia hạn và theo dõi lịch sử thanh toán.</p>
                 </div>
-            </div>`;
-        if (window.lucide) lucide.createIcons();
+                <div id="servicePackagesPanel">
+                    <div style="display:flex;align-items:center;justify-content:center;min-height:240px;color:var(--text-secondary);font-weight:600;">
+                        <span class="spinner-border spinner-border-sm" style="margin-right:8px;"></span> Đang tải gói dịch vụ...
+                    </div>
+                </div>`;
+            if (window.lucide) lucide.createIcons();
+        }
         paymentHistoryPage = 1;
         loadServicePackages();
     }
@@ -2617,6 +2744,11 @@
                 if (!pkg.success) {
                     showToast(pkg.message || 'Không thể tải gói dịch vụ.', 'error');
                     return;
+                }
+                const hasPlan = !!pkg?.currentPackage;
+                const userProfileEl = document.getElementById('userProfile');
+                if (userProfileEl) {
+                    userProfileEl.dataset.hasActivePackage = hasPlan ? 'true' : 'false';
                 }
                 renderServicePackagesData(pkg, history.success ? history.payments : []);
             })
@@ -2632,37 +2764,64 @@
 
         const current = data.currentPackage;
         const getPlanAction = (plan) => {
-            const isCurrent = current?.planId === plan.id;
-            const isLowerOrEqual = current && !isCurrent && (
-                Number(plan.price) < Number(current.price ?? 0)
-                || (Number(plan.price) === Number(current.price ?? 0) && Number(plan.jobPostLimit) <= Number(current.jobPostLimit ?? 0))
-            );
+            if (plan.id === 3) {
+                const hasVip = data.vipPackage != null || current?.planId === 3;
+                return {
+                    disabled: hasVip,
+                    label: hasVip ? 'Đang dùng' : 'Thanh toán / Nâng cấp'
+                };
+            } else if (plan.id === 2) {
+                const hasPremium = current?.planId === 2;
+                return {
+                    disabled: hasPremium,
+                    label: hasPremium ? 'Đang dùng' : 'Thanh toán / Nâng cấp'
+                };
+            }
 
+            const isCurrent = current?.planId === plan.id;
             return {
-                disabled: isCurrent || isLowerOrEqual,
-                label: isCurrent
-                    ? 'Đang dùng'
-                    : isLowerOrEqual
-                        ? 'Gói thấp hơn'
-                        : (plan.price === 0 ? 'Kích hoạt' : 'Thanh toán / Nâng cấp')
+                disabled: isCurrent,
+                label: isCurrent ? 'Đang dùng' : 'Thanh toán / Nâng cấp'
             };
         };
+
         panel.innerHTML = `
-            <section class="service-package-current animate-in" style="display:block; padding:24px;">
-                <div class="service-current-main">
-                    <span class="service-eyebrow">Gói đang sử dụng</span>
-                    <h2>${escapeHtml(current?.planName || 'Chưa có gói')}</h2>
-                    <p>${escapeHtml(current?.description || 'Doanh nghiệp chưa có gói dịch vụ đang hoạt động.')}</p>
-                    <div style="display:flex; flex-wrap:wrap; align-items:center; gap:16px; margin-top:14px;">
-                        ${current ? `<span style="font-size:0.85rem; color:#475569; font-weight:600;"><strong>Hết hạn:</strong> ${escapeHtml(current.endDate || '--')}</span>
-                        <span style="font-size:0.85rem; color:#475569; font-weight:600;"><strong>Tin còn lại:</strong> ${current.remainingJobPosts ?? 0} tin</span>
-                        <span style="font-size:0.85rem; color:#475569; font-weight:600;"><strong>Còn:</strong> ${current.daysLeft ?? 0} ngày</span>
-                        <button class="btn-modern-primary" id="btnRenewCurrentPlan" style="padding:8px 20px;">Gia hạn gói</button>` : ''}
+            <section class="service-package-current animate-in" style="display:block; padding:16px 20px; background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%); border: 1px solid #e2e8f0; border-radius: 16px; margin-bottom: 24px;">
+                ${(!current && !data.vipPackage) ? `
+                <div style="text-align: center; padding: 12px 0;">
+                    <div style="font-size: 1.5rem; color: #94a3b8; margin-bottom: 4px;"><i data-lucide="shield-alert"></i></div>
+                    <h3 style="margin: 0; font-size: 1.05rem; font-weight: 700; color: #475569;">Chưa đăng ký gói dịch vụ</h3>
+                    <p style="margin: 4px 0 0; font-size: 0.85rem; color: #64748b;">Vui lòng chọn đăng ký gói bên dưới để sử dụng đầy đủ các tính năng tuyển dụng.</p>
+                </div>
+                ` : `
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <div style="width: 44px; height: 44px; border-radius: 12px; background: #0ea5e9; color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 10px rgba(14,165,233,0.2);">
+                            <i data-lucide="award"></i>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.8rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Gói dịch vụ đang hoạt động</div>
+                            <h3 style="margin: 4px 0 0; font-size: 1.25rem; font-weight: 800; color: #1e293b; display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
+                                ${escapeHtml(current?.planName || 'Business Premium')}
+                                ${data.vipPackage ? `
+                                <span style="color: #94a3b8; font-weight: 400; font-size: 1.1rem;">+</span> 
+                                <span style="color: #d97706; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;">
+                                    Business VIP
+                                    <span style="background: #f59e0b; color: #fff; font-size: 0.6rem; font-weight: 700; padding: 1px 6px; border-radius: 4px; text-transform: uppercase;">1 Bài VIP</span>
+                                </span>
+                                ` : ''}
+                            </h3>
+                        </div>
                     </div>
-                    <div class="service-benefits">
-                        ${(current?.benefits || []).map(b => `<span><i data-lucide="check" style="width:14px;height:14px;"></i>${escapeHtml(b)}</span>`).join('')}
+                    <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+                        <div style="font-size: 0.85rem; color: #475569; line-height: 1.5;">
+                            <div><strong>Hạn Premium:</strong> ${escapeHtml(current?.endDate || '--')} (${current?.daysLeft ?? 0} ngày)</div>
+                            <div><strong>Tin thường:</strong> Còn <span style="color: #0ea5e9; font-weight: 700;">${current?.remainingJobPosts ?? 0}</span> / 10 tin</div>
+                        </div>
+                        ${current ? `<button class="btn-modern-primary" id="btnRenewCurrentPlan" style="padding: 8px 18px; border-radius: 10px; font-weight: 600; font-size: 0.85rem; background: #0ea5e9; color: white; border: none; box-shadow: 0 4px 10px rgba(14,165,233,0.15);">Gia hạn gói</button>` : ''}
                     </div>
                 </div>
+                `}
             </section>
 
             <section class="service-plan-section animate-in">
@@ -2671,25 +2830,39 @@
                     <span style="color:var(--text-muted);font-weight:700;">Số dư ví: ${formatVND(data.balance)}</span>
                 </div>
                 <div class="service-plan-grid">
-                    ${(data.plans || []).map(plan => `
-                        <article class="service-plan-card ${current?.planId === plan.id ? 'active' : ''}">
+                    ${(data.plans || []).map(plan => {
+            const isVipPlan = plan.id === 3;
+            const hasPremiumActive = current?.planId === 2 || data.vipPackage != null;
+            const isLocked = isVipPlan && !hasPremiumActive;
+            const isVipActive = isVipPlan && data.vipPackage != null;
+            const isCardActive = (current?.planId === plan.id) || isVipActive;
+            return `
+                        <article class="service-plan-card ${isCardActive ? 'active' : ''} position-relative" style="${isLocked ? 'overflow:hidden;' : ''}">
+                            ${isLocked ? `
+                            <div class="vip-lock-overlay" style="position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:16px; text-align:center; z-index:2;">
+                                <i data-lucide="lock" style="width:28px;height:28px;color:#64748b;margin-bottom:8px;"></i>
+                                <h5 style="font-weight:700;color:#334155;font-size:0.9rem;margin-bottom:4px;">Gói hỗ trợ VIP</h5>
+                                <p style="font-size:0.75rem;color:#64748b;margin:0;">Vui lòng kích hoạt gói Premium trước để mua gói VIP.</p>
+                            </div>
+                            ` : ''}
                             <div>
                                 <div class="service-plan-head">
                                     <h3>${escapeHtml(plan.name)}</h3>
-                                    ${current?.planId === plan.id ? '<span>Đang dùng</span>' : ''}
+                                    ${isCardActive ? '<span>Đang dùng</span>' : ''}
                                 </div>
                                 <p>${escapeHtml(plan.description)}</p>
                                 <strong>${formatVND(plan.price)}</strong>
-                                <small>${plan.durationDays} ngày · ${plan.jobPostLimit} tin đăng</small>
+                                <small>${plan.id === 3 ? '1 tin đăng VIP (Hạn theo gói Premium)' : `${plan.durationDays} ngày · ${plan.jobPostLimit} tin đăng`}</small>
                                 <div class="service-benefits">
                                     ${(plan.benefits || []).map(b => `<span><i data-lucide="check" style="width:14px;height:14px;"></i>${escapeHtml(b)}</span>`).join('')}
                                 </div>
                             </div>
-                            <button class="btn-modern-primary" data-plan-id="${plan.id}" ${getPlanAction(plan).disabled ? 'disabled' : ''}>
+                            <button class="btn-modern-primary" data-plan-id="${plan.id}" ${getPlanAction(plan).disabled || isLocked ? 'disabled' : ''}>
                                 ${getPlanAction(plan).label}
                             </button>
                         </article>
-                    `).join('')}
+                        `;
+        }).join('')}
                 </div>
             </section>
 
@@ -2845,6 +3018,13 @@
                 .then(data => {
                     showToast(data.message || 'Đã xử lý thanh toán gói dịch vụ.', data.success ? 'success' : 'error');
                     if (data.success) {
+                        const userProfileEl = document.getElementById('userProfile');
+                        if (userProfileEl) {
+                            userProfileEl.dataset.hasActivePackage = 'true';
+                        }
+                        setupBusinessDashboardShell();
+                        bindBusinessSidebarNav();
+                        setActiveSidebar('servicePackages');
                         loadServicePackages();
                         loadBusinessHomeData();
                         if (typeof window.getWalletData === 'function') {
@@ -2865,6 +3045,13 @@
                 .then(data => {
                     showToast(data.message || 'Đã gia hạn gói dịch vụ.', data.success ? 'success' : 'error');
                     if (data.success) {
+                        const userProfileEl = document.getElementById('userProfile');
+                        if (userProfileEl) {
+                            userProfileEl.dataset.hasActivePackage = 'true';
+                        }
+                        setupBusinessDashboardShell();
+                        bindBusinessSidebarNav();
+                        setActiveSidebar('servicePackages');
                         loadServicePackages();
                         loadBusinessHomeData();
                         if (typeof window.getWalletData === 'function') {
@@ -2878,6 +3065,9 @@
                 });
         });
     }
+
+    window.purchaseServicePlan = purchaseServicePlan;
+    window.renewCurrentServicePlan = renewCurrentServicePlan;
 
     // ============================================
     // RENDER: Dự án đang làm
@@ -3716,16 +3906,7 @@
                                         <span class="label">Quy mô:</span>
                                         <span class="value">${escapeHtml(data.companySize || 'Chưa cập nhật')}</span>
                                     </div>
-                                    <div class="info-item-modern">
-                                        <i data-lucide="file-text" style="width:16px;height:16px;"></i>
-                                        <span class="label">Mã số thuế:</span>
-                                        <span class="value">${escapeHtml(data.taxCode || 'Chưa cập nhật')}</span>
-                                    </div>
-                                    <div class="info-item-modern">
-                                        <i data-lucide="globe" style="width:16px;height:16px;"></i>
-                                        <span class="label">Website:</span>
-                                        <span class="value">${data.websiteUrl ? `<a href="${escapeHtml(data.websiteUrl)}" target="_blank">${escapeHtml(data.websiteUrl)}</a>` : 'Chưa cập nhật'}</span>
-                                    </div>
+
                                     <div class="info-item-modern">
                                         <i data-lucide="map-pin" style="width:16px;height:16px;"></i>
                                         <span class="label">Địa chỉ:</span>
@@ -4118,18 +4299,6 @@
                         <label class="form-label">Mô tả doanh nghiệp</label>
                         <textarea class="form-textarea" id="editBusinessDescription" rows="4" placeholder="Giới thiệu ngắn về doanh nghiệp, môi trường làm việc và định hướng tuyển dụng...">${escapeHtml(data.description || '')}</textarea>
                     </div>
-
-                    <div class="form-grid-2">
-                        <div class="form-group">
-                            <label class="form-label">Mã số thuế</label>
-                            <input type="text" class="form-input" id="editTaxCode" value="${escapeHtml(data.taxCode || '')}" />
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Website doanh nghiệp</label>
-                            <input type="text" class="form-input" id="editWebsiteUrl" value="${escapeHtml(data.websiteUrl || '')}" />
-                        </div>
-                    </div>
-
                     <div class="form-grid-2">
                         <div class="form-group">
                             <label class="form-label">Quy mô doanh nghiệp</label>
@@ -4715,6 +4884,31 @@
             }
 
             activeJobs = data.jobs || [];
+
+            // Sort jobs: VIP first, then by Status (In_Progress -> Approved Open -> Pending Approval -> Closed)
+            activeJobs.sort((a, b) => {
+                if (a.isVip && !b.isVip) return -1;
+                if (!a.isVip && b.isVip) return 1;
+
+                const getStatusPriority = (job) => {
+                    if (job.status === 'In_Progress') return 1;
+                    if (job.isApproved && job.status === 'Open') return 2;
+                    if (!job.isApproved) return 3;
+                    if (job.status === 'Closed') return 4;
+                    return 5;
+                };
+
+                const priorityA = getStatusPriority(a);
+                const priorityB = getStatusPriority(b);
+
+                if (priorityA !== priorityB) {
+                    return priorityA - priorityB;
+                }
+
+                // If same status, sort by ID descending (newest first)
+                return b.id - a.id;
+            });
+
             window.businessJobsData = activeJobs;
             renderPage();
         } catch (err) {
@@ -5253,9 +5447,14 @@
                     <div class="card border-0 shadow-sm p-4" style="border-radius:16px;">
                         <h3 class="fw-bold mb-3">Liên hệ CSKH</h3>
                         <div class="d-grid gap-2 text-slate-700">
-                            <div><strong>Email:</strong> support@jobforstudents.vn</div>
-                            <div><strong>Hotline:</strong> 1900 6868</div>
-                            <div><strong>Giờ làm việc:</strong> 08:00 - 17:30, Thứ 2 - Thứ 6</div>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <i data-lucide="mail" style="width:18px;height:18px;color:var(--primary);flex-shrink:0;"></i>
+                                <div><strong>Email:</strong> <a href="https://mail.google.com/mail/?view=cm&fs=1&to=j4s.job4stu@gmail.com" target="_blank" style="color:inherit;text-decoration:none;">j4s.job4stu@gmail.com</a></div>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+                                <div><strong>Fanpage:</strong> <a href="https://www.facebook.com/job4stu" target="_blank" style="color:var(--primary);text-decoration:none;font-weight:600;">www.facebook.com/job4stu</a></div>
+                            </div>
                         </div>
                     </div>
                     <div class="card border-0 shadow-sm p-4 mt-4" style="border-radius:16px;">
@@ -5476,13 +5675,18 @@
         const list = document.getElementById('businessMessagesList');
         if (!list) return;
 
+        const chatPanel = document.getElementById('chatPanel');
+        if (chatPanel && chatPanel.dataset.activeUserId) {
+            activeChatUserId = Number(chatPanel.dataset.activeUserId);
+        }
+
         if (!conversations.length) {
             list.innerHTML = '<div style="padding:18px;color:var(--text-muted);font-weight:700;">Chưa có hội thoại nào.</div>';
             return;
         }
 
         list.innerHTML = conversations.map(conv => `
-            <div class="message-item ${conv.unread > 0 ? 'unread' : ''}" data-user-id="${conv.userId}">
+            <div class="message-item ${conv.unread > 0 ? 'unread' : ''} ${Number(conv.userId) === Number(activeChatUserId) ? 'selected' : ''}" data-user-id="${conv.userId}">
                 <div class="msg-avatar" style="background:${conv.avatarUrl ? 'none' : '#0ea5e9'}">
                     ${conv.avatarUrl ? `<img src="${escapeHtml(conv.avatarUrl)}" alt="${escapeHtml(conv.name)}" />` : getInitials(conv.name)}
                 </div>
@@ -5509,6 +5713,7 @@
     }
 
     function openBusinessChat(userId) {
+        activeChatUserId = userId;
         document.querySelectorAll('.message-item').forEach(i => i.classList.toggle('selected', Number(i.dataset.userId) === userId));
 
         fetch(`/Home/GetConversationMessages?userId=${userId}`)
@@ -5534,6 +5739,8 @@
     function renderBusinessChat(user, messages) {
         const chatPanel = document.getElementById('chatPanel');
         if (!chatPanel) return;
+
+        chatPanel.dataset.activeUserId = user.id;
 
         // Preserve current typed text and focus state
         const chatInputOld = document.getElementById('chatInput');
@@ -5592,6 +5799,9 @@
                     input.value = '';
                     openBusinessChat(user.id);
                     loadBusinessConversations();
+                    if (typeof window.loadBubbleChatMessages === 'function') {
+                        window.loadBubbleChatMessages();
+                    }
                 })
                 .catch(err => {
                     console.error(err);
@@ -5604,7 +5814,20 @@
     }
 
     function renderMessagesView() {
+        if (activeChatUserId) {
+            pendingChatUserId = activeChatUserId;
+        }
         renderBusinessMessagesView();
+    }
+
+    function loadMainChatMessages() {
+        const chatPanel = document.getElementById('chatPanel');
+        const currentActiveId = (chatPanel && chatPanel.dataset.activeUserId) ? Number(chatPanel.dataset.activeUserId) : activeChatUserId;
+        if (currentActiveId) {
+            openBusinessChat(currentActiveId);
+        } else {
+            loadBusinessConversations();
+        }
     }
 
     // ============================================
@@ -6035,12 +6258,15 @@
             const appliedBadge = job.isApplied ? '<span class="applied-badge">Đã ứng tuyển</span>' : '';
 
             return `
-            <div class="job-card animate-in" data-job-id="${job.id}" style="animation-delay: ${idx * 0.05}s">
+            <div class="job-card animate-in ${job.isVip ? 'job-card-vip' : ''}" data-job-id="${job.id}" style="animation-delay: ${idx * 0.05}s">
                 <div class="job-icon ${iconInfo.cls}">
                     <i data-lucide="${iconInfo.icon}" style="width:22px;height:22px;"></i>
                 </div>
                 <div class="job-info">
-                    <h3 class="job-title" data-job-id="${job.id}">${escapeHtml(job.title)}</h3>
+                    <h3 class="job-title" data-job-id="${job.id}">
+                        ${escapeHtml(job.title)}
+                        ${job.isVip ? `<span style="background:#f59e0b; color:#fff; font-size:0.65rem; font-weight:700; padding:2px 8px; border-radius:4px; margin-left:8px; vertical-align:middle; display:inline-block;">VIP</span>` : ''}
+                    </h3>
                     <p class="job-desc">${escapeHtml(job.description)}</p>
                     <div class="job-tags">
                         ${job.tags.map(t => `<span class="job-tag">${escapeHtml(t)}</span>`).join('')}
@@ -6693,9 +6919,9 @@
         const chatPanel = document.getElementById('chatPanel');
         if (!chatPanel) return;
 
-        const selectedItem = document.querySelector('.message-item.selected');
-        if (selectedItem) {
-            const userId = Number(selectedItem.dataset.userId);
+        const currentActiveId = (chatPanel && chatPanel.dataset.activeUserId) ? Number(chatPanel.dataset.activeUserId) : activeChatUserId;
+        if (currentActiveId) {
+            const userId = currentActiveId;
             fetch(`/Home/GetConversationMessages?userId=${userId}`)
                 .then(res => res.json())
                 .then(data => {
@@ -6944,9 +7170,9 @@
                         </ul>
                         <h4 style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-top: 16px; margin-bottom: 8px;">2. Quy trình làm việc và Thanh toán</h4>
                         <ul style="padding-left: 20px;">
-                            <li>Doanh nghiệp và sinh viên tự chủ động thỏa thuận và thống nhất mức ngân sách công việc trước khi bắt đầu thực hiện dự án.</li>
-                            <li>Hệ thống J4S hỗ trợ nạp tiền và thực hiện thanh toán trực tiếp qua ví nội bộ dựa trên sự đồng thuận của hai bên.</li>
-                            <li>Sinh viên nhận thanh toán sau khi hoàn thành công việc và được phía doanh nghiệp nghiệm thu, xác nhận trực tiếp trên hệ thống.</li>
+                            <li><strong>Thỏa thuận chi phí:</strong> Doanh nghiệp và sinh viên chủ động trao đổi, thống nhất mức ngân sách và hình thức thanh toán với nhau trước khi bắt đầu dự án.</li>
+                            <li><strong>Vai trò của J4S:</strong> Hệ thống J4S không can thiệp vào quá trình thanh toán, không thu phí hay giữ tiền thù lao của sinh viên.</li>
+                            <li><strong>Dịch vụ nền tảng:</strong> Hệ thống cung cấp các gói dịch vụ trả phí (đăng tin tuyển dụng, tính năng hỗ trợ gia tăng) dành riêng cho doanh nghiệp để tối ưu hóa quá trình tìm kiếm nhân sự.</li>
                         </ul>
                         <h4 style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-top: 16px; margin-bottom: 8px;">3. Quyền và nghĩa vụ</h4>
                         <ul style="padding-left: 20px;">
@@ -7055,7 +7281,38 @@
         }
     }
 
-    function openPostJobModal(job = null) {
+    async function openPostJobModal(job = null) {
+        const isEditOpen = job && job.status === 'Open';
+
+        let isVipPackage = false;
+        let remainingPosts = 0;
+        let hasPlan = false;
+        try {
+            const res = await fetch('/Home/GetBusinessServicePackage');
+            const data = await res.json();
+            hasPlan = data.success && !!data.currentPackage;
+            if (hasPlan) {
+                remainingPosts = data.currentPackage.remainingJobPosts ?? 0;
+                if (data.currentPackage.planName === 'Business VIP' || data.currentPackage.hasVipActive) {
+                    isVipPackage = true;
+                }
+            }
+        } catch (e) {
+            console.error('Error checking subscription package:', e);
+        }
+
+        if (!isEditOpen && (!hasPlan || remainingPosts <= 0)) {
+            showToast('Gói dịch vụ hiện tại đã hết số lượng tin đăng hoặc bạn chưa đăng ký gói. Vui lòng nâng cấp hoặc gia hạn.', 'warning');
+            const navBtn = document.getElementById('navServicePackages');
+            if (navBtn) {
+                navBtn.click();
+            } else {
+                currentSidebarMode = 'servicePackages';
+                renderServicePackagesView();
+            }
+            return;
+        }
+
         const isEdit = !!job;
         const standardCategories = ['IT & Lập trình', 'Thiết kế & Đồ họa', 'Viết lách & Dịch thuật', 'Sales & Marketing', 'Video & Photography'];
         const isCustomCategory = job?.category && !standardCategories.includes(job.category);
@@ -7068,6 +7325,14 @@
                 <button class="modal-close"><i data-lucide="x" style="width:20px;height:20px;"></i></button>
                 <div class="modal-header"><h2>${isEdit ? 'Chỉnh sửa tin tuyển dụng' : 'Đăng việc mới'}</h2></div>
                 <div class="modal-body">
+                    ${(isVipPackage || job?.isVip) ? `
+                    <div class="form-group" style="background:#fffbeb; padding:12px; border-radius:8px; border:1px solid #fef3c7; margin-bottom:16px;">
+                        <label class="form-checkbox d-flex align-items-center gap-2" style="font-weight:600; color:#b45309; display:inline-flex; align-items:center; cursor:pointer;">
+                            <input type="checkbox" id="postJobIsVip" ${job?.isVip || isVipPackage ? 'checked' : ''} style="margin-right:8px; width:16px; height:16px;" />
+                            <span>Đăng bài này dưới tư cách thành viên VIP (Độ ưu tiên cao nhất, hiển thị trong 7 ngày)</span>
+                        </label>
+                    </div>
+                    ` : ''}
                     <div class="form-group">
                         <label class="form-label">Tiêu đề công việc</label>
                         <input type="text" class="form-input" id="postJobTitle" value="${escapeHtml(job?.title || '')}" placeholder="VD: Thiết kế poster sự kiện..." />
@@ -7147,6 +7412,23 @@
         setupCurrencyInput(modal.querySelector('#postJobBudget'));
         if (window.lucide) lucide.createIcons();
         requestAnimationFrame(() => modal.classList.add('active'));
+
+        const vipCheck = modal.querySelector('#postJobIsVip');
+        const deadlineInput = modal.querySelector('#postJobDeadline');
+        if (vipCheck && deadlineInput) {
+            const updateDeadlineState = () => {
+                if (vipCheck.checked) {
+                    const nextWeek = new Date();
+                    nextWeek.setDate(nextWeek.getDate() + 7);
+                    deadlineInput.value = nextWeek.toISOString().split('T')[0];
+                    deadlineInput.disabled = true;
+                } else {
+                    deadlineInput.disabled = false;
+                }
+            };
+            vipCheck.addEventListener('change', updateDeadlineState);
+            updateDeadlineState();
+        }
 
         modal.querySelector('.modal-close').addEventListener('click', () => closeModal(modal));
         modal.addEventListener('click', e => { if (e.target === modal) closeModal(modal); });
@@ -7231,6 +7513,7 @@
                 location: modal.querySelector('#postJobLocation').value.trim() || 'Online',
                 quantity: Number(modal.querySelector('#postJobQuantity').value) || 1,
                 deadline,
+                isVip: modal.querySelector('#postJobIsVip')?.checked || false,
                 saveAsDraft
             };
 
@@ -7244,6 +7527,20 @@
                     if (data.success) {
                         closeModal(modal);
                         showToast(data.message || 'Đã lưu tin tuyển dụng.', 'success');
+
+                        if (typeof loadBusinessHomeData === 'function') {
+                            loadBusinessHomeData();
+                        }
+                        if (typeof loadServicePackages === 'function' && document.getElementById('servicePackagesPanel')) {
+                            loadServicePackages();
+                        }
+                        if (typeof window.getWalletData === 'function') {
+                            window.getWalletData();
+                        }
+                        if (typeof window.renderBusinessWalletDeposit === 'function') {
+                            window.renderBusinessWalletDeposit();
+                        }
+
                         if (currentSidebarMode === 'businessJobs') loadBusinessJobs();
                     } else {
                         showToast(data.message || 'Không thể lưu tin tuyển dụng.', 'error');
@@ -8424,6 +8721,7 @@
             });
     }
 
+    window.loadMainChatMessages = loadMainChatMessages;
     window.openReviewModal = openReviewModal;
     window.renderBusinessReviewsView = renderBusinessReviewsView;
     window.formatCurrencyInput = formatCurrencyInput;
