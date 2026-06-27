@@ -252,17 +252,6 @@ public class AppDbContext : DbContext
             entity.HasData(
                 new ServicePlan
                 {
-                    Id = 1,
-                    Name = "Business Starter",
-                    Description = "Gói khởi đầu cho doanh nghiệp đăng tuyển quy mô nhỏ.",
-                    Price = 0,
-                    DurationDays = 14,
-                    JobPostLimit = 3,
-                    Benefits = "3 tin tuyển dụng;Trang tuyển dụng công khai;Nhận ứng viên cơ bản",
-                    IsActive = false
-                },
-                new ServicePlan
-                {
                     Id = 2,
                     Name = "Business Premium",
                     Description = "Gói tối ưu cho doanh nghiệp vừa và nhỏ, nâng cao hiển thị.",

@@ -617,17 +617,6 @@ namespace JobForStudents.Migrations
                     b.HasData(
                         new
                         {
-                            Id = 1,
-                            Benefits = "3 tin tuyển dụng;Trang tuyển dụng công khai;Nhận ứng viên cơ bản",
-                            Description = "Gói khởi đầu cho doanh nghiệp đăng tuyển quy mô nhỏ.",
-                            DurationDays = 14,
-                            IsActive = false,
-                            JobPostLimit = 3,
-                            Name = "Business Starter",
-                            Price = 0m
-                        },
-                        new
-                        {
                             Id = 2,
                             Benefits = "10 tin tuyển dụng;Xem duyệt ứng viên;Truy cập hồ sơ ứng viên không giới hạn",
                             Description = "Gói tối ưu cho doanh nghiệp vừa và nhỏ, nâng cao hiển thị.",
