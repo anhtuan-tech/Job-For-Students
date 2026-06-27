@@ -1436,6 +1436,46 @@ public class HomeController : Controller
 
         if (user.Role == UserRole.Student)
         {
+            // Validate GPA range [0.0 - 4.0]
+            if (request.GPA.HasValue && (request.GPA.Value < 0.0 || request.GPA.Value > 4.0))
+            {
+                return Json(new { success = false, message = "GPA phải nằm trong khoảng từ 0.0 đến 4.0." });
+            }
+
+            // Validate age from DateOfBirth [15 - 70]
+            if (!string.IsNullOrEmpty(request.DateOfBirth) && DateTime.TryParse(request.DateOfBirth, out var dobValidation))
+            {
+                var age = DateTime.Today.Year - dobValidation.Year;
+                if (dobValidation.Date > DateTime.Today.AddYears(-age)) age--;
+                if (age < 15 || age > 70)
+                {
+                    return Json(new { success = false, message = "Tuổi không hợp lệ. Tuổi phải từ 15 đến 70." });
+                }
+            }
+
+            // Validate CV file extension
+            if (!string.IsNullOrEmpty(request.CvName))
+            {
+                var allowedExtensions = new[] { ".pdf", ".doc", ".docx" };
+                var ext = System.IO.Path.GetExtension(request.CvName).ToLowerInvariant();
+                if (!allowedExtensions.Contains(ext))
+                {
+                    return Json(new { success = false, message = "File CV chỉ chấp nhận định dạng .pdf, .doc hoặc .docx." });
+                }
+            }
+
+            // Validate CV file size (max 5MB, stored as base64)
+            if (!string.IsNullOrEmpty(request.CvUrl))
+            {
+                var base64Data = request.CvUrl.Contains(",") ? request.CvUrl.Split(',')[1] : request.CvUrl;
+                var estimatedBytes = (long)(base64Data.Length * 0.75);
+                const long maxCvBytes = 5 * 1024 * 1024; // 5MB
+                if (estimatedBytes > maxCvBytes)
+                {
+                    return Json(new { success = false, message = "File CV không được vượt quá 5MB." });
+                }
+            }
+
             var studentProfile = await _context.StudentProfiles
                 .Include(sp => sp.StudentSkills)
                 .Include(sp => sp.PortfolioProjects)

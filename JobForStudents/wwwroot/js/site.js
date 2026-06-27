@@ -4154,6 +4154,23 @@
             cvInput.addEventListener('change', function (e) {
                 const file = e.target.files[0];
                 if (file) {
+                    // Validate file extension
+                    const allowedExtensions = ['.pdf', '.doc', '.docx'];
+                    const fileExt = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+                    if (!allowedExtensions.includes(fileExt)) {
+                        showToast('Chỉ chấp nhận file CV định dạng .pdf, .doc, .docx!', 'error');
+                        cvInput.value = '';
+                        return;
+                    }
+
+                    // Validate file size (max 5MB)
+                    const maxSizeBytes = 5 * 1024 * 1024; // 5MB
+                    if (file.size > maxSizeBytes) {
+                        showToast('File CV không được vượt quá 5MB!', 'error');
+                        cvInput.value = '';
+                        return;
+                    }
+
                     uploadedCvName = file.name;
                     cvFileLabel.textContent = `Đang tải: ${file.name}`;
                     const reader = new FileReader();
@@ -4328,6 +4345,25 @@
                 if (!payload.fullName) {
                     showToast('Vui lòng nhập họ và tên!', 'warning');
                     return;
+                }
+
+                // Validate GPA range [0.0 - 4.0]
+                if (payload.gpa !== null && (isNaN(payload.gpa) || payload.gpa < 0 || payload.gpa > 4.0)) {
+                    showToast('GPA phải nằm trong khoảng từ 0.0 đến 4.0!', 'warning');
+                    return;
+                }
+
+                // Validate Date of Birth (age must be 15–70)
+                if (payload.dateOfBirth) {
+                    const dob = new Date(payload.dateOfBirth);
+                    const today = new Date();
+                    const ageDiff = today.getFullYear() - dob.getFullYear();
+                    const hadBirthday = today >= new Date(today.getFullYear(), dob.getMonth(), dob.getDate());
+                    const age = hadBirthday ? ageDiff : ageDiff - 1;
+                    if (age < 15 || age > 70) {
+                        showToast('Tuổi không hợp lệ. Tuổi phải từ 15 đến 70!', 'warning');
+                        return;
+                    }
                 }
             } else {
                 payload.companyName = modal.querySelector('#editName').value.trim();
