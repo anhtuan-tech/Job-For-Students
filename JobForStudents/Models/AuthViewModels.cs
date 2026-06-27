@@ -28,6 +28,7 @@ public class RegisterViewModel
 
     [Required(ErrorMessage = "Mật khẩu là bắt buộc.")]
     [MinLength(6, ErrorMessage = "Mật khẩu phải có ít nhất 6 ký tự.")]
+    [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$", ErrorMessage = "Mật khẩu phải chứa ít nhất một chữ hoa, một chữ thường, một chữ số và một ký tự đặc biệt.")]
     [DataType(DataType.Password)]
     public string Password { get; set; } = string.Empty;
 

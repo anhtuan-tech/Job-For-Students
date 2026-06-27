@@ -119,6 +119,30 @@ public class AuthController : Controller
             return View(model);
         }
 
+        // Check for disposable email domains
+        var emailParts = model.Email.Split('@');
+        if (emailParts.Length == 2)
+        {
+            var domain = emailParts[1].ToLower().Trim();
+            string[] disposableDomains = { 
+                "mailinator.com", "yopmail.com", "tempmail.com", "guerrillamail.com", 
+                "sharklasers.com", "dispostable.com", "getairmail.com", "burnermail.io", 
+                "10minutemail.com", "trashmail.com", "temp-mail.org", "maildrop.cc" 
+            };
+            if (disposableDomains.Contains(domain))
+            {
+                ModelState.AddModelError("Email", "Không chấp nhận đăng ký tài khoản bằng địa chỉ email tạm thời.");
+                return View(model);
+            }
+        }
+
+        // Check for dangerous characters/links in Name
+        if (ContainsDangerousCharactersOrLinks(model.Name))
+        {
+            ModelState.AddModelError("Name", "Họ tên hoặc tên công ty không được chứa các ký tự đặc biệt nguy hiểm hoặc đường dẫn liên kết.");
+            return View(model);
+        }
+
         var emailExists = await _context.Users.AnyAsync(u => u.Email == model.Email);
         if (emailExists)
         {
@@ -331,5 +355,20 @@ public class AuthController : Controller
         _cache.Remove(cacheKey);
 
         return Json(new { success = true, message = "Đặt lại mật khẩu thành công!" });
+    }
+
+    private bool ContainsDangerousCharactersOrLinks(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return false;
+
+        // Check for links (http://, https://, www., .com, etc.)
+        var linkPattern = new System.Text.RegularExpressions.Regex(@"(https?:\/\/|www\.|[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        if (linkPattern.IsMatch(text)) return true;
+
+        // Check for dangerous characters
+        char[] dangerousChars = { '<', '>', '{', '}', '[', ']', '\\', '^', '$', '*', '+', '|', '?' };
+        if (text.Any(c => dangerousChars.Contains(c))) return true;
+
+        return false;
     }
 }
