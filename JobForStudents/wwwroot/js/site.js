@@ -16,6 +16,20 @@
     let originalCategoriesHTML = '';
     let pendingChatUserId = null;
     let reviewsFilter = 'all';
+    let studentProjectsPage = 1;
+    let studentProjectsPageSize = Number(localStorage.getItem('j4s_pagesize_studentProjects')) || 10;
+    let studentProjectsList = [];
+    let managedJobsPage = 1;
+    let managedJobsList = [];
+    let managedJobsSummary = {};
+    let candidateSearchPage = 1;
+    let candidateSearchList = [];
+    let businessReviewsPage = 1;
+    let businessReviewsList = [];
+    let newApplicantsPage = 1;
+    let newApplicantsList = [];
+    let newApplicantsTotal = 0;
+    let paymentHistoryPage = 1;
 
     let profileState = {
         avatar: '',
@@ -617,6 +631,68 @@
         bindFilterSelect();
     }
 
+    function renderGenericPaginationControls(paginationEl, total, totalPages, currentPage, pageSize, onPageSizeChange, onPageChange, storageKey = 'j4s_pagesize') {
+        if (!paginationEl) return;
+        if (totalPages <= 1) {
+            paginationEl.innerHTML = `
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="font-size:0.85rem;color:#64748b;">Hiển thị:</span>
+                    <select class="fj-pagesize-select" style="border:1px solid #e2e8f0;border-radius:8px;padding:4px 8px;font-size:0.85rem;outline:none;background:#fff;cursor:pointer;">
+                        ${[5, 10, 15, 20, 30, 50].map(sz => `<option value="${sz}" ${sz === pageSize ? 'selected' : ''}>${sz}</option>`).join('')}
+                    </select>
+                    <span style="font-size:0.85rem;color:#64748b;">/ trang</span>
+                </div>
+                <div style="font-size:0.85rem;color:#64748b;font-weight:500;">
+                    Hiển thị từ 1 đến ${total} trong tổng số ${total}
+                </div>
+            `;
+        } else {
+            paginationEl.innerHTML = `
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="font-size:0.85rem;color:#64748b;">Hiển thị:</span>
+                    <select class="fj-pagesize-select" style="border:1px solid #e2e8f0;border-radius:8px;padding:4px 8px;font-size:0.85rem;outline:none;background:#fff;cursor:pointer;">
+                        ${[5, 10, 15, 20, 30, 50].map(sz => `<option value="${sz}" ${sz === pageSize ? 'selected' : ''}>${sz}</option>`).join('')}
+                    </select>
+                    <span style="font-size:0.85rem;color:#64748b;">/ trang</span>
+                </div>
+                
+                <div style="display:flex;align-items:center;gap:6px;">
+                    <button class="fj-prev-btn" ${currentPage === 1 ? 'disabled' : ''} style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:6px 12px;cursor:${currentPage === 1 ? 'not-allowed' : 'pointer'};color:${currentPage === 1 ? '#cbd5e1' : '#475569'};font-size:0.85rem;font-weight:600;display:flex;align-items:center;gap:4px;">
+                        <i data-lucide="chevron-left" style="width:14px;height:14px;"></i> Trước
+                    </button>
+                    <span style="font-size:0.85rem;color:#475569;font-weight:600;padding:0 8px;">Trang ${currentPage} / ${totalPages}</span>
+                    <button class="fj-next-btn" ${currentPage === totalPages ? 'disabled' : ''} style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:6px 12px;cursor:${currentPage === totalPages ? 'not-allowed' : 'pointer'};color:${currentPage === totalPages ? '#cbd5e1' : '#475569'};font-size:0.85rem;font-weight:600;display:flex;align-items:center;gap:4px;">
+                        Sau <i data-lucide="chevron-right" style="width:14px;height:14px;"></i>
+                    </button>
+                </div>
+
+                <div style="font-size:0.85rem;color:#64748b;font-weight:500;">
+                    Hiển thị từ ${(currentPage - 1) * pageSize + 1} đến ${Math.min(currentPage * pageSize, total)} trong tổng số ${total}
+                </div>
+            `;
+        }
+
+        if (window.lucide) lucide.createIcons();
+
+        paginationEl.querySelector('.fj-pagesize-select')?.addEventListener('change', function () {
+            const newSize = Number(this.value);
+            localStorage.setItem(storageKey, newSize);
+            onPageSizeChange(newSize);
+        });
+
+        paginationEl.querySelector('.fj-prev-btn')?.addEventListener('click', function () {
+            if (currentPage > 1) {
+                onPageChange(currentPage - 1);
+            }
+        });
+
+        paginationEl.querySelector('.fj-next-btn')?.addEventListener('click', function () {
+            if (currentPage < totalPages) {
+                onPageChange(currentPage + 1);
+            }
+        });
+    }
+
     // ============================================
     // STUDENT VIEWS — Tìm việc / Đã lưu / Đã ứng tuyển
     // ============================================
@@ -718,7 +794,10 @@
                 <div style="text-align:center;padding:50px;color:#94a3b8;">
                     <span class="spinner-border spinner-border-sm" style="margin-right:8px;"></span> Đang tải danh sách việc làm...
                 </div>
-            </div>`;
+            </div>
+            
+            <!-- Pagination Container -->
+            <div id="fjPagination" style="display:flex;align-items:center;justify-content:space-between;margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;flex-wrap:wrap;gap:12px;"></div>`;
 
         if (window.lucide) lucide.createIcons();
 
@@ -768,9 +847,15 @@
             ).join('');
         }
 
+        let lastJobsSignature = '';
+        let currentPage = 1;
+        let pageSize = Number(localStorage.getItem('j4s_pagesize')) || 10;
+        let activeJobsList = [];
+
         function doSearch() {
             const results = document.getElementById('fjResults');
             const countEl = document.getElementById('fjCount');
+            const paginationEl = document.getElementById('fjPagination');
             if (!results) return;
             results.innerHTML = '<div style="text-align:center;padding:50px;color:#94a3b8;"><span class="spinner-border spinner-border-sm" style="margin-right:8px;"></span> Đang tìm kiếm...</div>';
             if (countEl) countEl.textContent = '';
@@ -780,6 +865,8 @@
                 .then(r => r.json())
                 .then(jobs => {
                     if (!jobs || !jobs.length) {
+                        lastJobsSignature = '';
+                        activeJobsList = [];
                         results.innerHTML = `
                             <div style="text-align:center;padding:70px 20px;">
                                 <div style="font-size:3.5rem;margin-bottom:14px;">🔍</div>
@@ -787,26 +874,155 @@
                                 <p style="color:#64748b;max-width:360px;margin:0 auto;">Hãy thử thay đổi từ khóa hoặc bỏ bớt bộ lọc.</p>
                             </div>`;
                         if (countEl) countEl.textContent = '0 kết quả';
+                        if (paginationEl) paginationEl.innerHTML = '';
                         return;
                     }
-                    if (countEl) countEl.textContent = `${jobs.length} việc làm phù hợp`;
-                    results.innerHTML = jobs.map(job => renderJobCard(job)).join('');
-                    if (window.lucide) lucide.createIcons();
-                    bindJobCardClicks();
+                    lastJobsSignature = jobs.map(j => `${j.id}_${j.applicantsCount}_${j.isSaved}_${j.isApplied}`).join(',');
+                    activeJobsList = jobs;
+                    renderPaginatedJobs();
                 })
                 .catch(() => {
                     results.innerHTML = '<div style="text-align:center;padding:60px;color:#ef4444;">⚠️ Lỗi khi tải dữ liệu. Vui lòng thử lại.</div>';
                 });
         }
 
+        function doSearchBackground() {
+            const results = document.getElementById('fjResults');
+            if (!results) {
+                if (window.findJobIntervalId) {
+                    clearInterval(window.findJobIntervalId);
+                    window.findJobIntervalId = null;
+                }
+                return;
+            }
+
+            fetch(buildUrl())
+                .then(r => r.json())
+                .then(jobs => {
+                    const signature = jobs ? jobs.map(j => `${j.id}_${j.applicantsCount}_${j.isSaved}_${j.isApplied}`).join(',') : '';
+                    if (signature !== lastJobsSignature) {
+                        lastJobsSignature = signature;
+                        activeJobsList = jobs || [];
+                        renderPaginatedJobs();
+                    }
+                })
+                .catch(err => console.warn('Background job poll failed:', err));
+        }
+
+        function renderPaginatedJobs() {
+            const results = document.getElementById('fjResults');
+            const countEl = document.getElementById('fjCount');
+            const paginationEl = document.getElementById('fjPagination');
+            if (!results) return;
+
+            if (!activeJobsList || !activeJobsList.length) {
+                results.innerHTML = `
+                    <div style="text-align:center;padding:70px 20px;">
+                        <div style="font-size:3.5rem;margin-bottom:14px;">🔍</div>
+                        <h3 style="color:#1e293b;font-weight:700;margin-bottom:8px;">Không tìm thấy việc làm phù hợp</h3>
+                        <p style="color:#64748b;max-width:360px;margin:0 auto;">Hãy thử thay đổi từ khóa hoặc bỏ bớt bộ lọc.</p>
+                    </div>`;
+                if (countEl) countEl.textContent = '0 kết quả';
+                if (paginationEl) paginationEl.innerHTML = '';
+                return;
+            }
+
+            const total = activeJobsList.length;
+            const totalPages = Math.ceil(total / pageSize);
+            if (currentPage > totalPages) {
+                currentPage = Math.max(1, totalPages);
+            }
+
+            if (countEl) {
+                countEl.textContent = `${total} việc làm phù hợp`;
+            }
+
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            const pageJobs = activeJobsList.slice(startIndex, endIndex);
+
+            results.innerHTML = pageJobs.map(job => renderJobCard(job)).join('');
+            if (window.lucide) lucide.createIcons();
+            bindJobCardClicks();
+
+            if (paginationEl) {
+                if (totalPages <= 1) {
+                    paginationEl.innerHTML = `
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <span style="font-size:0.85rem;color:#64748b;">Hiển thị:</span>
+                            <select id="fjPageSize" style="border:1px solid #e2e8f0;border-radius:8px;padding:4px 8px;font-size:0.85rem;outline:none;background:#fff;cursor:pointer;">
+                                ${[5, 10, 15, 20, 30, 50].map(sz => `<option value="${sz}" ${sz === pageSize ? 'selected' : ''}>${sz}</option>`).join('')}
+                            </select>
+                            <span style="font-size:0.85rem;color:#64748b;">/ trang</span>
+                        </div>
+                        <div style="font-size:0.85rem;color:#64748b;font-weight:500;">
+                            Hiển thị từ ${startIndex + 1} đến ${Math.min(endIndex, total)} trong tổng số ${total}
+                        </div>
+                    `;
+                } else {
+                    paginationEl.innerHTML = `
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <span style="font-size:0.85rem;color:#64748b;">Hiển thị:</span>
+                            <select id="fjPageSize" style="border:1px solid #e2e8f0;border-radius:8px;padding:4px 8px;font-size:0.85rem;outline:none;background:#fff;cursor:pointer;">
+                                ${[5, 10, 15, 20, 30, 50].map(sz => `<option value="${sz}" ${sz === pageSize ? 'selected' : ''}>${sz}</option>`).join('')}
+                            </select>
+                            <span style="font-size:0.85rem;color:#64748b;">/ trang</span>
+                        </div>
+                        
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <button id="fjPrevPage" ${currentPage === 1 ? 'disabled' : ''} style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:6px 12px;cursor:${currentPage === 1 ? 'not-allowed' : 'pointer'};color:${currentPage === 1 ? '#cbd5e1' : '#475569'};font-size:0.85rem;font-weight:600;display:flex;align-items:center;gap:4px;">
+                                <i data-lucide="chevron-left" style="width:14px;height:14px;"></i> Trước
+                            </button>
+                            <span style="font-size:0.85rem;color:#475569;font-weight:600;padding:0 8px;">Trang ${currentPage} / ${totalPages}</span>
+                            <button id="fjNextPage" ${currentPage === totalPages ? 'disabled' : ''} style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:6px 12px;cursor:${currentPage === totalPages ? 'not-allowed' : 'pointer'};color:${currentPage === totalPages ? '#cbd5e1' : '#475569'};font-size:0.85rem;font-weight:600;display:flex;align-items:center;gap:4px;">
+                                Sau <i data-lucide="chevron-right" style="width:14px;height:14px;"></i>
+                            </button>
+                        </div>
+
+                        <div style="font-size:0.85rem;color:#64748b;font-weight:500;">
+                            Hiển thị từ ${startIndex + 1} đến ${Math.min(endIndex, total)} trong tổng số ${total}
+                        </div>
+                    `;
+                }
+
+                if (window.lucide) lucide.createIcons();
+
+                document.getElementById('fjPageSize')?.addEventListener('change', function () {
+                    pageSize = Number(this.value);
+                    currentPage = 1;
+                    renderPaginatedJobs();
+                });
+
+                document.getElementById('fjPrevPage')?.addEventListener('click', function () {
+                    if (currentPage > 1) {
+                        currentPage--;
+                        renderPaginatedJobs();
+                        document.getElementById('mainContent')?.scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+
+                document.getElementById('fjNextPage')?.addEventListener('click', function () {
+                    if (currentPage < totalPages) {
+                        currentPage++;
+                        renderPaginatedJobs();
+                        document.getElementById('mainContent')?.scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+            }
+        }
+
         // Bind events
         let debounceTimer;
         document.getElementById('fjKeyword')?.addEventListener('input', () => {
             clearTimeout(debounceTimer);
+            currentPage = 1;
             debounceTimer = setTimeout(doSearch, 300);
         });
         ['fjCategory', 'fjBudget', 'fjDaysAgo', 'fjExperience', 'fjSort'].forEach(id => {
-            document.getElementById(id)?.addEventListener('change', doSearch);
+            document.getElementById(id)?.addEventListener('change', () => {
+                currentPage = 1;
+                doSearch();
+            });
         });
         document.getElementById('fjReset')?.addEventListener('click', () => {
             ['fjKeyword', 'fjCategory', 'fjBudget', 'fjDaysAgo', 'fjExperience'].forEach(id => {
@@ -817,6 +1033,7 @@
             if (sortEl) sortEl.value = 'newest';
             const activeEl = document.getElementById('fjActiveFilters');
             if (activeEl) activeEl.innerHTML = '';
+            currentPage = 1;
             doSearch();
         });
 
@@ -863,10 +1080,20 @@
                 if (select) select.innerHTML = '<option value="">Tất cả ngành</option>';
                 doSearch();
             });
+
+        if (window.findJobIntervalId) {
+            clearInterval(window.findJobIntervalId);
+        }
+        window.findJobIntervalId = setInterval(doSearchBackground, 5000);
     }
 
     function renderSavedJobsView() {
         if (!mainContent) return;
+
+        let currentPage = 1;
+        let pageSize = Number(localStorage.getItem('j4s_pagesize_studentSavedJobs')) || 10;
+        let activeJobs = [];
+
         mainContent.innerHTML = `
             <div class="page-header animate-in" style="margin-bottom:24px;">
                 <h1 style="font-size:1.5rem;font-weight:800;color:#0f172a;margin:0 0 6px;"><i data-lucide="bookmark" style="width:22px;height:22px;vertical-align:middle;margin-right:8px;"></i>Việc đã lưu</h1>
@@ -874,26 +1101,55 @@
             </div>
             <div id="savedJobResults" style="display:flex;flex-direction:column;gap:14px;">
                 <div style="text-align:center;padding:40px;color:#94a3b8;"><span class="spinner-border spinner-border-sm" style="margin-right:8px;"></span> Đang tải...</div>
-            </div>`;
+            </div>
+            <div id="savedJobPagination" style="display:flex;align-items:center;justify-content:space-between;margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;flex-wrap:wrap;gap:12px;"></div>`;
         if (window.lucide) lucide.createIcons();
+
+        function renderPage() {
+            const results = document.getElementById('savedJobResults');
+            const paginationEl = document.getElementById('savedJobPagination');
+            if (!results) return;
+
+            if (!activeJobs.length) {
+                results.innerHTML = `<div style="text-align:center;padding:60px;">
+                    <div style="font-size:3rem;margin-bottom:12px;">🔖</div>
+                    <h3 style="color:#1e293b;font-weight:700;margin-bottom:8px;">Chưa có việc làm nào được lưu</h3>
+                    <p style="color:#64748b;">Bấm vào icon bookmark trên các tin để lưu lại.</p>
+                </div>`;
+                if (paginationEl) paginationEl.innerHTML = '';
+                return;
+            }
+
+            const total = activeJobs.length;
+            const totalPages = Math.ceil(total / pageSize);
+            if (currentPage > totalPages) currentPage = Math.max(1, totalPages);
+
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            const pageJobs = activeJobs.slice(startIndex, endIndex);
+
+            results.innerHTML = pageJobs.map(job => renderJobCard(job)).join('');
+            if (window.lucide) lucide.createIcons();
+            bindJobCardClicks();
+
+            if (paginationEl) {
+                renderGenericPaginationControls(paginationEl, total, totalPages, currentPage, pageSize, (newSize) => {
+                    pageSize = newSize;
+                    currentPage = 1;
+                    renderPage();
+                }, (newPage) => {
+                    currentPage = newPage;
+                    renderPage();
+                    document.getElementById('mainContent')?.scrollIntoView({ behavior: 'smooth' });
+                }, 'j4s_pagesize_studentSavedJobs');
+            }
+        }
 
         fetch('/Home/GetSavedJobs')
             .then(r => r.json())
             .then(data => {
-                const results = document.getElementById('savedJobResults');
-                if (!results) return;
-                const jobs = Array.isArray(data) ? data : (data.jobs || []);
-                if (!jobs.length) {
-                    results.innerHTML = `<div style="text-align:center;padding:60px;">
-                        <div style="font-size:3rem;margin-bottom:12px;">🔖</div>
-                        <h3 style="color:#1e293b;font-weight:700;margin-bottom:8px;">Chưa có việc làm nào được lưu</h3>
-                        <p style="color:#64748b;">Bấm vào icon bookmark trên các tin để lưu lại.</p>
-                    </div>`;
-                    return;
-                }
-                results.innerHTML = jobs.map(job => renderJobCard(job)).join('');
-                if (window.lucide) lucide.createIcons();
-                bindJobCardClicks();
+                activeJobs = Array.isArray(data) ? data : (data.jobs || []);
+                renderPage();
             })
             .catch(() => {
                 const results = document.getElementById('savedJobResults');
@@ -903,6 +1159,11 @@
 
     function renderAppliedJobsView() {
         if (!mainContent) return;
+
+        let currentPage = 1;
+        let pageSize = Number(localStorage.getItem('j4s_pagesize_studentAppliedJobs')) || 10;
+        let activeJobs = [];
+
         mainContent.innerHTML = `
             <div class="page-header animate-in" style="margin-bottom:24px;">
                 <h1 style="font-size:1.5rem;font-weight:800;color:#0f172a;margin:0 0 6px;"><i data-lucide="send" style="width:22px;height:22px;vertical-align:middle;margin-right:8px;"></i>Đã ứng tuyển</h1>
@@ -910,26 +1171,55 @@
             </div>
             <div id="appliedJobResults" style="display:flex;flex-direction:column;gap:14px;">
                 <div style="text-align:center;padding:40px;color:#94a3b8;"><span class="spinner-border spinner-border-sm" style="margin-right:8px;"></span> Đang tải...</div>
-            </div>`;
+            </div>
+            <div id="appliedJobPagination" style="display:flex;align-items:center;justify-content:space-between;margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;flex-wrap:wrap;gap:12px;"></div>`;
         if (window.lucide) lucide.createIcons();
+
+        function renderPage() {
+            const results = document.getElementById('appliedJobResults');
+            const paginationEl = document.getElementById('appliedJobPagination');
+            if (!results) return;
+
+            if (!activeJobs.length) {
+                results.innerHTML = `<div style="text-align:center;padding:60px;">
+                    <div style="font-size:3rem;margin-bottom:12px;">📋</div>
+                    <h3 style="color:#1e293b;font-weight:700;margin-bottom:8px;">Bạn chưa ứng tuyển công việc nào</h3>
+                    <p style="color:#64748b;">Hãy bắt đầu tìm việc và nộp hồ sơ ngay!</p>
+                </div>`;
+                if (paginationEl) paginationEl.innerHTML = '';
+                return;
+            }
+
+            const total = activeJobs.length;
+            const totalPages = Math.ceil(total / pageSize);
+            if (currentPage > totalPages) currentPage = Math.max(1, totalPages);
+
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            const pageJobs = activeJobs.slice(startIndex, endIndex);
+
+            results.innerHTML = pageJobs.map(job => renderAppliedJobCard(job)).join('');
+            if (window.lucide) lucide.createIcons();
+            bindJobCardClicks();
+
+            if (paginationEl) {
+                renderGenericPaginationControls(paginationEl, total, totalPages, currentPage, pageSize, (newSize) => {
+                    pageSize = newSize;
+                    currentPage = 1;
+                    renderPage();
+                }, (newPage) => {
+                    currentPage = newPage;
+                    renderPage();
+                    document.getElementById('mainContent')?.scrollIntoView({ behavior: 'smooth' });
+                }, 'j4s_pagesize_studentAppliedJobs');
+            }
+        }
 
         fetch('/Home/GetAppliedJobs')
             .then(r => r.json())
             .then(data => {
-                const results = document.getElementById('appliedJobResults');
-                if (!results) return;
-                const jobs = Array.isArray(data) ? data : (data.jobs || []);
-                if (!jobs.length) {
-                    results.innerHTML = `<div style="text-align:center;padding:60px;">
-                        <div style="font-size:3rem;margin-bottom:12px;">📋</div>
-                        <h3 style="color:#1e293b;font-weight:700;margin-bottom:8px;">Bạn chưa ứng tuyển công việc nào</h3>
-                        <p style="color:#64748b;">Hãy bắt đầu tìm việc và nộp hồ sơ ngay!</p>
-                    </div>`;
-                    return;
-                }
-                results.innerHTML = jobs.map(job => renderAppliedJobCard(job)).join('');
-                if (window.lucide) lucide.createIcons();
-                bindJobCardClicks();
+                activeJobs = Array.isArray(data) ? data : (data.jobs || []);
+                renderPage();
             })
             .catch(() => {
                 const results = document.getElementById('appliedJobResults');
@@ -1169,6 +1459,7 @@
     }
 
     function renderBusinessJobsManagement() {
+        managedJobsPage = 1;
         mainContent.innerHTML = `
             <div class="page-header animate-in">
                 <h1 class="page-title"><i data-lucide="briefcase-business" style="width:24px;height:24px;"></i> Quản lý tin đăng</h1>
@@ -1182,19 +1473,22 @@
                 <div style="display:flex;align-items:center;justify-content:center;min-height:220px;color:var(--text-secondary);font-weight:600;">
                     <span class="spinner-border spinner-border-sm" style="margin-right:8px;"></span> Đang tải tin tuyển dụng...
                 </div>
-            </div>`;
+            </div>
+            <div id="businessJobsManagedPagination" style="display:flex;align-items:center;justify-content:space-between;margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;flex-wrap:wrap;gap:12px;"></div>`;
         if (window.lucide) lucide.createIcons();
         document.getElementById('btnCreateManagedJob')?.addEventListener('click', () => openPostJobModal());
         loadBusinessJobs();
     }
 
     function renderApproveCandidatesView() {
+        newApplicantsPage = 1;
         mainContent.innerHTML = `
             <div class="page-header animate-in">
                 <h1 class="page-title"><i data-lucide="user-check" style="width:24px;height:24px;"></i> Duyệt ứng viên</h1>
                 <p class="page-subtitle">Xem danh sách ứng viên mới ứng tuyển và đưa ra quyết định duyệt hoặc từ chối.</p>
             </div>
-            <div id="newApplicantsPanel" class="new-applicants-panel"></div>`;
+            <div id="newApplicantsPanel" class="new-applicants-panel"></div>
+            <div id="newApplicantsPagination" style="display:flex;align-items:center;justify-content:space-between;margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;flex-wrap:wrap;gap:12px;"></div>`;
         if (window.lucide) lucide.createIcons();
         loadNewBusinessApplicants();
     }
@@ -1207,7 +1501,9 @@
                     showToast(data.message || 'Không thể tải tin đăng.', 'error');
                     return;
                 }
-                renderBusinessJobsList(data.jobs || [], data.summary || {});
+                managedJobsList = data.jobs || [];
+                managedJobsSummary = data.summary || {};
+                renderBusinessJobsPage();
             })
             .catch(err => {
                 console.error(err);
@@ -1215,12 +1511,13 @@
             });
     }
 
-    function renderBusinessJobsList(jobs, summary = {}) {
+    function renderBusinessJobsPage() {
         const panel = document.getElementById('businessJobsPanel');
+        const paginationEl = document.getElementById('businessJobsManagedPagination');
         if (!panel) return;
-        renderBusinessJobStats(jobs, summary);
+        renderBusinessJobStats(managedJobsList, managedJobsSummary);
 
-        if (!jobs.length) {
+        if (!managedJobsList.length) {
             panel.innerHTML = `
                 <div class="profile-card-modern animate-in" style="padding:34px;text-align:center;">
                     <i data-lucide="briefcase" style="width:34px;height:34px;color:var(--primary);"></i>
@@ -1230,12 +1527,22 @@
                 </div>`;
             if (window.lucide) lucide.createIcons();
             document.getElementById('btnEmptyCreateJob')?.addEventListener('click', () => openPostJobModal());
+            if (paginationEl) paginationEl.innerHTML = '';
             return;
         }
 
+        const pageSize = Number(localStorage.getItem('j4s_pagesize_businessJobPosts')) || 10;
+        const total = managedJobsList.length;
+        const totalPages = Math.ceil(total / pageSize);
+        if (managedJobsPage > totalPages) managedJobsPage = Math.max(1, totalPages);
+
+        const startIndex = (managedJobsPage - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+        const pageJobs = managedJobsList.slice(startIndex, endIndex);
+
         panel.innerHTML = `
             <div class="managed-job-list">
-                ${jobs.map(job => `
+                ${pageJobs.map(job => `
                     <article class="managed-job-card animate-in" data-job-id="${job.id}">
                         <div class="managed-job-main">
                             <div class="managed-job-topline">
@@ -1270,7 +1577,18 @@
                 `).join('')}
             </div>`;
         if (window.lucide) lucide.createIcons();
-        bindManagedJobActions(jobs);
+        bindManagedJobActions(pageJobs);
+
+        if (paginationEl) {
+            renderGenericPaginationControls(paginationEl, total, totalPages, managedJobsPage, pageSize, (newSize) => {
+                managedJobsPage = 1;
+                renderBusinessJobsPage();
+            }, (newPage) => {
+                managedJobsPage = newPage;
+                renderBusinessJobsPage();
+                document.getElementById('mainContent')?.scrollIntoView({ behavior: 'smooth' });
+            }, 'j4s_pagesize_businessJobPosts');
+        }
     }
 
     function renderBusinessJobStats(jobs, summary = {}) {
@@ -1562,37 +1880,76 @@
             ? "Theo dõi ứng viên mới, thanh toán, tin sắp hết hạn và thông báo hệ thống."
             : "Theo dõi cập nhật dự án, tin tuyển dụng, tin nhắn mới và thông báo hệ thống.";
 
+        let currentPage = 1;
+        let pageSize = Number(localStorage.getItem('j4s_pagesize_notifications')) || 10;
+        let activeNotifications = [];
+
         mainContent.innerHTML = `
             <div class="page-header animate-in">
                 <h1 class="page-title"><i data-lucide="bell" style="width:24px;height:24px;"></i> Thông báo</h1>
                 <p class="page-subtitle">${subtitle}</p>
             </div>
-            <div class="profile-card-modern" id="notificationsPanel" style="padding:18px;">
-                <div class="business-loading-row"><span class="spinner-border spinner-border-sm"></span> Đang tải thông báo...</div>
+            <div class="profile-card-modern" style="padding:18px;">
+                <div id="notificationsPanel" style="display:flex; flex-direction:column;">
+                    <div class="business-loading-row"><span class="spinner-border spinner-border-sm"></span> Đang tải thông báo...</div>
+                </div>
+                <div id="notificationsPagination" style="display:flex;align-items:center;justify-content:space-between;margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;flex-wrap:wrap;gap:12px;"></div>
             </div>`;
+        if (window.lucide) lucide.createIcons();
+
+        function renderPage() {
+            const panel = document.getElementById('notificationsPanel');
+            const paginationEl = document.getElementById('notificationsPagination');
+            if (!panel) return;
+
+            if (!activeNotifications.length) {
+                panel.innerHTML = '<div class="business-empty-row">Chưa có thông báo.</div>';
+                if (paginationEl) paginationEl.innerHTML = '';
+                return;
+            }
+
+            const total = activeNotifications.length;
+            const totalPages = Math.ceil(total / pageSize);
+            if (currentPage > totalPages) currentPage = Math.max(1, totalPages);
+
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            const pageNotifications = activeNotifications.slice(startIndex, endIndex);
+
+            panel.innerHTML = pageNotifications.map(n => `
+                <div class="notification-list-item ${n.unread ? 'unread' : ''}">
+                    <div class="notification-icon">${escapeHtml(n.icon || '•')}</div>
+                    <div>
+                        <strong>${escapeHtml(n.title || '')}</strong>
+                        <p>${escapeHtml(n.desc || '')}</p>
+                        <small>${escapeHtml(n.time || '')}</small>
+                    </div>
+                </div>
+            `).join('');
+
+            if (paginationEl) {
+                renderGenericPaginationControls(paginationEl, total, totalPages, currentPage, pageSize, (newSize) => {
+                    pageSize = newSize;
+                    currentPage = 1;
+                    renderPage();
+                }, (newPage) => {
+                    currentPage = newPage;
+                    renderPage();
+                    document.getElementById('mainContent')?.scrollIntoView({ behavior: 'smooth' });
+                }, 'j4s_pagesize_notifications');
+            }
+        }
 
         fetch('/Home/GetNotifications')
             .then(res => res.json())
             .then(notifications => {
-                const panel = document.getElementById('notificationsPanel');
-                if (!panel) return;
-                const items = Array.isArray(notifications) ? notifications : [];
-                panel.innerHTML = items.length ? items.map(n => `
-                    <div class="notification-list-item ${n.unread ? 'unread' : ''}">
-                        <div class="notification-icon">${escapeHtml(n.icon || '•')}</div>
-                        <div>
-                            <strong>${escapeHtml(n.title || '')}</strong>
-                            <p>${escapeHtml(n.desc || '')}</p>
-                            <small>${escapeHtml(n.time || '')}</small>
-                        </div>
-                    </div>
-                `).join('') : '<div class="business-empty-row">Chưa có thông báo.</div>';
+                activeNotifications = Array.isArray(notifications) ? notifications : [];
+                renderPage();
             })
             .catch(err => {
                 console.error(err);
                 showToast('Không thể tải thông báo.', 'error');
             });
-        if (window.lucide) lucide.createIcons();
     }
 
     function renderBusinessSupportView() {
@@ -2085,7 +2442,9 @@
                     showToast(data.message || 'Không thể tải ứng viên mới.', 'error');
                     return;
                 }
-                renderNewBusinessApplicants(data.applicants || [], data.totalNewApplicants || 0);
+                newApplicantsList = data.applicants || [];
+                newApplicantsTotal = data.totalNewApplicants || 0;
+                renderNewBusinessApplicantsPage();
             })
             .catch(err => {
                 console.error(err);
@@ -2093,20 +2452,36 @@
             });
     }
 
-    function renderNewBusinessApplicants(applicants, totalNewApplicants) {
+    function renderNewBusinessApplicantsPage() {
         const panel = document.getElementById('newApplicantsPanel');
+        const paginationEl = document.getElementById('newApplicantsPagination');
         if (!panel) return;
+
+        if (!newApplicantsList.length) {
+            panel.innerHTML = `<div class="service-payment-empty">Chưa có ứng viên nào ứng tuyển.</div>`;
+            if (paginationEl) paginationEl.innerHTML = '';
+            return;
+        }
+
+        const pageSize = Number(localStorage.getItem('j4s_pagesize_businessApplicantsApproval')) || 10;
+        const total = newApplicantsList.length;
+        const totalPages = Math.ceil(total / pageSize);
+        if (newApplicantsPage > totalPages) newApplicantsPage = Math.max(1, totalPages);
+
+        const startIndex = (newApplicantsPage - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+        const pageApplicants = newApplicantsList.slice(startIndex, endIndex);
 
         panel.innerHTML = `
             <section class="new-applicants-section animate-in">
                 <div class="section-header">
                     <div>
                         <h2 class="section-title">Danh sách ứng viên</h2>
-                        <p class="section-subtitle">Tổng số: ${totalNewApplicants} ứng viên đã ứng tuyển</p>
+                        <p class="section-subtitle">Tổng số: ${newApplicantsTotal} ứng viên đã ứng tuyển</p>
                     </div>
                 </div>
                 <div class="new-applicant-list">
-                    ${applicants.length ? applicants.map(app => `
+                    ${pageApplicants.map(app => `
                         <article class="new-applicant-card" data-student-id="${app.studentId}" data-bid-id="${app.id}">
                             <div class="applicant-avatar">
                                 ${app.avatarUrl ? `<img src="${escapeHtml(app.avatarUrl)}" alt="${escapeHtml(app.name)}" />` : `<span>${getInitials(app.name)}</span>`}
@@ -2160,7 +2535,7 @@
                                 </div>
                             </div>
                         </article>
-                    `).join('') : '<div class="service-payment-empty">Chưa có ứng viên nào ứng tuyển.</div>'}
+                    `).join('')}
                 </div>
             </section>`;
 
@@ -2173,6 +2548,17 @@
             card.querySelector('[data-action="approve"]')?.addEventListener('click', () => updateApplicantStatus(bidId, 'hire'));
             card.querySelector('[data-action="reject"]')?.addEventListener('click', () => updateApplicantStatus(bidId, 'reject'));
         });
+
+        if (paginationEl) {
+            renderGenericPaginationControls(paginationEl, total, totalPages, newApplicantsPage, pageSize, (newSize) => {
+                newApplicantsPage = 1;
+                renderNewBusinessApplicantsPage();
+            }, (newPage) => {
+                newApplicantsPage = newPage;
+                renderNewBusinessApplicantsPage();
+                document.getElementById('mainContent')?.scrollIntoView({ behavior: 'smooth' });
+            }, 'j4s_pagesize_businessApplicantsApproval');
+        }
     }
 
     function contactCandidate(studentId) {
@@ -2206,6 +2592,7 @@
                 </div>
             </div>`;
         if (window.lucide) lucide.createIcons();
+        paymentHistoryPage = 1;
         loadServicePackages();
     }
 
@@ -2298,20 +2685,10 @@
                 <div class="section-header">
                     <h2 class="section-title">Lịch sử thanh toán</h2>
                 </div>
-                <div class="service-payment-list">
-                    ${payments.length ? payments.map(p => `
-                        <div class="service-payment-item">
-                            <div>
-                                <strong>${escapeHtml(p.description)}</strong>
-                                <span>${escapeHtml(p.code)} · ${escapeHtml(p.createdAt)}</span>
-                            </div>
-                            <div>
-                                <strong>${formatVND(p.amount)}</strong>
-                                <span>${escapeHtml(p.status)}</span>
-                            </div>
-                        </div>
-                    `).join('') : '<div class="service-payment-empty">Chưa có lịch sử thanh toán gói dịch vụ.</div>'}
+                <div id="servicePaymentListContainer" class="service-payment-list">
+                    <div class="text-muted text-center py-4">Đang tải lịch sử...</div>
                 </div>
+                <div id="servicePaymentPagination" style="display:flex;align-items:center;justify-content:space-between;margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;flex-wrap:wrap;gap:12px;"></div>
             </section>`;
 
         if (window.lucide) lucide.createIcons();
@@ -2320,6 +2697,52 @@
         panel.querySelectorAll('button[data-plan-id]').forEach(btn => {
             btn.addEventListener('click', () => purchaseServicePlan(Number(btn.dataset.planId)));
         });
+
+        function renderPaymentsPage() {
+            const listEl = document.getElementById('servicePaymentListContainer');
+            const paginationEl = document.getElementById('servicePaymentPagination');
+            if (!listEl) return;
+
+            if (!payments.length) {
+                listEl.innerHTML = '<div class="service-payment-empty">Chưa có lịch sử thanh toán gói dịch vụ.</div>';
+                if (paginationEl) paginationEl.innerHTML = '';
+                return;
+            }
+
+            const pageSize = Number(localStorage.getItem('j4s_pagesize_paymentHistory')) || 10;
+            const total = payments.length;
+            const totalPages = Math.ceil(total / pageSize);
+            if (paymentHistoryPage > totalPages) paymentHistoryPage = Math.max(1, totalPages);
+
+            const startIndex = (paymentHistoryPage - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            const pagePayments = payments.slice(startIndex, endIndex);
+
+            listEl.innerHTML = pagePayments.map(p => `
+                <div class="service-payment-item">
+                    <div>
+                        <strong>${escapeHtml(p.description)}</strong>
+                        <span>${escapeHtml(p.code)} · ${escapeHtml(p.createdAt)}</span>
+                    </div>
+                    <div>
+                        <strong>${formatVND(p.amount)}</strong>
+                        <span style="font-weight:700; color:${p.status === 'Success' ? '#059669' : '#dc2626'}">${escapeHtml(p.status === 'Success' ? 'Thành công' : p.status)}</span>
+                    </div>
+                </div>
+            `).join('');
+
+            if (paginationEl) {
+                renderGenericPaginationControls(paginationEl, total, totalPages, paymentHistoryPage, pageSize, (newSize) => {
+                    paymentHistoryPage = 1;
+                    renderPaymentsPage();
+                }, (newPage) => {
+                    paymentHistoryPage = newPage;
+                    renderPaymentsPage();
+                }, 'j4s_pagesize_paymentHistory');
+            }
+        }
+
+        renderPaymentsPage();
     }
 
     function showConfirmModal(message, onConfirm, title = 'Xác nhận thanh toán') {
@@ -2448,6 +2871,7 @@
     // RENDER: Dự án đang làm
     // ============================================
     function renderCandidateSearchView() {
+        candidateSearchPage = 1;
         mainContent.innerHTML = `
             <div class="page-header animate-in">
                 <h1 class="page-title"><i data-lucide="user-search" style="width:24px;height:24px;"></i> Tìm hồ sơ ứng viên</h1>
@@ -2494,14 +2918,20 @@
                 </div>
             </section>
 
-            <div id="candidateResultsPanel" class="candidate-results-panel">
-                <div style="display:flex;align-items:center;justify-content:center;min-height:220px;color:var(--text-secondary);font-weight:600;">
-                    <span class="spinner-border spinner-border-sm" style="margin-right:8px;"></span> Đang tải hồ sơ ứng viên...
+            <div class="profile-card-modern p-4" style="background:#fff; border-radius:12px; border:1px solid #e2e8f0; margin-top:16px;">
+                <div id="candidateResultsPanel" class="candidate-results-panel">
+                    <div style="display:flex;align-items:center;justify-content:center;min-height:220px;color:var(--text-secondary);font-weight:600;">
+                        <span class="spinner-border spinner-border-sm" style="margin-right:8px;"></span> Đang tải hồ sơ ứng viên...
+                    </div>
                 </div>
+                <div id="candidateSearchPagination" style="display:flex;align-items:center;justify-content:space-between;margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;flex-wrap:wrap;gap:12px;"></div>
             </div>`;
 
         if (window.lucide) lucide.createIcons();
-        document.getElementById('btnSearchCandidates')?.addEventListener('click', loadCandidateProfiles);
+        document.getElementById('btnSearchCandidates')?.addEventListener('click', () => {
+            candidateSearchPage = 1;
+            loadCandidateProfiles();
+        });
         document.getElementById('btnResetCandidateFilters')?.addEventListener('click', () => {
             ['candidateKeyword', 'candidateSkill', 'candidateMajor', 'candidateMaxSalary', 'candidateExperience'].forEach(id => {
                 const el = document.getElementById(id);
@@ -2509,11 +2939,15 @@
             });
             const rating = document.getElementById('candidateMinRating');
             if (rating) rating.value = '';
+            candidateSearchPage = 1;
             loadCandidateProfiles();
         });
         document.querySelectorAll('#candidateKeyword,#candidateSkill,#candidateMajor,#candidateExperience').forEach(input => {
             input.addEventListener('keydown', e => {
-                if (e.key === 'Enter') loadCandidateProfiles();
+                if (e.key === 'Enter') {
+                    candidateSearchPage = 1;
+                    loadCandidateProfiles();
+                }
             });
         });
         loadCandidateProfiles();
@@ -2545,7 +2979,8 @@
                     showToast(data.message || 'Không thể tải hồ sơ ứng viên.', 'error');
                     return;
                 }
-                renderCandidateProfiles(data.candidates || []);
+                candidateSearchList = data.candidates || [];
+                renderCandidateProfilesPage();
             })
             .catch(err => {
                 console.error(err);
@@ -2553,11 +2988,12 @@
             });
     }
 
-    function renderCandidateProfiles(candidates) {
+    function renderCandidateProfilesPage() {
         const panel = document.getElementById('candidateResultsPanel');
+        const paginationEl = document.getElementById('candidateSearchPagination');
         if (!panel) return;
 
-        if (!candidates.length) {
+        if (!candidateSearchList.length) {
             panel.innerHTML = `
                 <div class="profile-card-modern animate-in" style="padding:34px;text-align:center;">
                     <i data-lucide="search-x" style="width:34px;height:34px;color:var(--primary);"></i>
@@ -2565,12 +3001,22 @@
                     <p style="color:var(--text-muted);margin:0;">Thử nới bộ lọc hoặc tìm bằng kỹ năng/ngành nghề khác.</p>
                 </div>`;
             if (window.lucide) lucide.createIcons();
+            if (paginationEl) paginationEl.innerHTML = '';
             return;
         }
 
+        const pageSize = Number(localStorage.getItem('j4s_pagesize_candidateSearch')) || 10;
+        const total = candidateSearchList.length;
+        const totalPages = Math.ceil(total / pageSize);
+        if (candidateSearchPage > totalPages) candidateSearchPage = Math.max(1, totalPages);
+
+        const startIndex = (candidateSearchPage - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+        const pageCandidates = candidateSearchList.slice(startIndex, endIndex);
+
         panel.innerHTML = `
             <div class="candidate-result-list">
-                ${candidates.map(candidate => `
+                ${pageCandidates.map(candidate => `
                     <article class="candidate-card animate-in" data-candidate-id="${candidate.id}">
                         <div class="candidate-avatar">
                             ${candidate.avatarUrl ? `<img src="${escapeHtml(candidate.avatarUrl)}" alt="${escapeHtml(candidate.name)}" />` : `<span>${getInitials(candidate.name)}</span>`}
@@ -2600,6 +3046,17 @@
             const studentId = Number(card.dataset.candidateId);
             card.querySelector('[data-action="view"]')?.addEventListener('click', () => openCandidateProfileModal(studentId));
         });
+
+        if (paginationEl) {
+            renderGenericPaginationControls(paginationEl, total, totalPages, candidateSearchPage, pageSize, (newSize) => {
+                candidateSearchPage = 1;
+                renderCandidateProfilesPage();
+            }, (newPage) => {
+                candidateSearchPage = newPage;
+                renderCandidateProfilesPage();
+                document.getElementById('mainContent')?.scrollIntoView({ behavior: 'smooth' });
+            }, 'j4s_pagesize_candidateSearch');
+        }
     }
 
     function openCandidateProfileModal(studentId) {
@@ -2723,6 +3180,7 @@
     }
 
     function renderProjectsView() {
+        studentProjectsPage = 1;
         mainContent.innerHTML = `
             <div class="page-header animate-in">
                 <h1 class="page-title"><i data-lucide="folder-open" style="width:24px;height:24px;"></i> Dự án của mình</h1>
@@ -2730,7 +3188,8 @@
             </div>
             <div class="projects-list" id="studentProjectsList">
                 <div style="padding:18px;color:var(--text-muted);font-weight:700;"><span class="spinner-border spinner-border-sm" style="margin-right:8px;"></span> Đang tải danh sách dự án...</div>
-            </div>`;
+            </div>
+            <div id="studentProjectsPagination" style="display:flex;align-items:center;justify-content:space-between;margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;flex-wrap:wrap;gap:12px;"></div>`;
         if (window.lucide) lucide.createIcons();
         loadStudentActiveContracts();
     }
@@ -2740,74 +3199,18 @@
             .then(res => res.json())
             .then(data => {
                 const list = document.getElementById('studentProjectsList');
+                const paginationEl = document.getElementById('studentProjectsPagination');
                 if (!list) return;
 
                 if (!data.success) {
                     showToast(data.message || 'Không thể tải danh sách dự án.', 'error');
                     list.innerHTML = `<div style="padding:18px;color:#ef4444;font-weight:700;">Lỗi: ${data.message}</div>`;
+                    if (paginationEl) paginationEl.innerHTML = '';
                     return;
                 }
 
-                const contracts = data.contracts || [];
-                if (!contracts.length) {
-                    list.innerHTML = '<div class="service-payment-empty" style="text-align:center; padding:40px; color:var(--text-muted); font-weight:600;">Chưa có dự án nào.</div>';
-                    return;
-                }
-
-                list.innerHTML = contracts.map(p => `
-                    <div class="project-card animate-in" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:20px; margin-bottom:16px; box-shadow:0 4px 15px rgba(0,0,0,0.01);">
-                        <div class="project-header" style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; gap: 12px;">
-                            <h3 style="margin:0; font-size:1.1rem; font-weight:800; color:#0f172a;">${escapeHtml(p.title)}</h3>
-                            <span class="project-status" style="${p.contractStatus === 'Completed' ? 'background:#e0f2fe; color:#0369a1;' : (p.contractStatus === 'Submitted' ? 'background:#fef3c7; color:#d97706;' : 'background:#ecfdf5; color:#059669;')} padding:4px 12px; border-radius:999px; font-size:0.75rem; font-weight:700;">${escapeHtml(p.status)}</span>
-                        </div>
-                        <div class="project-client" style="color:#475569; font-size:0.88rem; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
-                            <i data-lucide="building" style="width:16px;height:16px;color:#64748b;"></i>
-                            Khách hàng: <strong>${escapeHtml(p.client)}</strong>
-                        </div>
-                        <div class="project-footer" style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #f1f5f9; padding-top:14px; margin-top:14px;">
-                            <span class="project-deadline" style="font-size:0.85rem; color:#ef4444; font-weight:600; display:flex; align-items:center; gap:6px;">
-                                <i data-lucide="calendar" style="width:16px;height:16px;"></i> Hạn chót: ${escapeHtml(p.deadline)}
-                            </span>
-                            <span class="project-budget" style="font-size:1.1rem; font-weight:900; color:#0f766e;">${formatVND(p.budget)}</span>
-                        </div>
-                        <div class="project-actions" style="margin-top:16px; display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; align-items:center;">
-                            <button class="btn-sm btn-outline chat-client-btn" data-client-id="${p.clientId}" style="display:flex; align-items:center; gap:6px; font-weight:600; padding:6px 14px;">
-                                <i data-lucide="message-square" style="width:14px;height:14px;"></i> Trao đổi với khách hàng
-                            </button>
-                            ${p.contractStatus === 'Completed' ? `
-                                <span style="color:#0369a1; font-weight:700; display:inline-flex; align-items:center; gap:6px; font-size:0.9rem; padding:6px 14px; background:#e0f2fe; border-radius:8px;">
-                                    <i data-lucide="check-circle" style="width:16px;height:16px;"></i> Dự án đã kết thúc
-                                </span>
-                            ` : (p.studentCompleted ? `
-                                <button class="btn-sm" disabled style="display:flex; align-items:center; gap:6px; font-weight:600; padding:6px 14px; background:#d1fae5; color:#065f46; border:none; border-radius:8px; cursor:not-allowed; opacity:0.85;">
-                                    <i data-lucide="clock" style="width:14px;height:14px;"></i> ${p.businessCompleted ? 'Cả hai đã xác nhận' : 'Chờ doanh nghiệp xác nhận'}
-                                </button>
-                            ` : `
-                                <button class="btn-sm complete-project-btn" data-contract-id="${p.id}" style="display:flex; align-items:center; gap:6px; font-weight:700; padding:6px 16px; background:linear-gradient(135deg,#10b981,#059669); color:#fff; border:none; border-radius:8px; cursor:pointer; box-shadow:0 2px 8px rgba(16,185,129,0.25);">
-                                    <i data-lucide="check-circle" style="width:14px;height:14px;"></i> ${p.businessCompleted ? 'Xác nhận hoàn thành (DN đã xác nhận)' : 'Hoàn thành'}
-                                </button>
-                            `)}
-                        </div>
-                    </div>
-                `).join('');
-
-                if (window.lucide) lucide.createIcons();
-
-                // Bind chat click
-                list.querySelectorAll('.chat-client-btn').forEach(btn => {
-                    btn.addEventListener('click', function () {
-                        const clientId = Number(this.dataset.clientId);
-                        chatWithClient(clientId);
-                    });
-                });
-
-                // Bind complete click
-                list.querySelectorAll('.complete-project-btn').forEach(btn => {
-                    btn.addEventListener('click', function () {
-                        const contractId = Number(this.dataset.contractId);
-                        completeStudentProject(contractId);
-                    });
-                });
+                studentProjectsList = data.contracts || [];
+                renderStudentProjectsPage();
             })
             .catch(err => {
                 console.error(err);
@@ -2816,6 +3219,93 @@
                     list.innerHTML = `<div style="padding:18px;color:#ef4444;font-weight:700;">Không thể kết nối đến máy chủ.</div>`;
                 }
             });
+    }
+
+    function renderStudentProjectsPage() {
+        const list = document.getElementById('studentProjectsList');
+        const paginationEl = document.getElementById('studentProjectsPagination');
+        if (!list) return;
+
+        if (!studentProjectsList.length) {
+            list.innerHTML = '<div class="service-payment-empty" style="text-align:center; padding:40px; color:var(--text-muted); font-weight:600;">Chưa có dự án nào.</div>';
+            if (paginationEl) paginationEl.innerHTML = '';
+            return;
+        }
+
+        const total = studentProjectsList.length;
+        const totalPages = Math.ceil(total / studentProjectsPageSize);
+        if (studentProjectsPage > totalPages) studentProjectsPage = Math.max(1, totalPages);
+
+        const startIndex = (studentProjectsPage - 1) * studentProjectsPageSize;
+        const endIndex = startIndex + studentProjectsPageSize;
+        const pageContracts = studentProjectsList.slice(startIndex, endIndex);
+
+        list.innerHTML = pageContracts.map(p => `
+            <div class="project-card animate-in" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:20px; margin-bottom:16px; box-shadow:0 4px 15px rgba(0,0,0,0.01);">
+                <div class="project-header" style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; gap: 12px;">
+                    <h3 style="margin:0; font-size:1.1rem; font-weight:800; color:#0f172a;">${escapeHtml(p.title)}</h3>
+                    <span class="project-status" style="${p.contractStatus === 'Completed' ? 'background:#e0f2fe; color:#0369a1;' : (p.contractStatus === 'Submitted' ? 'background:#fef3c7; color:#d97706;' : 'background:#ecfdf5; color:#059669;')} padding:4px 12px; border-radius:999px; font-size:0.75rem; font-weight:700;">${escapeHtml(p.status)}</span>
+                </div>
+                <div class="project-client" style="color:#475569; font-size:0.88rem; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                    <i data-lucide="building" style="width:16px;height:16px;color:#64748b;"></i>
+                    Khách hàng: <strong>${escapeHtml(p.client)}</strong>
+                </div>
+                <div class="project-footer" style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #f1f5f9; padding-top:14px; margin-top:14px;">
+                    <span class="project-deadline" style="font-size:0.85rem; color:#ef4444; font-weight:600; display:flex; align-items:center; gap:6px;">
+                        <i data-lucide="calendar" style="width:16px;height:16px;"></i> Hạn chót: ${escapeHtml(p.deadline)}
+                    </span>
+                    <span class="project-budget" style="font-size:1.1rem; font-weight:900; color:#0f766e;">${formatVND(p.budget)}</span>
+                </div>
+                <div class="project-actions" style="margin-top:16px; display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; align-items:center;">
+                    <button class="btn-sm btn-outline chat-client-btn" data-client-id="${p.clientId}" style="display:flex; align-items:center; gap:6px; font-weight:600; padding:6px 14px;">
+                        <i data-lucide="message-square" style="width:14px;height:14px;"></i> Trao đổi với khách hàng
+                    </button>
+                    ${p.contractStatus === 'Completed' ? `
+                        <span style="color:#0369a1; font-weight:700; display:inline-flex; align-items:center; gap:6px; font-size:0.9rem; padding:6px 14px; background:#e0f2fe; border-radius:8px;">
+                            <i data-lucide="check-circle" style="width:16px;height:16px;"></i> Dự án đã kết thúc
+                        </span>
+                    ` : (p.studentCompleted ? `
+                        <button class="btn-sm" disabled style="display:flex; align-items:center; gap:6px; font-weight:600; padding:6px 14px; background:#d1fae5; color:#065f46; border:none; border-radius:8px; cursor:not-allowed; opacity:0.85;">
+                            <i data-lucide="clock" style="width:14px;height:14px;"></i> ${p.businessCompleted ? 'Cả hai đã xác nhận' : 'Chờ doanh nghiệp xác nhận'}
+                        </button>
+                    ` : `
+                        <button class="btn-sm complete-project-btn" data-contract-id="${p.id}" style="display:flex; align-items:center; gap:6px; font-weight:700; padding:6px 16px; background:linear-gradient(135deg,#10b981,#059669); color:#fff; border:none; border-radius:8px; cursor:pointer; box-shadow:0 2px 8px rgba(16,185,129,0.25);">
+                            <i data-lucide="check-circle" style="width:14px;height:14px;"></i> ${p.businessCompleted ? 'Xác nhận hoàn thành (DN đã xác nhận)' : 'Hoàn thành'}
+                        </button>
+                    `)}
+                </div>
+            </div>
+        `).join('');
+
+        if (window.lucide) lucide.createIcons();
+
+        // Bind chat click
+        list.querySelectorAll('.chat-client-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const clientId = Number(this.dataset.clientId);
+                chatWithClient(clientId);
+            });
+        });
+
+        // Bind complete click
+        list.querySelectorAll('.complete-project-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const contractId = Number(this.dataset.contractId);
+                completeStudentProject(contractId);
+            });
+        });
+
+        if (paginationEl) {
+            renderGenericPaginationControls(paginationEl, total, totalPages, studentProjectsPage, studentProjectsPageSize, (newSize) => {
+                studentProjectsPageSize = newSize;
+                studentProjectsPage = 1;
+                renderStudentProjectsPage();
+            }, (newPage) => {
+                studentProjectsPage = newPage;
+                renderStudentProjectsPage();
+                document.getElementById('mainContent')?.scrollIntoView({ behavior: 'smooth' });
+            }, 'j4s_pagesize_studentProjects');
+        }
     }
 
     function completeStudentProject(contractId) {
@@ -3940,6 +4430,10 @@
     }
 
     async function renderBusinessJobsView() {
+        let currentPage = 1;
+        let pageSize = Number(localStorage.getItem('j4s_pagesize_businessJobs')) || 10;
+        let activeJobs = [];
+
         mainContent.innerHTML = `
             <div class="page-header">
                 <h1 class="page-title"><i data-lucide="file-text" style="width:24px;height:24px;"></i> Quản lý tin đăng</h1>
@@ -3949,25 +4443,30 @@
                 <div id="businessJobsList" style="display:flex; flex-direction:column; gap:12px;">
                     <div class="text-muted text-center py-4">Đang tải tin đăng...</div>
                 </div>
+                <div id="businessJobsPagination" style="display:flex;align-items:center;justify-content:space-between;margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;flex-wrap:wrap;gap:12px;"></div>
             </div>`;
         if (window.lucide) lucide.createIcons();
 
-        try {
-            const res = await fetch('/Home/GetBusinessJobs');
-            const data = await res.json();
+        function renderPage() {
             const list = document.getElementById('businessJobsList');
-            if (!data.success) {
-                list.innerHTML = `<div class="alert alert-danger m-0">${escapeHtml(data.message || 'Không thể tải tin đăng.')}</div>`;
-                return;
-            }
+            const paginationEl = document.getElementById('businessJobsPagination');
+            if (!list) return;
 
-            if (!data.jobs || data.jobs.length === 0) {
+            if (!activeJobs.length) {
                 list.innerHTML = `<div class="empty-state"><div class="empty-icon">📄</div><h3>Chưa có tin đăng</h3><p>Hãy tạo tin tuyển dụng đầu tiên để nhận ứng viên.</p></div>`;
+                if (paginationEl) paginationEl.innerHTML = '';
                 return;
             }
 
-            window.businessJobsData = data.jobs;
-            list.innerHTML = data.jobs.map(job => {
+            const total = activeJobs.length;
+            const totalPages = Math.ceil(total / pageSize);
+            if (currentPage > totalPages) currentPage = Math.max(1, totalPages);
+
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            const pageJobs = activeJobs.slice(startIndex, endIndex);
+
+            list.innerHTML = pageJobs.map(job => {
                 const approvalText = job.isApproved ? 'Đã duyệt' : 'Chờ duyệt';
                 const approvalColor = job.isApproved ? '#059669' : '#d97706';
                 const statusText = job.status === 'Open' ? 'Đang mở' : job.status === 'In_Progress' ? 'Đang thực hiện' : job.status === 'Closed' ? 'Đã đóng' : job.status === 'Rejected' ? 'Bị từ chối' : job.status;
@@ -4026,6 +4525,32 @@
             document.querySelectorAll('.btnViewBusinessApplicants').forEach(btn => {
                 btn.addEventListener('click', () => renderBusinessApplicantsView(btn.dataset.jobId));
             });
+
+            if (paginationEl) {
+                renderGenericPaginationControls(paginationEl, total, totalPages, currentPage, pageSize, (newSize) => {
+                    pageSize = newSize;
+                    currentPage = 1;
+                    renderPage();
+                }, (newPage) => {
+                    currentPage = newPage;
+                    renderPage();
+                    document.getElementById('mainContent')?.scrollIntoView({ behavior: 'smooth' });
+                }, 'j4s_pagesize_businessJobs');
+            }
+        }
+
+        try {
+            const res = await fetch('/Home/GetBusinessJobs');
+            const data = await res.json();
+            const list = document.getElementById('businessJobsList');
+            if (!data.success) {
+                list.innerHTML = `<div class="alert alert-danger m-0">${escapeHtml(data.message || 'Không thể tải tin đăng.')}</div>`;
+                return;
+            }
+
+            activeJobs = data.jobs || [];
+            window.businessJobsData = activeJobs;
+            renderPage();
         } catch (err) {
             console.error(err);
             document.getElementById('businessJobsList').innerHTML = `<div class="alert alert-danger m-0">Không thể kết nối máy chủ.</div>`;
@@ -4258,7 +4783,7 @@
         executeAction();
     };
 
-    async function renderBusinessApplicantsView(jobId = null, filters = {}) {
+    async function renderBusinessApplicantsView(jobId = null, filters = {}, pageToRender = 1) {
         const currentFilters = {
             searchTerm: filters.searchTerm || '',
             status: filters.status || '',
@@ -4271,6 +4796,10 @@
         if (currentFilters.status) params.set('status', currentFilters.status);
         if (currentFilters.savedOnly) params.set('savedOnly', 'true');
         const url = `/Home/GetBusinessApplicants${params.toString() ? '?' + params.toString() : ''}`;
+
+        let currentPage = pageToRender;
+        let pageSize = Number(localStorage.getItem('j4s_pagesize_businessApplicants')) || 10;
+        let applicantsList = [];
 
         mainContent.innerHTML = `
             <div class="page-header">
@@ -4300,6 +4829,7 @@
                 <div id="businessApplicantsList" style="display:flex; flex-direction:column; gap:12px;">
                     <div class="text-muted text-center py-4">Đang tải ứng viên...</div>
                 </div>
+                <div id="businessApplicantsPagination" style="display:flex;align-items:center;justify-content:space-between;margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;flex-wrap:wrap;gap:12px;"></div>
             </div>`;
         if (window.lucide) lucide.createIcons();
 
@@ -4315,7 +4845,7 @@
                     searchTerm: searchInputEl.value,
                     status: statusFilterEl.value,
                     savedOnly: savedOnlyEl.checked
-                });
+                }, 1);
             }, 400);
         });
         statusFilterEl?.addEventListener('change', () => {
@@ -4323,29 +4853,34 @@
                 searchTerm: searchInputEl.value,
                 status: statusFilterEl.value,
                 savedOnly: savedOnlyEl.checked
-            });
+            }, 1);
         });
         savedOnlyEl?.addEventListener('change', () => {
             renderBusinessApplicantsView(jobId, {
                 searchTerm: searchInputEl.value,
                 status: statusFilterEl.value,
                 savedOnly: savedOnlyEl.checked
-            });
+            }, 1);
         });
 
-        try {
-            const res = await fetch(url);
-            const data = await res.json();
+        function renderPage() {
             const list = document.getElementById('businessApplicantsList');
-            if (!data.success) {
-                list.innerHTML = `<div class="alert alert-danger m-0">${escapeHtml(data.message || 'Không thể tải ứng viên.')}</div>`;
+            const paginationEl = document.getElementById('businessApplicantsPagination');
+            if (!list) return;
+
+            if (!applicantsList.length) {
+                list.innerHTML = `<div class="empty-state"><div class="empty-icon">👥</div><h3>Chưa có ứng viên</h3><p>Khi sinh viên ứng tuyển, hồ sơ sẽ xuất hiện tại đây.</p></div>`;
+                if (paginationEl) paginationEl.innerHTML = '';
                 return;
             }
 
-            if (!data.applicants || data.applicants.length === 0) {
-                list.innerHTML = `<div class="empty-state"><div class="empty-icon">👥</div><h3>Chưa có ứng viên</h3><p>Khi sinh viên ứng tuyển, hồ sơ sẽ xuất hiện tại đây.</p></div>`;
-                return;
-            }
+            const total = applicantsList.length;
+            const totalPages = Math.ceil(total / pageSize);
+            if (currentPage > totalPages) currentPage = Math.max(1, totalPages);
+
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            const pageApplicants = applicantsList.slice(startIndex, endIndex);
 
             const statusLabels = {
                 Pending: 'Chờ duyệt',
@@ -4360,7 +4895,7 @@
                 Rejected: '#dc2626'
             };
 
-            list.innerHTML = data.applicants.map(app => {
+            list.innerHTML = pageApplicants.map(app => {
                 const initials = (app.fullName || 'UV').split(' ').filter(Boolean).slice(-2).map(x => x[0]).join('').toUpperCase() || 'UV';
                 const statusText = statusLabels[app.status] || app.status;
                 const statusColor = statusColors[app.status] || '#64748b';
@@ -4426,9 +4961,34 @@
             document.querySelectorAll('.btnChatApplicant').forEach(btn => btn.addEventListener('click', () => {
                 window.location.href = `/Message?userId=${encodeURIComponent(btn.dataset.studentId)}`;
             }));
+
+            if (paginationEl) {
+                renderGenericPaginationControls(paginationEl, total, totalPages, currentPage, pageSize, (newSize) => {
+                    pageSize = newSize;
+                    currentPage = 1;
+                    renderPage();
+                }, (newPage) => {
+                    currentPage = newPage;
+                    renderPage();
+                    document.getElementById('mainContent')?.scrollIntoView({ behavior: 'smooth' });
+                }, 'j4s_pagesize_businessApplicants');
+            }
+        }
+
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
+            if (!data.success) {
+                const list = document.getElementById('businessApplicantsList');
+                if (list) list.innerHTML = `<div class="alert alert-danger m-0">${escapeHtml(data.message || 'Không thể tải ứng viên.')}</div>`;
+                return;
+            }
+            applicantsList = data.applicants || [];
+            renderPage();
         } catch (err) {
             console.error(err);
-            document.getElementById('businessApplicantsList').innerHTML = `<div class="alert alert-danger m-0">Không thể kết nối máy chủ.</div>`;
+            const list = document.getElementById('businessApplicantsList');
+            if (list) list.innerHTML = `<div class="alert alert-danger m-0">Không thể kết nối máy chủ.</div>`;
         }
     }
 
@@ -4938,82 +5498,8 @@
                         <button class="review-tab-btn ${reviewsFilter === 'low' ? 'active' : ''}" data-filter="low">Dưới 4 ★ (${dbReviews.filter(r => r.rating <= 3).length})</button>
                     </div>
 
-                    <div class="reviews-list animate-in">
-                        ${filteredReviews.length === 0 ? `
-                            <div class="empty-state">
-                                <div class="empty-icon">⭐</div>
-                                <h3>Không tìm thấy đánh giá nào</h3>
-                                <p>Không có đánh giá nào phù hợp với bộ lọc đã chọn.</p>
-                            </div>
-                        ` : filteredReviews.map((r, i) => {
-                    const avatarColor = colors[i % colors.length];
-                    const initials = (r.reviewer || "KH").split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase();
-                    return `
-                                <div class="review-card ${r.isReported ? 'reported-dimmed' : ''}" data-id="${r.id}">
-                                    <div class="review-header">
-                                        <div class="reviewer-info">
-                                            <div class="reviewer-avatar" style="background: linear-gradient(135deg, ${avatarColor}, ${avatarColor}aa)">${initials}</div>
-                                            <div>
-                                                <div class="reviewer-name">${escapeHtml(r.reviewer)}</div>
-                                                <div class="review-project"><i data-lucide="briefcase" style="width:12px;height:12px;display:inline-align:middle;margin-right:4px;"></i> ${escapeHtml(r.project)}</div>
-                                            </div>
-                                        </div>
-                                        <div class="review-meta">
-                                            <div class="review-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</div>
-                                            <div class="review-date">${r.date}</div>
-                                        </div>
-                                    </div>
-                                    <p class="review-comment">"${escapeHtml(r.comment)}"</p>
-                                    
-                                    ${r.reply ? `
-                                        <div class="review-reply-box">
-                                            <div class="reply-header">
-                                                <div style="display:flex; align-items:center; gap:6px;">
-                                                    <div class="reply-avatar">SV</div>
-                                                    <strong>Phản hồi của bạn (Freelancer)</strong>
-                                                </div>
-                                            </div>
-                                            <p class="reply-content">${escapeHtml(r.reply)}</p>
-                                        </div>
-                                    ` : `
-                                        <div class="review-actions" id="actions-${r.id}">
-                                            ${r.isReported ? `
-                                                <span class="report-badge pending"><i data-lucide="alert-triangle" style="width:14px;height:14px;"></i> Đang xem xét báo cáo không phù hợp</span>
-                                            ` : `
-                                                <button class="btn-review-reply" data-id="${r.id}"><i data-lucide="message-square" style="width:14px;height:14px;"></i> Phản hồi</button>
-                                                <button class="btn-review-report" data-id="${r.id}"><i data-lucide="flag" style="width:14px;height:14px;"></i> Báo cáo không phù hợp</button>
-                                            `}
-                                        </div>
-                                        
-                                        <!-- Reply Form Container -->
-                                        <div class="reply-form-wrapper" id="replyForm-${r.id}" style="display:none; margin-top:12px;">
-                                            <textarea placeholder="Nhập nội dung phản hồi của bạn tới khách hàng..." class="form-control reply-textarea" id="replyText-${r.id}"></textarea>
-                                            <div style="display:flex; gap:8px; margin-top:8px; justify-content:flex-end;">
-                                                <button class="btn-reply-cancel" data-id="${r.id}">Hủy</button>
-                                                <button class="btn-reply-submit" data-id="${r.id}">Gửi phản hồi</button>
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Report Form Container -->
-                                        <div class="report-form-wrapper" id="reportForm-${r.id}" style="display:none; margin-top:12px;">
-                                            <div style="background:#FFFBEB; border:1px solid #FDE68A; padding:12px; border-radius:8px;">
-                                                <div style="font-weight:700; color:#92400E; margin-bottom:8px; font-size:13px;">Chọn lý do báo cáo đánh giá này không phù hợp:</div>
-                                                <div style="display:flex; flex-direction:column; gap:6px; font-size:13px; color:#4B5563;">
-                                                    <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="radio" name="reportReason-${r.id}" value="Thông tin sai sự thật" checked> Đánh giá không đúng sự thật, bôi nhọ danh dự</label>
-                                                    <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="radio" name="reportReason-${r.id}" value="Ngôn từ thô tục"> Có chứa từ ngữ thiếu văn hóa, kích động</label>
-                                                    <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="radio" name="reportReason-${r.id}" value="Spam/Quảng cáo"> Spam quảng cáo hoặc không liên quan đến công việc</label>
-                                                </div>
-                                                <div style="display:flex; gap:8px; margin-top:12px; justify-content:flex-end;">
-                                                    <button class="btn-report-cancel" data-id="${r.id}">Hủy</button>
-                                                    <button class="btn-report-submit" data-id="${r.id}">Báo cáo vi phạm</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    `}
-                                </div>
-                            `;
-                }).join('')}
-                    </div>`;
+                    <div class="reviews-list animate-in" id="reviewsCardList"></div>
+                    <div id="reviewsPagination" style="display:flex;align-items:center;justify-content:space-between;margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;flex-wrap:wrap;gap:12px;"></div>`;
 
                 if (window.lucide) lucide.createIcons();
 
@@ -5025,105 +5511,221 @@
                     });
                 });
 
-                // Attach reply click handler
-                document.querySelectorAll('.btn-review-reply').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        const id = btn.getAttribute('data-id');
-                        document.getElementById(`replyForm-${id}`).style.display = 'block';
-                        document.getElementById(`actions-${id}`).style.display = 'none';
+                let currentPage = 1;
+                let pageSize = Number(localStorage.getItem('j4s_pagesize_studentReviews')) || 10;
+
+                function renderPage() {
+                    const listContainer = document.getElementById('reviewsCardList');
+                    const paginationEl = document.getElementById('reviewsPagination');
+                    if (!listContainer) return;
+
+                    if (filteredReviews.length === 0) {
+                        listContainer.innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-icon">⭐</div>
+                                <h3>Không tìm thấy đánh giá nào</h3>
+                                <p>Không có đánh giá nào phù hợp với bộ lọc đã chọn.</p>
+                            </div>`;
+                        if (paginationEl) paginationEl.innerHTML = '';
+                        return;
+                    }
+
+                    const total = filteredReviews.length;
+                    const totalPages = Math.ceil(total / pageSize);
+                    if (currentPage > totalPages) currentPage = Math.max(1, totalPages);
+
+                    const startIndex = (currentPage - 1) * pageSize;
+                    const endIndex = startIndex + pageSize;
+                    const pageReviews = filteredReviews.slice(startIndex, endIndex);
+
+                    listContainer.innerHTML = pageReviews.map((r, i) => {
+                        const avatarColor = colors[(startIndex + i) % colors.length];
+                        const initials = (r.reviewer || "KH").split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                        return `
+                            <div class="review-card ${r.isReported ? 'reported-dimmed' : ''}" data-id="${r.id}" style="margin-bottom: 16px;">
+                                <div class="review-header">
+                                    <div class="reviewer-info">
+                                        <div class="reviewer-avatar" style="background: linear-gradient(135deg, ${avatarColor}, ${avatarColor}aa)">${initials}</div>
+                                        <div>
+                                            <div class="reviewer-name">${escapeHtml(r.reviewer)}</div>
+                                            <div class="review-project"><i data-lucide="briefcase" style="width:12px;height:12px;display:inline-align:middle;margin-right:4px;"></i> ${escapeHtml(r.project)}</div>
+                                        </div>
+                                    </div>
+                                    <div class="review-meta">
+                                        <div class="review-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</div>
+                                        <div class="review-date">${r.date}</div>
+                                    </div>
+                                </div>
+                                <p class="review-comment">"${escapeHtml(r.comment)}"</p>
+                                
+                                ${r.reply ? `
+                                    <div class="review-reply-box">
+                                        <div class="reply-header">
+                                            <div style="display:flex; align-items:center; gap:6px;">
+                                                <div class="reply-avatar">SV</div>
+                                                <strong>Phản hồi của bạn (Freelancer)</strong>
+                                            </div>
+                                        </div>
+                                        <p class="reply-content">${escapeHtml(r.reply)}</p>
+                                    </div>
+                                ` : `
+                                    <div class="review-actions" id="actions-${r.id}">
+                                        ${r.isReported ? `
+                                            <span class="report-badge pending"><i data-lucide="alert-triangle" style="width:14px;height:14px;"></i> Đang xem xét báo cáo không phù hợp</span>
+                                        ` : `
+                                            <button class="btn-review-reply" data-id="${r.id}"><i data-lucide="message-square" style="width:14px;height:14px;"></i> Phản hồi</button>
+                                            <button class="btn-review-report" data-id="${r.id}"><i data-lucide="flag" style="width:14px;height:14px;"></i> Báo cáo không phù hợp</button>
+                                        `}
+                                    </div>
+                                    
+                                    <!-- Reply Form Container -->
+                                    <div class="reply-form-wrapper" id="replyForm-${r.id}" style="display:none; margin-top:12px;">
+                                        <textarea placeholder="Nhập nội dung phản hồi của bạn tới khách hàng..." class="form-control reply-textarea" id="replyText-${r.id}"></textarea>
+                                        <div style="display:flex; gap:8px; margin-top:8px; justify-content:flex-end;">
+                                            <button class="btn-reply-cancel" data-id="${r.id}">Hủy</button>
+                                            <button class="btn-reply-submit" data-id="${r.id}">Gửi phản hồi</button>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Report Form Container -->
+                                    <div class="report-form-wrapper" id="reportForm-${r.id}" style="display:none; margin-top:12px;">
+                                        <div style="background:#FFFBEB; border:1px solid #FDE68A; padding:12px; border-radius:8px;">
+                                            <div style="font-weight:700; color:#92400E; margin-bottom:8px; font-size:13px;">Chọn lý do báo cáo đánh giá này không phù hợp:</div>
+                                            <div style="display:flex; flex-direction:column; gap:6px; font-size:13px; color:#4B5563;">
+                                                <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="radio" name="reportReason-${r.id}" value="Thông tin sai sự thật" checked> Đánh giá không đúng sự thật, bôi nhọ danh dự</label>
+                                                <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="radio" name="reportReason-${r.id}" value="Ngôn từ thô tục"> Có chứa từ ngữ thiếu văn hóa, kích động</label>
+                                                <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="radio" name="reportReason-${r.id}" value="Spam/Quảng cáo"> Spam quảng cáo hoặc không liên quan đến công việc</label>
+                                            </div>
+                                            <div style="display:flex; gap:8px; margin-top:12px; justify-content:flex-end;">
+                                                <button class="btn-report-cancel" data-id="${r.id}">Hủy</button>
+                                                <button class="btn-report-submit" data-id="${r.id}">Báo cáo vi phạm</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `}
+                            </div>
+                        `;
+                    }).join('');
+
+                    if (window.lucide) lucide.createIcons();
+                    bindReviewActions();
+
+                    if (paginationEl) {
+                        renderGenericPaginationControls(paginationEl, total, totalPages, currentPage, pageSize, (newSize) => {
+                            pageSize = newSize;
+                            currentPage = 1;
+                            renderPage();
+                        }, (newPage) => {
+                            currentPage = newPage;
+                            renderPage();
+                            document.getElementById('mainContent')?.scrollIntoView({ behavior: 'smooth' });
+                        }, 'j4s_pagesize_studentReviews');
+                    }
+                }
+
+                function bindReviewActions() {
+                    // Attach reply click handler
+                    document.querySelectorAll('.btn-review-reply').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            const id = btn.getAttribute('data-id');
+                            document.getElementById(`replyForm-${id}`).style.display = 'block';
+                            document.getElementById(`actions-${id}`).style.display = 'none';
+                        });
                     });
-                });
 
-                // Attach cancel reply handler
-                document.querySelectorAll('.btn-reply-cancel').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        const id = btn.getAttribute('data-id');
-                        document.getElementById(`replyForm-${id}`).style.display = 'none';
-                        document.getElementById(`actions-${id}`).style.display = 'flex';
+                    // Attach cancel reply handler
+                    document.querySelectorAll('.btn-reply-cancel').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            const id = btn.getAttribute('data-id');
+                            document.getElementById(`replyForm-${id}`).style.display = 'none';
+                            document.getElementById(`actions-${id}`).style.display = 'flex';
+                        });
                     });
-                });
 
-                // Attach submit reply handler
-                document.querySelectorAll('.btn-reply-submit').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        const id = Number(btn.getAttribute('data-id'));
-                        const text = document.getElementById(`replyText-${id}`).value.trim();
-                        if (!text) {
-                            showToast('Vui lòng nhập nội dung phản hồi!', 'warning');
-                            return;
-                        }
+                    // Attach submit reply handler
+                    document.querySelectorAll('.btn-reply-submit').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            const id = Number(btn.getAttribute('data-id'));
+                            const text = document.getElementById(`replyText-${id}`).value.trim();
+                            if (!text) {
+                                showToast('Vui lòng nhập nội dung phản hồi!', 'warning');
+                                return;
+                            }
 
-                        const formData = new FormData();
-                        formData.append('parentReviewId', id);
-                        formData.append('comment', text);
+                            const formData = new FormData();
+                            formData.append('parentReviewId', id);
+                            formData.append('comment', text);
 
-                        fetch('/Review/Reply', {
-                            method: 'POST',
-                            body: formData
-                        })
-                            .then(res => res.json())
-                            .then(resData => {
-                                if (resData.success) {
-                                    showToast('✅ Gửi phản hồi thành công!', 'success');
-                                    renderReviewsView();
-                                } else {
-                                    showToast(resData.message || 'Lỗi khi gửi phản hồi.', 'error');
-                                }
+                            fetch('/Review/Reply', {
+                                method: 'POST',
+                                body: formData
                             })
-                            .catch(err => {
-                                console.error(err);
-                                showToast('Không thể kết nối đến máy chủ.', 'error');
-                            });
+                                .then(res => res.json())
+                                .then(resData => {
+                                    if (resData.success) {
+                                        showToast('✅ Gửi phản hồi thành công!', 'success');
+                                        renderReviewsView();
+                                    } else {
+                                        showToast(resData.message || 'Lỗi khi gửi phản hồi.', 'error');
+                                    }
+                                })
+                                .catch(err => {
+                                    console.error(err);
+                                    showToast('Không thể kết nối đến máy chủ.', 'error');
+                                });
+                        });
                     });
-                });
 
-                // Attach report click handler
-                document.querySelectorAll('.btn-review-report').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        const id = btn.getAttribute('data-id');
-                        document.getElementById(`reportForm-${id}`).style.display = 'block';
-                        document.getElementById(`actions-${id}`).style.display = 'none';
+                    // Attach report click handler
+                    document.querySelectorAll('.btn-review-report').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            const id = btn.getAttribute('data-id');
+                            document.getElementById(`reportForm-${id}`).style.display = 'block';
+                            document.getElementById(`actions-${id}`).style.display = 'none';
+                        });
                     });
-                });
 
-                // Attach cancel report handler
-                document.querySelectorAll('.btn-report-cancel').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        const id = btn.getAttribute('data-id');
-                        document.getElementById(`reportForm-${id}`).style.display = 'none';
-                        document.getElementById(`actions-${id}`).style.display = 'flex';
+                    // Attach cancel report handler
+                    document.querySelectorAll('.btn-report-cancel').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            const id = btn.getAttribute('data-id');
+                            document.getElementById(`reportForm-${id}`).style.display = 'none';
+                            document.getElementById(`actions-${id}`).style.display = 'flex';
+                        });
                     });
-                });
 
-                // Attach submit report handler
-                document.querySelectorAll('.btn-report-submit').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        const id = Number(btn.getAttribute('data-id'));
-                        const selectedReason = document.querySelector(`input[name="reportReason-${id}"]:checked`)?.value || "Lý do khác";
+                    // Attach submit report handler
+                    document.querySelectorAll('.btn-report-submit').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            const id = Number(btn.getAttribute('data-id'));
+                            const selectedReason = document.querySelector(`input[name="reportReason-${id}"]:checked`)?.value || "Lý do khác";
 
-                        const formData = new FormData();
-                        formData.append('id', id);
-                        formData.append('reason', selectedReason);
+                            const formData = new FormData();
+                            formData.append('id', id);
+                            formData.append('reason', selectedReason);
 
-                        fetch('/Review/Report', {
-                            method: 'POST',
-                            body: formData
-                        })
-                            .then(res => res.json())
-                            .then(resData => {
-                                if (resData.success) {
-                                    showToast('🚩 Đã gửi báo cáo đánh giá! Ban quản trị sẽ xem xét trong 24h.', 'success');
-                                    renderReviewsView();
-                                } else {
-                                    showToast(resData.message || 'Lỗi khi gửi báo cáo.', 'error');
-                                }
+                            fetch('/Review/Report', {
+                                method: 'POST',
+                                body: formData
                             })
-                            .catch(err => {
-                                console.error(err);
-                                showToast('Không thể kết nối đến máy chủ.', 'error');
-                            });
+                                .then(res => res.json())
+                                .then(resData => {
+                                    if (resData.success) {
+                                        showToast('🚩 Đã gửi báo cáo đánh giá! Ban quản trị sẽ xem xét trong 24h.', 'success');
+                                        renderReviewsView();
+                                    } else {
+                                        showToast(resData.message || 'Lỗi khi gửi báo cáo.', 'error');
+                                    }
+                                })
+                                .catch(err => {
+                                    console.error(err);
+                                    showToast('Không thể kết nối đến máy chủ.', 'error');
+                                });
+                        });
                     });
-                });
+                }
+
+                renderPage();
             })
             .catch(err => {
                 console.error(err);
@@ -6544,13 +7146,17 @@
     });
 
     function renderBusinessReviewsView() {
+        businessReviewsPage = 1;
         mainContent.innerHTML = `
             <div class="page-header animate-in">
                 <h1 class="page-title"><i data-lucide="star" style="width:24px;height:24px;"></i> Đánh giá sinh viên</h1>
                 <p class="page-subtitle">Đánh giá sinh viên sau khi dự án đã hoàn thành. Cho phép chỉnh sửa trong vòng 24 giờ sau khi đánh giá.</p>
             </div>
-            <div class="profile-card-modern" id="businessReviewsPanel" style="padding:18px;">
-                <div class="business-loading-row"><span class="spinner-border spinner-border-sm"></span> Đang tải danh sách dự án...</div>
+            <div class="profile-card-modern" style="padding:18px;">
+                <div id="businessReviewsPanel" style="display:flex; flex-direction:column; gap:16px;">
+                    <div class="business-loading-row"><span class="spinner-border spinner-border-sm"></span> Đang tải danh sách dự án...</div>
+                </div>
+                <div id="businessReviewsPagination" style="display:flex;align-items:center;justify-content:space-between;margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;flex-wrap:wrap;gap:12px;"></div>
             </div>`;
 
         if (window.lucide) lucide.createIcons();
@@ -6567,22 +7173,51 @@
                     panel.innerHTML = `<div class="business-empty-row">${escapeHtml(data.message || 'Lỗi khi tải dữ liệu.')}</div>`;
                     return;
                 }
-                const contracts = data.contracts || [];
-                panel.innerHTML = contracts.length ? `
-                    <div style="display:flex; flex-direction:column; gap:16px;">
-                        ${contracts.map(c => {
-                    let actionHTML = '';
-                    if (c.hasReview) {
-                        if (c.review.canEdit) {
-                            actionHTML = `<button class="btn btn-sm btn-outline-primary rounded-pill px-3 btn-edit-review" data-contract-id="${c.contractId}"><i data-lucide="edit-3" style="width:14px;height:14px;margin-right:4px;"></i> Chỉnh sửa</button>`;
-                        } else {
-                            actionHTML = `<span class="text-muted small d-inline-flex align-items-center gap-1"><i data-lucide="lock" style="width:14px;height:14px;"></i> Đã khóa (Quá 24h)</span>`;
-                        }
-                    } else {
-                        actionHTML = `<button class="btn btn-sm btn-primary rounded-pill px-3 btn-write-review" style="background:#0ea5e9; border:none;" data-contract-id="${c.contractId}"><i data-lucide="star" style="width:14px;height:14px;margin-right:4px;"></i> Viết đánh giá</button>`;
-                    }
+                businessReviewsList = data.contracts || [];
+                renderBusinessCompletedReviewsPage();
+            })
+            .catch(err => {
+                console.error(err);
+                const panel = document.getElementById('businessReviewsPanel');
+                if (panel) panel.innerHTML = '<div class="business-empty-row">Có lỗi khi tải danh sách.</div>';
+            });
+    }
 
-                    return `
+    function renderBusinessCompletedReviewsPage() {
+        const panel = document.getElementById('businessReviewsPanel');
+        const paginationEl = document.getElementById('businessReviewsPagination');
+        if (!panel) return;
+
+        if (!businessReviewsList.length) {
+            panel.innerHTML = '<div class="business-empty-row">Chưa có dự án nào hoàn thành để đánh giá.</div>';
+            if (paginationEl) paginationEl.innerHTML = '';
+            return;
+        }
+
+        const pageSize = Number(localStorage.getItem('j4s_pagesize_businessReviews')) || 10;
+        const total = businessReviewsList.length;
+        const totalPages = Math.ceil(total / pageSize);
+        if (businessReviewsPage > totalPages) businessReviewsPage = Math.max(1, totalPages);
+
+        const startIndex = (businessReviewsPage - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+        const pageContracts = businessReviewsList.slice(startIndex, endIndex);
+
+        panel.innerHTML = `
+            <div style="display:flex; flex-direction:column; gap:16px;">
+                ${pageContracts.map(c => {
+            let actionHTML = '';
+            if (c.hasReview) {
+                if (c.review.canEdit) {
+                    actionHTML = `<button class="btn btn-sm btn-outline-primary rounded-pill px-3 btn-edit-review" data-contract-id="${c.contractId}"><i data-lucide="edit-3" style="width:14px;height:14px;margin-right:4px;"></i> Chỉnh sửa</button>`;
+                } else {
+                    actionHTML = `<span class="text-muted small d-inline-flex align-items-center gap-1"><i data-lucide="lock" style="width:14px;height:14px;"></i> Đã khóa (Quá 24h)</span>`;
+                }
+            } else {
+                actionHTML = `<button class="btn btn-sm btn-primary rounded-pill px-3 btn-write-review" style="background:#0ea5e9; border:none;" data-contract-id="${c.contractId}"><i data-lucide="star" style="width:14px;height:14px;margin-right:4px;"></i> Viết đánh giá</button>`;
+            }
+
+            return `
                                 <div class="review-modern-item" style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; background:#fff; display:flex; justify-content:space-between; align-items:flex-start; gap:16px;">
                                     <div style="display:flex; gap:16px; align-items:flex-start;">
                                         <div class="user-avatar" style="width:48px; height:48px; border-radius:50%; overflow:hidden; background:#e2e8f0; flex-shrink:0;">
@@ -6609,33 +7244,37 @@
                                     </div>
                                 </div>
                             `;
-                }).join('')}
-                    </div>
-                ` : '<div class="business-empty-row">Chưa có dự án nào hoàn thành để đánh giá.</div>';
+        }).join('')}
+            </div>`;
 
-                // Programmatically bind events to write/edit buttons
-                panel.querySelectorAll('.btn-write-review, .btn-edit-review').forEach(btn => {
-                    btn.addEventListener('click', function () {
-                        const contractId = parseInt(this.dataset.contractId);
-                        const c = contracts.find(item => item.contractId === contractId);
-                        if (c) {
-                            openReviewModal(
-                                c.contractId,
-                                c.studentName,
-                                c.review ? c.review.rating : 5,
-                                c.review ? c.review.comment : ''
-                            );
-                        }
-                    });
-                });
-
-                if (window.lucide) lucide.createIcons();
-            })
-            .catch(err => {
-                console.error(err);
-                const panel = document.getElementById('businessReviewsPanel');
-                if (panel) panel.innerHTML = '<div class="business-empty-row">Có lỗi khi tải danh sách.</div>';
+        // Programmatically bind events to write/edit buttons
+        panel.querySelectorAll('.btn-write-review, .btn-edit-review').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const contractId = parseInt(this.dataset.contractId);
+                const c = businessReviewsList.find(item => item.contractId === contractId);
+                if (c) {
+                    openReviewModal(
+                        c.contractId,
+                        c.studentName,
+                        c.review ? c.review.rating : 5,
+                        c.review ? c.review.comment : ''
+                    );
+                }
             });
+        });
+
+        if (window.lucide) lucide.createIcons();
+
+        if (paginationEl) {
+            renderGenericPaginationControls(paginationEl, total, totalPages, businessReviewsPage, pageSize, (newSize) => {
+                businessReviewsPage = 1;
+                renderBusinessCompletedReviewsPage();
+            }, (newPage) => {
+                businessReviewsPage = newPage;
+                renderBusinessCompletedReviewsPage();
+                document.getElementById('mainContent')?.scrollIntoView({ behavior: 'smooth' });
+            }, 'j4s_pagesize_businessReviews');
+        }
     }
 
     function openReviewModal(contractId, studentName, currentRating = 5, currentComment = '') {
@@ -6747,4 +7386,6 @@
     window.renderBusinessReviewsView = renderBusinessReviewsView;
     window.formatCurrencyInput = formatCurrencyInput;
     window.setupCurrencyInput = setupCurrencyInput;
+    window.renderGenericPaginationControls = renderGenericPaginationControls;
 })();
+

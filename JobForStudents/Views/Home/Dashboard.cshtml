@@ -2233,6 +2233,19 @@
             </div>
             </div>
             </div>
+
+            <!-- Deposit History Section -->
+            <div class="row g-4 mt-2">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm p-4 animate-in" style="border-radius: 16px;">
+                        <h4 class="fw-bold mb-3" style="color:#0f172a;"><i data-lucide="history" style="width:20px;height:20px;margin-right:8px;vertical-align:text-bottom;"></i>Lịch sử nạp tiền</h4>
+                        <div id="depositHistoryListContainer" class="service-payment-list">
+                            <div class="text-muted text-center py-4">Đang tải lịch sử...</div>
+                        </div>
+                        <div id="depositHistoryPagination" style="display:flex;align-items:center;justify-content:space-between;margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;flex-wrap:wrap;gap:12px;"></div>
+                    </div>
+                </div>
+            </div>
             `;
 
             if (window.lucide) lucide.createIcons();
@@ -2241,7 +2254,70 @@
             if (depositInput && typeof window.setupCurrencyInput === 'function') {
                 window.setupCurrencyInput(depositInput);
             }
+
+            // Render deposit history with pagination
+            let depositHistoryPage = 1;
+            const deposits = (walletData.transactions || []).filter(t => t.type === 'Deposit');
+
+            function renderDepositHistoryPage() {
+                const listEl = document.getElementById('depositHistoryListContainer');
+                const paginationEl = document.getElementById('depositHistoryPagination');
+                if (!listEl) return;
+
+                if (!deposits.length) {
+                    listEl.innerHTML = '<div class="service-payment-empty">Chưa có lịch sử nạp tiền vào ví.</div>';
+                    if (paginationEl) paginationEl.innerHTML = '';
+                    return;
+                }
+
+                const pageSize = Number(localStorage.getItem('j4s_pagesize_depositHistory')) || 10;
+                const total = deposits.length;
+                const totalPages = Math.ceil(total / pageSize);
+                if (depositHistoryPage > totalPages) depositHistoryPage = Math.max(1, totalPages);
+
+                const startIndex = (depositHistoryPage - 1) * pageSize;
+                const endIndex = startIndex + pageSize;
+                const pageDeposits = deposits.slice(startIndex, endIndex);
+
+                listEl.innerHTML = pageDeposits.map(d => {
+                    let statusBadge = '';
+                    if (d.status === 'Success') {
+                        statusBadge = '<span class="badge bg-success px-2.5 py-1.5 small rounded-pill"><i data-lucide="check" class="me-1" style="width:12px;height:12px;"></i>Thành công</span>';
+                    } else if (d.status === 'Pending') {
+                        statusBadge = '<span class="badge bg-warning text-dark px-2.5 py-1.5 small rounded-pill"><i data-lucide="loader" class="me-1 animate-spin" style="width:12px;height:12px;"></i>Đang chờ</span>';
+                    } else {
+                        statusBadge = `<span class="badge bg-danger px-2.5 py-1.5 small rounded-pill">${d.status}</span>`;
+                    }
+
+                    return `
+                        <div class="service-payment-item">
+                            <div>
+                                <strong>${d.description || 'Nạp tiền vào ví'}</strong>
+                                <span>${d.transactionCode || d.id} · ${d.createdAt}</span>
+                            </div>
+                            <div>
+                                <strong class="text-success">+ ${new Intl.NumberFormat('vi-VN').format(d.amount)} đ</strong>
+                                <span>${statusBadge}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                if (window.lucide) lucide.createIcons();
+
+                if (paginationEl && typeof window.renderGenericPaginationControls === 'function') {
+                    window.renderGenericPaginationControls(paginationEl, total, totalPages, depositHistoryPage, pageSize, (newSize) => {
+                        depositHistoryPage = 1;
+                        renderDepositHistoryPage();
+                    }, (newPage) => {
+                        depositHistoryPage = newPage;
+                        renderDepositHistoryPage();
+                    }, 'j4s_pagesize_depositHistory');
+                }
             }
+
+            renderDepositHistoryPage();
+            };
 
             window.setDepositAmount = function(amount) {
             const input = document.getElementById('depositAmountInput');
@@ -2620,12 +2696,12 @@
             };
 
             window.adminPageState = {
-                users: { currentPage: 1, pageSize: 10 },
-                pendingJobs: { currentPage: 1, pageSize: 5 },
-                allJobs: { currentPage: 1, pageSize: 10 },
-                txs: { currentPage: 1, pageSize: 10 },
-                support: { currentPage: 1, pageSize: 10 },
-                feedback: { currentPage: 1, pageSize: 10 }
+                users: { currentPage: 1, pageSize: Number(localStorage.getItem('j4s_pagesize_admin_users')) || 10 },
+                pendingJobs: { currentPage: 1, pageSize: Number(localStorage.getItem('j4s_pagesize_admin_pendingJobs')) || 10 },
+                allJobs: { currentPage: 1, pageSize: Number(localStorage.getItem('j4s_pagesize_admin_allJobs')) || 10 },
+                txs: { currentPage: 1, pageSize: Number(localStorage.getItem('j4s_pagesize_admin_txs')) || 10 },
+                support: { currentPage: 1, pageSize: Number(localStorage.getItem('j4s_pagesize_admin_support')) || 10 },
+                feedback: { currentPage: 1, pageSize: Number(localStorage.getItem('j4s_pagesize_admin_feedback')) || 10 }
             };
 
             window.triggerReloadAdminList = function(listKey) {
@@ -2638,11 +2714,15 @@
 
             window.renderAdminTable = function(listKey, data, headers, rowRenderer, containerId = 'adminSectionBody') {
                 if (!window.adminPageState[listKey]) {
-                    window.adminPageState[listKey] = { currentPage: 1, pageSize: 10 };
+                    const savedSize = Number(localStorage.getItem(`j4s_pagesize_admin_${listKey}`)) || 10;
+                    window.adminPageState[listKey] = { currentPage: 1, pageSize: savedSize };
                 }
                 const state = window.adminPageState[listKey];
                 const container = document.getElementById(containerId);
                 if (!container) return;
+
+                // Sync current page size with localStorage for this specific list
+                state.pageSize = Number(localStorage.getItem(`j4s_pagesize_admin_${listKey}`)) || 10;
 
                 const totalItems = data.length;
                 const totalPages = Math.ceil(totalItems / state.pageSize) || 1;
@@ -2684,40 +2764,24 @@
                         </tbody>
                     </table>
                 </div>
+                <div id="adminPagination_${listKey}" style="display:flex;align-items:center;justify-content:space-between;margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;flex-wrap:wrap;gap:12px;"></div>
                 `;
 
-                if (totalItems > 0) {
-                    const pageSizeOptions = [5, 10, 15, 20, 30, 50];
-                    const selectOptions = pageSizeOptions.map(size => `<option value="${size}" ${size === state.pageSize ? 'selected' : ''}>${size}</option>`).join('');
-
-                    html += `
-                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mt-4 p-3 bg-light rounded-3 border" style="font-size: 0.9rem;">
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="text-secondary">Hiển thị</span>
-                            <select class="form-select form-select-sm" style="width: auto; font-weight: 600;" onchange="window.adminPageState['${listKey}'].pageSize = parseInt(this.value); window.adminPageState['${listKey}'].currentPage = 1; triggerReloadAdminList('${listKey}');">
-                                ${selectOptions}
-                            </select>
-                            <span class="text-secondary">kết quả / trang</span>
-                        </div>
-                        
-                        <div class="text-secondary font-medium">
-                            Hiển thị <strong>${totalItems === 0 ? 0 : startIndex + 1}-${endIndex}</strong> trong tổng số <strong>${totalItems}</strong> kết quả
-                        </div>
-                        
-                        <div class="d-flex align-items-center gap-1">
-                            <button class="btn btn-sm btn-outline-secondary ${state.currentPage === 1 ? 'disabled' : ''}" onclick="window.adminPageState['${listKey}'].currentPage = 1; triggerReloadAdminList('${listKey}');">« Đầu</button>
-                            <button class="btn btn-sm btn-outline-secondary ${state.currentPage === 1 ? 'disabled' : ''}" onclick="window.adminPageState['${listKey}'].currentPage--; triggerReloadAdminList('${listKey}');">‹ Trước</button>
-                            
-                            <span class="px-3 text-secondary">Trang <strong>${state.currentPage}</strong> / <strong>${totalPages}</strong></span>
-                            
-                            <button class="btn btn-sm btn-outline-secondary ${state.currentPage === totalPages ? 'disabled' : ''}" onclick="window.adminPageState['${listKey}'].currentPage++; triggerReloadAdminList('${listKey}');">Sau ›</button>
-                            <button class="btn btn-sm btn-outline-secondary ${state.currentPage === totalPages ? 'disabled' : ''}" onclick="window.adminPageState['${listKey}'].currentPage = ${totalPages}; triggerReloadAdminList('${listKey}');">Cuối »</button>
-                        </div>
-                    </div>
-                    `;
-                }
-
                 container.innerHTML = html;
+
+                if (totalItems > 0) {
+                    const paginationEl = document.getElementById(`adminPagination_${listKey}`);
+                    if (paginationEl && typeof window.renderGenericPaginationControls === 'function') {
+                        window.renderGenericPaginationControls(paginationEl, totalItems, totalPages, state.currentPage, state.pageSize, (newSize) => {
+                            state.pageSize = newSize;
+                            state.currentPage = 1;
+                            triggerReloadAdminList(listKey);
+                        }, (newPage) => {
+                            state.currentPage = newPage;
+                            triggerReloadAdminList(listKey);
+                        }, `j4s_pagesize_admin_${listKey}`);
+                    }
+                }
             };
 
             document.addEventListener('DOMContentLoaded', () => {
