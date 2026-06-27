@@ -1,4 +1,5 @@
 @model JobForStudents.Models.DashboardViewModel
+@inject JobForStudents.Data.AppDbContext _context
 @{
     ViewData["Title"] = User.IsInRole("Admin") ? "Admin Dashboard" : "Trang chủ";
     Layout = "~/Views/Shared/_DashboardLayout.cshtml";
@@ -1266,6 +1267,11 @@
                     Tin nhắn
                     @{
                         int unreadMessages = 0;
+                        var currentUserIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                        if (!string.IsNullOrEmpty(currentUserIdStr) && int.TryParse(currentUserIdStr, out var currentUserId))
+                        {
+                            unreadMessages = _context.Messages.Count(m => m.ReceiverId == currentUserId && !m.IsRead);
+                        }
                     }
                     @if (unreadMessages > 0)
                     {

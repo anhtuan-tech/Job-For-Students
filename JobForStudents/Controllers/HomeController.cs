@@ -1806,6 +1806,7 @@ public class HomeController : Controller
             Type = NotificationType.Payment,
             IsRead = false,
             CreatedAt = now
+
         });
 
         await _context.SaveChangesAsync();
@@ -2382,6 +2383,22 @@ public class HomeController : Controller
                 time = m.SentAt.ToString("HH:mm")
             }).ToList()
         });
+    }
+
+    [Authorize]
+    [HttpGet]
+    public async Task<IActionResult> GetUnreadMessagesCount()
+    {
+        var currentUserId = GetCurrentUserId();
+        if (!currentUserId.HasValue)
+        {
+            return Json(new { success = false, count = 0 });
+        }
+
+        var count = await _context.Messages
+            .CountAsync(m => m.ReceiverId == currentUserId.Value && !m.IsRead);
+
+        return Json(new { success = true, count });
     }
 
     [Authorize]

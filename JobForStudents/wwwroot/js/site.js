@@ -130,6 +130,8 @@
         bindPostJobButtons();
         bindFindFreelancerBtn();
         updateNotificationBadge();
+        updateUnreadMessagesBadge();
+        setInterval(updateUnreadMessagesBadge, 10000);
 
         try {
             if (isBusiness) {
@@ -287,6 +289,7 @@
             btnPostJobEl.dataset.bound = '1';
             btnPostJobEl.addEventListener('click', () => openPostJobModal());
         }
+        updateUnreadMessagesBadge();
     }
 
     function bindBusinessSidebarNav() {
@@ -5353,6 +5356,8 @@
                     return;
                 }
                 renderBusinessChat(data.user, data.messages || []);
+                updateUnreadMessagesBadge();
+                loadBusinessConversations();
             })
             .catch(err => {
                 console.error(err);
@@ -6471,6 +6476,33 @@
                 }
             })
             .catch(err => console.error('Error fetching notifications:', err));
+    }
+
+    function updateUnreadMessagesBadge() {
+        const navMsg = document.getElementById('navMessages');
+        if (!navMsg) return;
+
+        fetch('/Home/GetUnreadMessagesCount')
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.success) {
+                    let badge = navMsg.querySelector('.sidebar-badge');
+                    if (data.count > 0) {
+                        if (!badge) {
+                            badge = document.createElement('span');
+                            badge.className = 'sidebar-badge';
+                            navMsg.appendChild(badge);
+                        }
+                        badge.textContent = data.count;
+                        badge.style.display = 'inline-flex';
+                    } else {
+                        if (badge) {
+                            badge.remove();
+                        }
+                    }
+                }
+            })
+            .catch(err => console.error('Error fetching unread message count:', err));
     }
 
     function bindNotificationBtn() {
