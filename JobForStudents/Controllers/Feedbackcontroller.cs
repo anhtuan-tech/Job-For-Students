@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using JobForStudents.Data;
 using JobForStudents.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -56,6 +56,18 @@ public class FeedbackController : Controller
         if (string.IsNullOrWhiteSpace(input?.Title) || string.IsNullOrWhiteSpace(input?.Details))
         {
             return Json(new { success = false, message = "Vui lòng nhập đầy đủ tiêu đề và nội dung." });
+        }
+
+        var tenMinutesAgo = DateTime.UtcNow.AddMinutes(-10);
+        var feedbackCount = await _context.Feedbacks
+            .CountAsync(f => f.UserId == currentUserId.Value && f.CreatedAt >= tenMinutesAgo);
+        
+        var supportCount = await _context.SupportRequests
+            .CountAsync(s => s.UserId == currentUserId.Value && s.CreatedAt >= tenMinutesAgo);
+
+        if (feedbackCount + supportCount >= 3)
+        {
+            return Json(new { success = false, message = "Bạn đã gửi quá giới hạn yêu cầu (tối đa 3 lần/10 phút). Vui lòng thử lại sau." });
         }
 
         var feedback = new Feedback

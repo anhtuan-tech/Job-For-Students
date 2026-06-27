@@ -7042,11 +7042,45 @@
             const deadline = modal.querySelector('#postJobDeadline').value;
             const budgetVal = modal.querySelector('#postJobBudget').value;
             const budget = Number(budgetVal.replace(/\D/g, ''));
+            const quantity = Number(modal.querySelector('#postJobQuantity').value) || 1;
 
-            if (!title) { showToast('Vui lòng nhập tiêu đề công việc.', 'warning'); return; }
-            if (!saveAsDraft && !description) { showToast('Vui lòng nhập mô tả công việc.', 'warning'); return; }
-            if (!saveAsDraft && !deadline) { showToast('Vui lòng chọn deadline tuyển dụng.', 'warning'); return; }
-            if (!saveAsDraft && (!Number.isFinite(budget) || budget <= 0)) { showToast('Vui lòng nhập mức lương hợp lệ.', 'warning'); return; }
+            if (!title || title.length < 10 || title.length > 150) {
+                showToast('Tiêu đề công việc phải có độ dài từ 10 đến 150 ký tự.', 'warning');
+                return;
+            }
+            if (quantity < 1) {
+                showToast('Số lượng tuyển dụng phải lớn hơn hoặc bằng 1.', 'warning');
+                return;
+            }
+            if (!saveAsDraft) {
+                if (!description) { showToast('Vui lòng nhập mô tả công việc.', 'warning'); return; }
+                if (!deadline) { showToast('Vui lòng chọn deadline tuyển dụng.', 'warning'); return; }
+
+                const deadlineDate = new Date(deadline);
+                deadlineDate.setHours(0, 0, 0, 0);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                const tomorrow = new Date(today);
+                tomorrow.setDate(tomorrow.getDate() + 1);
+
+                const maxFutureDate = new Date(today);
+                maxFutureDate.setDate(maxFutureDate.getDate() + 90);
+
+                if (deadlineDate < tomorrow) {
+                    showToast('Hạn chót ứng tuyển phải từ ngày mai trở đi.', 'warning');
+                    return;
+                }
+                if (deadlineDate > maxFutureDate) {
+                    showToast('Hạn chót ứng tuyển không được vượt quá 90 ngày kể từ ngày đăng.', 'warning');
+                    return;
+                }
+
+                if (!Number.isFinite(budget) || budget < 10000 || budget > 10000000000) {
+                    showToast('Mức lương hợp lệ phải từ 10,000đ đến 10 tỷ đồng.', 'warning');
+                    return;
+                }
+            }
 
             let finalCategory = modal.querySelector('#postJobCategory').value;
             if (finalCategory === 'Khác') {
@@ -7209,6 +7243,48 @@
         if (btnSubmitJob) {
             btnSubmitJob.addEventListener('click', async () => {
                 const form = document.getElementById('postJobForm');
+                const title = document.getElementById('jobTitle')?.value.trim() || '';
+                const description = document.getElementById('jobDescription')?.value.trim() || '';
+                const budget = Number(document.getElementById('jobBudget')?.value) || 0;
+                const deadline = document.getElementById('jobDeadline')?.value || '';
+                const saveMode = document.getElementById('jobFormSaveMode')?.value || 'publish';
+                const isDraft = saveMode.trim().toLowerCase() === 'draft';
+
+                if (!title || title.length < 10 || title.length > 150) {
+                    showToast('Tiêu đề công việc phải có độ dài từ 10 đến 150 ký tự.', 'warning');
+                    return;
+                }
+
+                if (!isDraft) {
+                    if (!description) { showToast('Vui lòng nhập mô tả công việc.', 'warning'); return; }
+                    if (!deadline) { showToast('Vui lòng chọn deadline tuyển dụng.', 'warning'); return; }
+
+                    const deadlineDate = new Date(deadline);
+                    deadlineDate.setHours(0, 0, 0, 0);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+
+                    const tomorrow = new Date(today);
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+
+                    const maxFutureDate = new Date(today);
+                    maxFutureDate.setDate(maxFutureDate.getDate() + 90);
+
+                    if (deadlineDate < tomorrow) {
+                        showToast('Hạn chót ứng tuyển phải từ ngày mai trở đi.', 'warning');
+                        return;
+                    }
+                    if (deadlineDate > maxFutureDate) {
+                        showToast('Hạn chót ứng tuyển không được vượt quá 90 ngày kể từ ngày đăng.', 'warning');
+                        return;
+                    }
+
+                    if (budget < 10000 || budget > 10000000000) {
+                        showToast('Mức lương hợp lệ phải từ 10,000đ đến 10 tỷ đồng.', 'warning');
+                        return;
+                    }
+                }
+
                 if (!form.checkValidity()) {
                     form.reportValidity();
                     return;
@@ -7464,8 +7540,14 @@
         document.getElementById('btnSubmitReview').addEventListener('click', () => {
             const rating = parseInt(ratingInput.value);
             const comment = document.getElementById('reviewCommentInput').value.trim();
-            if (!comment) {
-                showToast('Vui lòng nhập nhận xét.', 'warning');
+
+            if (isNaN(rating) || rating < 1 || rating > 5) {
+                showToast('Vui lòng chọn số sao từ 1 đến 5.', 'warning');
+                return;
+            }
+
+            if (!comment || comment.length < 10) {
+                showToast('Nội dung nhận xét phải tối thiểu 10 ký tự.', 'warning');
                 return;
             }
 

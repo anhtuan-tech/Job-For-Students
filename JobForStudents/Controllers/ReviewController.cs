@@ -216,6 +216,11 @@ public class ReviewController : Controller
             return BadRequest(new { success = false, message = "Đánh giá sao phải từ 1 đến 5." });
         }
 
+        if (string.IsNullOrWhiteSpace(comment) || comment.Trim().Length < 10)
+        {
+            return BadRequest(new { success = false, message = "Nội dung nhận xét phải tối thiểu 10 ký tự." });
+        }
+
         var contract = await _context.JobContracts
             .Include(c => c.Reviews)
             .FirstOrDefaultAsync(c => c.Id == contractId && c.BusinessId == currentUserId.Value && c.Status == ContractStatus.Completed);

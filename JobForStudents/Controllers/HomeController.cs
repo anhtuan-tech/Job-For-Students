@@ -457,6 +457,18 @@ public class HomeController : Controller
             return Json(new { success = false, message = "Không tìm thấy việc làm." });
         }
 
+        // Validate Job Status: Must be Open
+        if (job.Status != JobStatus.Open)
+        {
+            return Json(new { success = false, message = "Tin tuyển dụng này hiện không ở trạng thái mở ứng tuyển." });
+        }
+
+        // Validate Deadline: Cannot apply if deadline has passed
+        if (job.Deadline < DateTime.UtcNow)
+        {
+            return Json(new { success = false, message = "Thời hạn ứng tuyển của công việc này đã kết thúc." });
+        }
+
         var existingBid = await _context.JobBids
             .FirstOrDefaultAsync(jb => jb.StudentId == currentUserId.Value && jb.JobPostId == jobId);
 
@@ -479,11 +491,12 @@ public class HomeController : Controller
                 Status = BidStatus.Pending,
                 CreatedAt = DateTime.UtcNow
             });
+
             _context.Notifications.Add(new Notification
             {
                 UserId = job.BusinessId,
                 Title = "Có ứng viên mới ứng tuyển",
-                Message = $"Một freelancer vừa ứng tuyển vào tin \"{job.Title}\".",
+                Message = $"Một ứng viên vừa ứng tuyển vào tin tuyển dụng \"{job.Title}\".",
                 Type = NotificationType.JobStatus,
                 IsRead = false,
                 CreatedAt = DateTime.UtcNow
@@ -925,6 +938,22 @@ public class HomeController : Controller
         }
         else if (action == "hire")
         {
+            var existingContract = await _context.JobContracts
+                .AnyAsync(c => c.JobPostId == bid.JobPostId && c.StudentId == bid.StudentId && c.BusinessId == currentUserId.Value);
+
+            if (!existingContract)
+            {
+                _context.JobContracts.Add(new JobContract
+                {
+                    JobPostId = bid.JobPostId,
+                    StudentId = bid.StudentId,
+                    BusinessId = currentUserId.Value,
+                    FinalPrice = bid.BidAmount,
+                    Status = ContractStatus.Active,
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
+
             bid.Status = BidStatus.Hired;
 
             var alreadyHiredCount = await _context.JobBids.CountAsync(b => b.JobPostId == bid.JobPostId && b.Status == BidStatus.Hired && b.Id != bid.Id);
@@ -952,22 +981,6 @@ public class HomeController : Controller
                         CreatedAt = DateTime.UtcNow
                     });
                 }
-            }
-
-            var existingContract = await _context.JobContracts
-                .AnyAsync(c => c.JobPostId == bid.JobPostId && c.StudentId == bid.StudentId && c.BusinessId == currentUserId.Value);
-
-            if (!existingContract)
-            {
-                _context.JobContracts.Add(new JobContract
-                {
-                    JobPostId = bid.JobPostId,
-                    StudentId = bid.StudentId,
-                    BusinessId = currentUserId.Value,
-                    FinalPrice = bid.BidAmount,
-                    Status = ContractStatus.Active,
-                    CreatedAt = DateTime.UtcNow
-                });
             }
 
             _context.Notifications.Add(new Notification
@@ -1138,6 +1151,16 @@ public class HomeController : Controller
         if (!currentUserId.HasValue)
         {
             return Json(new { success = false, message = "Vui lòng đăng nhập để nạp tiền." });
+        }
+
+        if (request.Amount <= 0)
+        {
+            return Json(new { success = false, message = "Số tiền nạp phải lớn hơn 0." });
+        }
+
+        if (request.Amount % 1 != 0)
+        {
+            return Json(new { success = false, message = "Số tiền nạp không được chứa phần thập phân." });
         }
 
         if (request.Amount < 50000m || request.Amount % 50000m != 0m)
@@ -1957,9 +1980,14 @@ public class HomeController : Controller
             return Json(new { success = false, message = "Chưa đăng nhập." });
         }
 
-        if (string.IsNullOrWhiteSpace(request.Title))
+        if (string.IsNullOrWhiteSpace(request.Title) || request.Title.Length < 10 || request.Title.Length > 150)
         {
-            return Json(new { success = false, message = "Vui lòng nhập tiêu đề và mô tả tin tuyển dụng." });
+            return Json(new { success = false, message = "Tiêu đề tin tuyển dụng phải có độ dài từ 10 đến 150 ký tự." });
+        }
+
+        if (request.Quantity < 1)
+        {
+            return Json(new { success = false, message = "Số lượng ứng viên cần tuyển phải lớn hơn hoặc bằng 1." });
         }
 
         var hasDeadline = DateTime.TryParse(request.Deadline, out var parsedDeadline);
@@ -1968,14 +1996,28 @@ public class HomeController : Controller
             return Json(new { success = false, message = "Deadline không hợp lệ." });
         }
 
+        if (!request.SaveAsDraft && hasDeadline)
+        {
+            var tomorrow = DateTime.Today.AddDays(1);
+            var maxFutureDate = DateTime.Today.AddDays(90);
+            if (parsedDeadline.Date < tomorrow)
+            {
+                return Json(new { success = false, message = "Hạn chót ứng tuyển phải từ ngày mai trở đi." });
+            }
+            if (parsedDeadline.Date > maxFutureDate)
+            {
+                return Json(new { success = false, message = "Hạn chót ứng tuyển không được vượt quá 90 ngày kể từ ngày đăng." });
+            }
+        }
+
         if (!request.SaveAsDraft && string.IsNullOrWhiteSpace(request.Description))
         {
             return Json(new { success = false, message = "Vui lòng nhập mô tả công việc." });
         }
 
-        if (!request.SaveAsDraft && request.Budget <= 0)
+        if (!request.SaveAsDraft && (request.Budget < 10000 || request.Budget > 10000000000))
         {
-            return Json(new { success = false, message = "Vui lòng nhập mức lương hợp lệ." });
+            return Json(new { success = false, message = "Mức lương hợp lệ phải từ 10,000đ đến 10,000,000,000đ (10 tỷ đồng)." });
         }
 
         if (!hasDeadline)
@@ -2456,10 +2498,25 @@ public class HomeController : Controller
             return Json(new { success = false, message = "Vui lòng nhập tin nhắn." });
         }
 
-        var receiverExists = await _context.Users.AnyAsync(u => u.Id == request.ReceiverId && !u.IsDeleted && u.Status == UserStatus.Active);
-        if (!receiverExists)
+        if (request.Content.Length > 4000)
         {
-            return Json(new { success = false, message = "Không tìm thấy người nhận." });
+            return Json(new { success = false, message = "Nội dung tin nhắn không được vượt quá 4000 ký tự." });
+        }
+
+        var receiver = await _context.Users.FirstOrDefaultAsync(u => u.Id == request.ReceiverId && !u.IsDeleted);
+        if (receiver == null)
+        {
+            return Json(new { success = false, message = "Người nhận không tồn tại hoặc đã bị xóa." });
+        }
+
+        if (receiver.Status == UserStatus.Banned)
+        {
+            return Json(new { success = false, message = "Không thể gửi tin nhắn vì tài khoản người nhận đã bị khóa." });
+        }
+
+        if (receiver.Status != UserStatus.Active)
+        {
+            return Json(new { success = false, message = "Tài khoản người nhận hiện không hoạt động." });
         }
 
         var message = new Message
@@ -3254,7 +3311,17 @@ public class HomeController : Controller
             return Json(new { success = false, message = "Chưa đăng nhập." });
         }
 
-        if (request.Amount <= 0 || request.Amount % 50000 != 0)
+        if (request.Amount <= 0)
+        {
+            return Json(new { success = false, message = "Số tiền nạp phải lớn hơn 0." });
+        }
+
+        if (request.Amount % 1 != 0)
+        {
+            return Json(new { success = false, message = "Số tiền nạp không được chứa phần thập phân." });
+        }
+
+        if (request.Amount % 50000 != 0)
         {
             return Json(new { success = false, message = "Số tiền nạp phải là bội số của 50.000 đ." });
         }
@@ -3627,6 +3694,35 @@ public class HomeController : Controller
 
         bool isDraft = (saveMode ?? string.Empty).Trim().ToLowerInvariant() == "draft";
 
+        if (string.IsNullOrWhiteSpace(title) || title.Length < 10 || title.Length > 150)
+        {
+            return Ok(new { success = false, message = "Tiêu đề tin tuyển dụng phải có độ dài từ 10 đến 150 ký tự." });
+        }
+
+        if (!isDraft && string.IsNullOrWhiteSpace(description))
+        {
+            return Ok(new { success = false, message = "Vui lòng nhập mô tả công việc." });
+        }
+
+        if (!isDraft)
+        {
+            var tomorrow = DateTime.Today.AddDays(1);
+            var maxFutureDate = DateTime.Today.AddDays(90);
+            if (deadline.Date < tomorrow)
+            {
+                return Ok(new { success = false, message = "Hạn chót ứng tuyển phải từ ngày mai trở đi." });
+            }
+            if (deadline.Date > maxFutureDate)
+            {
+                return Ok(new { success = false, message = "Hạn chót ứng tuyển không được quá 90 ngày kể từ ngày đăng." });
+            }
+        }
+
+        if (!isDraft && (budget < 10000 || budget > 10000000000))
+        {
+            return Ok(new { success = false, message = "Mức lương hợp lệ phải từ 10,000đ đến 10,000,000,000đ (10 tỷ đồng)." });
+        }
+
         try
         {
             var newJob = new JobPost
@@ -3669,6 +3765,35 @@ public class HomeController : Controller
         if (job == null) return Ok(new { success = false, message = "Không tìm thấy tin đăng." });
 
         bool isDraft = (saveMode ?? string.Empty).Trim().ToLowerInvariant() == "draft";
+
+        if (string.IsNullOrWhiteSpace(title) || title.Length < 10 || title.Length > 150)
+        {
+            return Ok(new { success = false, message = "Tiêu đề tin tuyển dụng phải có độ dài từ 10 đến 150 ký tự." });
+        }
+
+        if (!isDraft && string.IsNullOrWhiteSpace(description))
+        {
+            return Ok(new { success = false, message = "Vui lòng nhập mô tả công việc." });
+        }
+
+        if (!isDraft)
+        {
+            var tomorrow = DateTime.Today.AddDays(1);
+            var maxFutureDate = DateTime.Today.AddDays(90);
+            if (deadline.Date < tomorrow)
+            {
+                return Ok(new { success = false, message = "Hạn chót ứng tuyển phải từ ngày mai trở đi." });
+            }
+            if (deadline.Date > maxFutureDate)
+            {
+                return Ok(new { success = false, message = "Hạn chót ứng tuyển không được quá 90 ngày kể từ ngày đăng." });
+            }
+        }
+
+        if (!isDraft && (budget < 10000 || budget > 10000000000))
+        {
+            return Ok(new { success = false, message = "Mức lương hợp lệ phải từ 10,000đ đến 10,000,000,000đ (10 tỷ đồng)." });
+        }
 
         job.Title = title;
         job.Description = description;
@@ -3869,6 +3994,7 @@ public record AcbBankTransaction(string Reference);
 public class JobActionRequest
 {
     public string JobId { get; set; } = string.Empty;
+    public decimal? BidAmount { get; set; }
 }
 
 public class UpdateBidStatusRequest
