@@ -8,7 +8,7 @@ public class Review
     public int Id { get; set; }
     public int ContractId { get; set; }
     public int ReviewerId { get; set; }
-    public int Rating { get; set; } // 1-5
+    public int? Rating { get; set; } // 1-5, nullable for replies
     public string Comment { get; set; } = null!;
     public int? ParentReviewId { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

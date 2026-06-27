@@ -342,9 +342,6 @@ public class AuthController : Controller
         // Set rate limit: block re-send for 60 seconds
         _cache.Set(rateLimitKey, true, TimeSpan.FromSeconds(60));
 
-        // For development purpose, print to output console and return OTP
-        System.Diagnostics.Debug.WriteLine($"[FORGOT PASSWORD] OTP for {request.Email}: {otp}");
-        Console.WriteLine($"[FORGOT PASSWORD] OTP for {request.Email}: {otp}");
 
         // Send OTP email
         var subject = "Mã xác thực khôi phục mật khẩu J4S";

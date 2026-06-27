@@ -98,7 +98,7 @@ public class StudentProfileController : Controller
 
         vm.Reviews = reviews;
         vm.TotalReviews = reviews.Count;
-        vm.AverageRating = reviews.Any() ? reviews.Average(r => r.Rating) : 0;
+        vm.AverageRating = reviews.Any() ? (reviews.Average(r => r.Rating) ?? 0) : 0;
 
         return View(vm);
     }

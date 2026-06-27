@@ -325,10 +325,10 @@ public class HomeController : Controller
         // Sort
         jobQuery = (sortBy ?? "newest") switch
         {
-            "budget_asc"  => jobQuery.OrderBy(j => j.Budget),
+            "budget_asc" => jobQuery.OrderBy(j => j.Budget),
             "budget_desc" => jobQuery.OrderByDescending(j => j.Budget),
-            "applicants"  => jobQuery.OrderByDescending(j => j.JobBids.Count),
-            _             => jobQuery.OrderByDescending(j => j.CreatedAt)
+            "applicants" => jobQuery.OrderByDescending(j => j.JobBids.Count),
+            _ => jobQuery.OrderByDescending(j => j.CreatedAt)
         };
 
         var jobPosts = await jobQuery.ToListAsync();
@@ -338,7 +338,7 @@ public class HomeController : Controller
 
         if (currentUserId.HasValue && isStudent)
         {
-            savedJobIds  = new HashSet<int>(await _context.SavedJobs.Where(sj => sj.StudentId == currentUserId.Value).Select(sj => sj.JobPostId).ToListAsync());
+            savedJobIds = new HashSet<int>(await _context.SavedJobs.Where(sj => sj.StudentId == currentUserId.Value).Select(sj => sj.JobPostId).ToListAsync());
             appliedJobIds = new HashSet<int>(await _context.JobBids.Where(jb => jb.StudentId == currentUserId.Value).Select(jb => jb.JobPostId).ToListAsync());
         }
 
@@ -565,7 +565,7 @@ public class HomeController : Controller
                 .Select(jb => jb.JobPostId)
                 .ToListAsync());
 
-        var savedJobs = await _context.SavedJobs
+        var savedJobsRaw = await _context.SavedJobs
             .Include(sj => sj.JobPost)
                 .ThenInclude(jp => jp.JobPostSkills)
                     .ThenInclude(jps => jps.Skill)
@@ -578,7 +578,7 @@ public class HomeController : Controller
                 description = sj.JobPost.Description,
                 category = sj.JobPost.Category ?? (sj.JobPost.JobPostSkills.Select(jps => jps.Skill.Category).FirstOrDefault() ?? "Khác"),
                 budget = sj.JobPost.Budget,
-                deadline = sj.JobPost.Deadline.ToString("dd/MM/yyyy"),
+                deadline = sj.JobPost.Deadline,
                 applicantsCount = _context.JobBids.Count(b => b.JobPostId == sj.JobPostId),
                 quantity = sj.JobPost.Quantity,
                 hiredCount = _context.JobBids.Count(b => b.JobPostId == sj.JobPostId && b.Status == BidStatus.Hired),
@@ -587,6 +587,22 @@ public class HomeController : Controller
                 tags = sj.JobPost.JobPostSkills.Select(jps => jps.Skill.Name).ToList()
             })
             .ToListAsync();
+
+        var savedJobs = savedJobsRaw.Select(sj => new
+        {
+            sj.id,
+            sj.title,
+            sj.description,
+            sj.category,
+            sj.budget,
+            deadline = sj.deadline.ToString("dd/MM/yyyy"),
+            sj.applicantsCount,
+            sj.quantity,
+            sj.hiredCount,
+            sj.isSaved,
+            sj.isApplied,
+            sj.tags
+        }).ToList();
 
         return Json(savedJobs);
     }
@@ -600,7 +616,7 @@ public class HomeController : Controller
         if (!currentUserId.HasValue)
             return Json(new List<object>());
 
-        var appliedJobs = await _context.JobBids
+        var appliedJobsRaw = await _context.JobBids
             .Include(b => b.JobPost)
                 .ThenInclude(jp => jp.BusinessProfile)
             .Where(b => b.StudentId == currentUserId.Value && !b.JobPost.IsDeleted)
@@ -612,7 +628,7 @@ public class HomeController : Controller
                 description = b.JobPost.Description,
                 category = b.JobPost.Category ?? "Khác",
                 budget = b.JobPost.Budget,
-                deadline = b.JobPost.Deadline.ToString("dd/MM/yyyy"),
+                deadline = b.JobPost.Deadline,
                 applicantsCount = _context.JobBids.Count(jb => jb.JobPostId == b.JobPostId),
                 quantity = b.JobPost.Quantity,
                 hiredCount = _context.JobBids.Count(jb => jb.JobPostId == b.JobPostId && jb.Status == BidStatus.Hired),
@@ -623,6 +639,24 @@ public class HomeController : Controller
                 businessName = b.JobPost.BusinessProfile != null ? b.JobPost.BusinessProfile.CompanyName : ""
             })
             .ToListAsync();
+
+        var appliedJobs = appliedJobsRaw.Select(b => new
+        {
+            b.id,
+            b.title,
+            b.description,
+            b.category,
+            b.budget,
+            deadline = b.deadline.ToString("dd/MM/yyyy"),
+            b.applicantsCount,
+            b.quantity,
+            b.hiredCount,
+            b.isSaved,
+            b.isApplied,
+            b.status,
+            b.appliedDate,
+            b.businessName
+        }).ToList();
 
         return Json(appliedJobs);
     }
@@ -681,7 +715,7 @@ public class HomeController : Controller
             return Json(new { success = false, message = "Vui lòng đăng nhập." });
         }
 
-        var contracts = await _context.JobContracts
+        var contractsRaw = await _context.JobContracts
             .Include(c => c.JobPost)
                 .ThenInclude(jp => jp.BusinessProfile)
             .Where(c => c.StudentId == currentUserId.Value && (c.Status == ContractStatus.Active || c.Status == ContractStatus.Submitted || c.Status == ContractStatus.Completed))
@@ -694,13 +728,27 @@ public class HomeController : Controller
                 client = c.BusinessProfile != null ? c.BusinessProfile.CompanyName : "Unknown",
                 clientId = c.BusinessId,
                 status = c.Status == ContractStatus.Completed ? "Hoàn thành" : (c.Status == ContractStatus.Submitted ? "Đang xác nhận" : "Đang thực hiện"),
-                deadline = c.JobPost.Deadline.ToString("dd/MM/yyyy"),
+                deadline = c.JobPost.Deadline,
                 budget = (double)c.FinalPrice,
                 studentCompleted = c.DeliverableContent != null && c.DeliverableContent.Contains("StudentCompleted"),
                 businessCompleted = c.DeliverableContent != null && c.DeliverableContent.Contains("BusinessCompleted"),
-                contractStatus = c.Status.ToString()
+                contractStatus = c.Status
             })
             .ToListAsync();
+
+        var contracts = contractsRaw.Select(c => new
+        {
+            c.id,
+            c.title,
+            c.client,
+            c.clientId,
+            c.status,
+            deadline = c.deadline.ToString("dd/MM/yyyy"),
+            c.budget,
+            c.studentCompleted,
+            c.businessCompleted,
+            contractStatus = c.contractStatus.ToString()
+        }).ToList();
 
         return Json(new { success = true, contracts = contracts });
     }
@@ -1076,20 +1124,20 @@ public class HomeController : Controller
             .ToListAsync();
 
         var openJobs = openJobEntities.Select(j => new BusinessPublicJobViewModel
-            {
-                Id = j.Id,
-                Title = j.Title,
-                Description = j.Description,
-                Requirements = j.Requirements ?? string.Empty,
-                Benefits = j.Benefits ?? string.Empty,
-                Budget = j.Budget,
-                BudgetType = j.BudgetType.ToString(),
-                ExperienceLevel = j.ExperienceLevelRequired.ToString().Replace("_", " "),
-                Location = j.Location ?? "Linh hoạt",
-                Quantity = j.Quantity,
-                Deadline = j.Deadline.ToString("dd/MM/yyyy"),
-                Skills = j.JobPostSkills.Select(jps => jps.Skill.Name).ToList()
-            })
+        {
+            Id = j.Id,
+            Title = j.Title,
+            Description = j.Description,
+            Requirements = j.Requirements ?? string.Empty,
+            Benefits = j.Benefits ?? string.Empty,
+            Budget = j.Budget,
+            BudgetType = j.BudgetType.ToString(),
+            ExperienceLevel = j.ExperienceLevelRequired.ToString().Replace("_", " "),
+            Location = j.Location ?? "Linh hoạt",
+            Quantity = j.Quantity,
+            Deadline = j.Deadline.ToString("dd/MM/yyyy"),
+            Skills = j.JobPostSkills.Select(jps => jps.Skill.Name).ToList()
+        })
             .ToList();
 
         var reviewEntities = await _context.Reviews
@@ -1097,26 +1145,26 @@ public class HomeController : Controller
                 .ThenInclude(u => u.StudentProfile)
             .Include(r => r.Reviewer)
                 .ThenInclude(u => u.BusinessProfile)
-            .Where(r => r.JobContract.BusinessId == id && r.ReviewerId != id)
+            .Where(r => r.JobContract.BusinessId == id && r.ReviewerId != id && r.ParentReviewId == null)
             .OrderByDescending(r => r.CreatedAt)
             .ToListAsync();
 
         var reviews = reviewEntities.Select(r => new BusinessPublicReviewViewModel
-            {
-                ReviewerName = r.Reviewer.StudentProfile != null
+        {
+            ReviewerName = r.Reviewer.StudentProfile != null
                     ? r.Reviewer.StudentProfile.FullName
                     : r.Reviewer.BusinessProfile != null
                         ? r.Reviewer.BusinessProfile.CompanyName
                         : r.Reviewer.Email,
-                ReviewerAvatar = r.Reviewer.StudentProfile != null
+            ReviewerAvatar = r.Reviewer.StudentProfile != null
                     ? r.Reviewer.StudentProfile.AvatarUrl ?? string.Empty
                     : r.Reviewer.BusinessProfile != null
                         ? r.Reviewer.BusinessProfile.LogoUrl ?? string.Empty
                         : string.Empty,
-                Rating = r.Rating,
-                Comment = r.Comment,
-                CreatedAt = r.CreatedAt.ToString("dd/MM/yyyy")
-            })
+            Rating = r.Rating ?? 0,
+            Comment = r.Comment,
+            CreatedAt = r.CreatedAt.ToString("dd/MM/yyyy")
+        })
             .ToList();
 
         var model = new BusinessJobsPageViewModel
@@ -1259,22 +1307,24 @@ public class HomeController : Controller
             var level = 1 + (completedContracts / 2); // Level calculation: +1 level per 2 completed jobs
 
             // Retrieve Customer Reviews written for the student
-            var reviews = await _context.Reviews
+            var reviewsRaw = await _context.Reviews
                 .Include(r => r.Reviewer)
                     .ThenInclude(u => u.StudentProfile)
                 .Include(r => r.Reviewer)
                     .ThenInclude(u => u.BusinessProfile)
-                .Where(r => r.JobContract.StudentId == currentUserId.Value && r.ReviewerId != currentUserId.Value)
+                .Include(r => r.JobContract)
+                .Where(r => r.JobContract.StudentId == currentUserId.Value && r.ReviewerId != currentUserId.Value && r.ParentReviewId == null)
                 .OrderByDescending(r => r.CreatedAt)
-                .Select(r => new
-                {
-                    reviewerName = r.Reviewer.StudentProfile != null ? r.Reviewer.StudentProfile.FullName : (r.Reviewer.BusinessProfile != null ? r.Reviewer.BusinessProfile.CompanyName : r.Reviewer.Email),
-                    reviewerAvatar = r.Reviewer.StudentProfile != null ? r.Reviewer.StudentProfile.AvatarUrl : (r.Reviewer.BusinessProfile != null ? r.Reviewer.BusinessProfile.LogoUrl : ""),
-                    rating = r.Rating,
-                    comment = r.Comment,
-                    createdAt = r.CreatedAt.ToString("dd/MM/yyyy")
-                })
                 .ToListAsync();
+
+            var reviews = reviewsRaw.Select(r => new
+            {
+                reviewerName = r.Reviewer.StudentProfile != null ? r.Reviewer.StudentProfile.FullName : (r.Reviewer.BusinessProfile != null ? r.Reviewer.BusinessProfile.CompanyName : r.Reviewer.Email),
+                reviewerAvatar = r.Reviewer.StudentProfile != null ? r.Reviewer.StudentProfile.AvatarUrl : (r.Reviewer.BusinessProfile != null ? r.Reviewer.BusinessProfile.LogoUrl : ""),
+                rating = r.Rating,
+                comment = r.Comment,
+                createdAt = r.CreatedAt.ToString("dd/MM/yyyy")
+            }).ToList();
 
             return Json(new
             {
@@ -1333,22 +1383,24 @@ public class HomeController : Controller
             var completionRate = totalContracts > 0 ? (int)Math.Round((double)completedContracts / totalContracts * 100) : 100;
 
             // Retrieve Customer Reviews written for the business
-            var reviews = await _context.Reviews
+            var reviewsRaw = await _context.Reviews
                 .Include(r => r.Reviewer)
                     .ThenInclude(u => u.StudentProfile)
                 .Include(r => r.Reviewer)
                     .ThenInclude(u => u.BusinessProfile)
-                .Where(r => r.JobContract.BusinessId == currentUserId.Value && r.ReviewerId != currentUserId.Value)
+                .Include(r => r.JobContract)
+                .Where(r => r.JobContract.BusinessId == currentUserId.Value && r.ReviewerId != currentUserId.Value && r.ParentReviewId == null)
                 .OrderByDescending(r => r.CreatedAt)
-                .Select(r => new
-                {
-                    reviewerName = r.Reviewer.StudentProfile != null ? r.Reviewer.StudentProfile.FullName : (r.Reviewer.BusinessProfile != null ? r.Reviewer.BusinessProfile.CompanyName : r.Reviewer.Email),
-                    reviewerAvatar = r.Reviewer.StudentProfile != null ? r.Reviewer.StudentProfile.AvatarUrl : (r.Reviewer.BusinessProfile != null ? r.Reviewer.BusinessProfile.LogoUrl : ""),
-                    rating = r.Rating,
-                    comment = r.Comment,
-                    createdAt = r.CreatedAt.ToString("dd/MM/yyyy")
-                })
                 .ToListAsync();
+
+            var reviews = reviewsRaw.Select(r => new
+            {
+                reviewerName = r.Reviewer.StudentProfile != null ? r.Reviewer.StudentProfile.FullName : (r.Reviewer.BusinessProfile != null ? r.Reviewer.BusinessProfile.CompanyName : r.Reviewer.Email),
+                reviewerAvatar = r.Reviewer.StudentProfile != null ? r.Reviewer.StudentProfile.AvatarUrl : (r.Reviewer.BusinessProfile != null ? r.Reviewer.BusinessProfile.LogoUrl : ""),
+                rating = r.Rating,
+                comment = r.Comment,
+                createdAt = r.CreatedAt.ToString("dd/MM/yyyy")
+            }).ToList();
 
             return Json(new
             {
@@ -1380,22 +1432,23 @@ public class HomeController : Controller
             var totalContracts = await _context.JobContracts.CountAsync();
             var systemVolume = await _context.Wallets.Where(w => w.User.Role == UserRole.Business).SumAsync(w => w.Balance);
 
-            var reviews = await _context.Reviews
+            var reviewsRaw = await _context.Reviews
                 .Include(r => r.Reviewer)
                     .ThenInclude(u => u.StudentProfile)
                 .Include(r => r.Reviewer)
                     .ThenInclude(u => u.BusinessProfile)
                 .OrderByDescending(r => r.CreatedAt)
                 .Take(10)
-                .Select(r => new
-                {
-                    reviewerName = r.Reviewer.StudentProfile != null ? r.Reviewer.StudentProfile.FullName : (r.Reviewer.BusinessProfile != null ? r.Reviewer.BusinessProfile.CompanyName : r.Reviewer.Email),
-                    reviewerAvatar = r.Reviewer.StudentProfile != null ? r.Reviewer.StudentProfile.AvatarUrl : (r.Reviewer.BusinessProfile != null ? r.Reviewer.BusinessProfile.LogoUrl : ""),
-                    rating = r.Rating,
-                    comment = r.Comment,
-                    createdAt = r.CreatedAt.ToString("dd/MM/yyyy")
-                })
                 .ToListAsync();
+
+            var reviews = reviewsRaw.Select(r => new
+            {
+                reviewerName = r.Reviewer.StudentProfile != null ? r.Reviewer.StudentProfile.FullName : (r.Reviewer.BusinessProfile != null ? r.Reviewer.BusinessProfile.CompanyName : r.Reviewer.Email),
+                reviewerAvatar = r.Reviewer.StudentProfile != null ? r.Reviewer.StudentProfile.AvatarUrl : (r.Reviewer.BusinessProfile != null ? r.Reviewer.BusinessProfile.LogoUrl : ""),
+                rating = r.Rating,
+                comment = r.Comment,
+                createdAt = r.CreatedAt.ToString("dd/MM/yyyy")
+            }).ToList();
 
             return Json(new
             {
@@ -1715,16 +1768,16 @@ public class HomeController : Controller
             {
                 id = subscription.Id,
                 planId = subscription.ServicePlanId,
-                planName = subscription.ServicePlan.Name,
-                description = subscription.ServicePlan.Description,
-                price = subscription.ServicePlan.Price,
-                jobPostLimit = subscription.ServicePlan.JobPostLimit,
+                planName = subscription.ServicePlan != null ? subscription.ServicePlan.Name : "Gói dịch vụ",
+                description = subscription.ServicePlan != null ? subscription.ServicePlan.Description : "",
+                price = subscription.ServicePlan != null ? subscription.ServicePlan.Price : 0m,
+                jobPostLimit = subscription.ServicePlan != null ? subscription.ServicePlan.JobPostLimit : 0,
                 startDate = subscription.StartDate.ToString("dd/MM/yyyy"),
                 endDate = subscription.EndDate.ToString("dd/MM/yyyy"),
                 daysLeft = Math.Max(0, (int)Math.Ceiling((subscription.EndDate - DateTime.UtcNow).TotalDays)),
                 remainingJobPosts = subscription.RemainingJobPosts,
                 status = subscription.Status.ToString(),
-                benefits = SplitBenefits(subscription.ServicePlan.Benefits)
+                benefits = subscription.ServicePlan != null ? SplitBenefits(subscription.ServicePlan.Benefits) : new List<string>()
             },
             plans = plans.Select(p => new
             {
@@ -1960,7 +2013,8 @@ public class HomeController : Controller
                 skills = j.JobPostSkills.Select(jps => jps.Skill.Name).ToList(),
                 category = j.Category ?? (j.JobPostSkills.FirstOrDefault()?.Skill.Category ?? "Khác"),
                 createdAt = j.CreatedAt.ToString("dd/MM/yyyy"),
-                contracts = j.JobContracts.Select(c => new {
+                contracts = j.JobContracts.Select(c => new
+                {
                     id = c.Id,
                     status = c.Status.ToString(),
                     studentCompleted = c.DeliverableContent != null && c.DeliverableContent.Contains("StudentCompleted"),
@@ -2184,7 +2238,8 @@ public class HomeController : Controller
         {
             success = true,
             jobTitle = job.Title,
-            applicants = applicants.Select(b => {
+            applicants = applicants.Select(b =>
+            {
                 var contract = contracts.FirstOrDefault(c => c.StudentId == b.StudentId);
                 return new
                 {
@@ -2307,8 +2362,8 @@ public class HomeController : Controller
             {
                 id = b.Id,
                 studentId = b.StudentId,
-                name = b.StudentProfile.FullName,
-                avatarUrl = b.StudentProfile.AvatarUrl ?? "",
+                name = b.StudentProfile != null ? b.StudentProfile.FullName : "Người dùng ẩn",
+                avatarUrl = b.StudentProfile != null ? (b.StudentProfile.AvatarUrl ?? "") : "",
                 jobId = b.JobPostId,
                 jobTitle = b.JobPost.Title,
                 bidAmount = b.BidAmount,
@@ -2317,7 +2372,7 @@ public class HomeController : Controller
                 appliedAt = b.CreatedAt.ToString("dd/MM/yyyy"),
                 appliedAgo = GetTimeAgo(b.CreatedAt),
                 status = b.Status.ToString(),
-                skills = b.StudentProfile.StudentSkills.Select(ss => ss.Skill.Name).Take(6).ToList()
+                skills = b.StudentProfile != null ? b.StudentProfile.StudentSkills.Select(ss => ss.Skill.Name).Take(6).ToList() : new List<string>()
             }).ToList()
         });
     }
@@ -2603,7 +2658,7 @@ public class HomeController : Controller
             .ToListAsync());
 
         var reviewStats = await _context.Reviews
-            .Where(r => candidateIds.Contains(r.JobContract.StudentId) && r.ReviewerId != r.JobContract.StudentId)
+            .Where(r => candidateIds.Contains(r.JobContract.StudentId) && r.ReviewerId != r.JobContract.StudentId && r.ParentReviewId == null)
             .GroupBy(r => r.JobContract.StudentId)
             .Select(g => new
             {
@@ -2675,7 +2730,7 @@ public class HomeController : Controller
         var reviews = await _context.Reviews
             .Include(r => r.Reviewer)
             .Include(r => r.JobContract)
-            .Where(r => r.JobContract.StudentId == studentId && r.ReviewerId != studentId)
+            .Where(r => r.JobContract.StudentId == studentId && r.ReviewerId != studentId && r.ParentReviewId == null)
             .OrderByDescending(r => r.CreatedAt)
             .Take(8)
             .ToListAsync();
@@ -2842,7 +2897,7 @@ public class HomeController : Controller
                 {
                     id = -100000 - subscription.Id,
                     title = "Gói dịch vụ sắp hết hạn",
-                    desc = $"Gói {subscription.ServicePlan.Name} sẽ hết hạn vào {subscription.EndDate:dd/MM/yyyy}.",
+                    desc = $"Gói {(subscription.ServicePlan != null ? subscription.ServicePlan.Name : "dịch vụ")} sẽ hết hạn vào {subscription.EndDate:dd/MM/yyyy}.",
                     type = NotificationType.System.ToString(),
                     time = "Sắp hết hạn",
                     unread = false,
@@ -3114,7 +3169,8 @@ public class HomeController : Controller
             .Include(u => u.StudentProfile)
             .Include(u => u.BusinessProfile)
             .OrderByDescending(u => u.CreatedAt)
-            .Select(u => new {
+            .Select(u => new
+            {
                 id = u.Id,
                 email = u.Email,
                 phone = u.Phone,
@@ -3154,20 +3210,32 @@ public class HomeController : Controller
     [HttpGet]
     public async Task<IActionResult> GetAdminJobs()
     {
-        var jobs = await _context.JobPosts
+        var jobsRaw = await _context.JobPosts
             .Include(j => j.BusinessProfile)
             .Where(j => !j.IsDeleted)
             .OrderByDescending(j => j.CreatedAt)
-            .Select(j => new {
+            .Select(j => new
+            {
                 id = j.Id,
                 title = j.Title,
                 businessName = j.BusinessProfile.CompanyName ?? "N/A",
                 budget = j.Budget,
-                deadline = j.Deadline.ToString("dd/MM/yyyy"),
-                status = j.Status.ToString(),
-                createdAt = j.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                deadline = j.Deadline,
+                status = j.Status,
+                createdAt = j.CreatedAt
             })
             .ToListAsync();
+
+        var jobs = jobsRaw.Select(j => new
+        {
+            j.id,
+            j.title,
+            j.businessName,
+            j.budget,
+            deadline = j.deadline.ToString("dd/MM/yyyy"),
+            status = j.status.ToString(),
+            createdAt = j.createdAt.ToString("dd/MM/yyyy HH:mm")
+        }).ToList();
 
         return Json(jobs);
     }
@@ -3194,7 +3262,8 @@ public class HomeController : Controller
                 .ThenInclude(w => w.User)
             .Where(t => t.Wallet.User.Role == UserRole.Business)
             .OrderByDescending(t => t.CreatedAt)
-            .Select(t => new {
+            .Select(t => new
+            {
                 id = t.Id,
                 userEmail = t.Wallet.User.Email,
                 amount = t.Amount,

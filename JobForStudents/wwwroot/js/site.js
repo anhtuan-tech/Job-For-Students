@@ -132,6 +132,7 @@
         updateNotificationBadge();
         updateUnreadMessagesBadge();
         setInterval(updateUnreadMessagesBadge, 10000);
+        setInterval(updateNotificationBadge, 10000);
         setInterval(pollActiveChat, 4000);
 
         try {
@@ -220,6 +221,10 @@
                         <span class="item-icon"><i data-lucide="home" style="width:18px;height:18px;"></i></span>
                         Trang chủ
                     </a>
+                    <a href="#" class="sidebar-item" data-nav="profile" id="navBusinessProfile">
+                        <span class="item-icon"><i data-lucide="building-2" style="width:18px;height:18px;"></i></span>
+                        Hồ sơ doanh nghiệp
+                    </a>
                 </div>
                 <div class="sidebar-group">
                     <div class="sidebar-label">QUẢN LÝ TUYỂN DỤNG</div>
@@ -260,7 +265,7 @@
                     </a>
                     <a href="#" class="sidebar-item" data-nav="reviews-business" id="navBusinessReviews">
                         <span class="item-icon"><i data-lucide="star" style="width:18px;height:18px;"></i></span>
-                        Đánh giá sinh viên
+                        Đánh giá
                     </a>
                 </div>
                 <div class="sidebar-group">
@@ -349,6 +354,9 @@
                         break;
                     case 'feedback':
                         renderBusinessFeedbackView();
+                        break;
+                    case 'profile':
+                        renderProfileView();
                         break;
                     default:
                         renderBusinessEmployerHome();
@@ -3621,6 +3629,124 @@
                     </div>
                 </div>
             `;
+        } else if (data.role === 'Business') {
+            const tagline = data.industry ? `${data.industry} | Doanh nghiệp` : 'Doanh nghiệp tuyển dụng';
+            const ratingBadgeHTML = reviewsCount > 0
+                ? `<span class="badge-modern badge-modern-orange">★ ${avgRating} (${reviewsCount} đánh giá)</span>`
+                : `<span class="badge-modern badge-modern-gray"><i data-lucide="star" style="width:13px;height:13px;"></i> Chưa có đánh giá</span>`;
+
+            mainContent.innerHTML = `
+                <div class="profile-modern-container">
+                    <div class="profile-cover-modern">
+                        ${data.coverImageUrl
+                    ? `<img src="${data.coverImageUrl}" class="profile-cover-image" alt="Cover Photo" />`
+                    : ''
+                }
+                    </div>
+
+                    <div class="profile-header-card animate-in">
+                        <div class="profile-header-info">
+                            <div class="profile-avatar-frame">
+                                ${data.logoUrl
+                    ? `<img src="${data.logoUrl}" alt="${escapeHtml(data.companyName)}" id="profileAvatarImg" />`
+                    : `<span>${escapeHtml(initials)}</span>`
+                }
+                            </div>
+                            <div class="profile-meta-text">
+                                <h2>${escapeHtml(data.companyName)}</h2>
+                                <div class="tagline">${escapeHtml(tagline)}</div>
+                                <div class="badge-row">
+                                    ${data.isVerified ? `<span class="badge-modern badge-modern-blue"><i data-lucide="check-circle" style="width:13px;height:13px;"></i> Đã xác minh</span>` : ''}
+                                    ${ratingBadgeHTML}
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;">
+                            <button class="btn-modern-primary" id="btnEditProfile">
+                                <i data-lucide="edit-3" style="width:16px;height:16px;"></i> Chỉnh sửa hồ sơ
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="profile-stats-modern-grid" style="grid-template-columns: repeat(3, 1fr);">
+                        <div class="stat-modern-card animate-in">
+                            <div class="stat-modern-icon"><i data-lucide="briefcase" style="width:20px;height:20px;"></i></div>
+                            <div class="stat-modern-info">
+                                <span class="stat-modern-value">${data.openJobsCount}</span>
+                                <span class="stat-modern-title">Tin tuyển dụng mở</span>
+                            </div>
+                        </div>
+                        <div class="stat-modern-card animate-in">
+                            <div class="stat-modern-icon"><i data-lucide="star" style="width:20px;height:20px;"></i></div>
+                            <div class="stat-modern-info">
+                                <span class="stat-modern-value">${reviewsCount > 0 ? avgRating + ' ★' : 'Chưa có'}</span>
+                                <span class="stat-modern-title">Đánh giá trung bình</span>
+                            </div>
+                        </div>
+                        <div class="stat-modern-card animate-in">
+                            <div class="stat-modern-icon"><i data-lucide="award" style="width:20px;height:20px;"></i></div>
+                            <div class="stat-modern-info">
+                                <span class="stat-modern-value">${data.completedJobsCount}</span>
+                                <span class="stat-modern-title">Dự án hoàn thành</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="profile-content-grid">
+                        <div style="display: flex; flex-direction: column; gap: 24px;">
+                            <div class="profile-card-modern animate-in">
+                                <h3><i data-lucide="info" style="width:16px;height:16px;"></i> Giới thiệu công ty</h3>
+                                <p style="font-size:14px; color: var(--text-secondary); margin:0; line-height: 1.6; white-space: pre-line;">
+                                    ${escapeHtml(data.description || 'Chưa cập nhật giới thiệu công ty.')}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; gap: 24px;">
+                            <div class="profile-card-modern animate-in">
+                                <h3><i data-lucide="building" style="width:16px;height:16px;"></i> Thông tin doanh nghiệp</h3>
+                                <div class="info-list-modern">
+                                    <div class="info-item-modern">
+                                        <i data-lucide="tag" style="width:16px;height:16px;"></i>
+                                        <span class="label">Lĩnh vực:</span>
+                                        <span class="value">${escapeHtml(data.industry || 'Chưa cập nhật')}</span>
+                                    </div>
+                                    <div class="info-item-modern">
+                                        <i data-lucide="users" style="width:16px;height:16px;"></i>
+                                        <span class="label">Quy mô:</span>
+                                        <span class="value">${escapeHtml(data.companySize || 'Chưa cập nhật')}</span>
+                                    </div>
+                                    <div class="info-item-modern">
+                                        <i data-lucide="file-text" style="width:16px;height:16px;"></i>
+                                        <span class="label">Mã số thuế:</span>
+                                        <span class="value">${escapeHtml(data.taxCode || 'Chưa cập nhật')}</span>
+                                    </div>
+                                    <div class="info-item-modern">
+                                        <i data-lucide="globe" style="width:16px;height:16px;"></i>
+                                        <span class="label">Website:</span>
+                                        <span class="value">${data.websiteUrl ? `<a href="${escapeHtml(data.websiteUrl)}" target="_blank">${escapeHtml(data.websiteUrl)}</a>` : 'Chưa cập nhật'}</span>
+                                    </div>
+                                    <div class="info-item-modern">
+                                        <i data-lucide="map-pin" style="width:16px;height:16px;"></i>
+                                        <span class="label">Địa chỉ:</span>
+                                        <span class="value">${escapeHtml(data.address || 'Chưa cập nhật')}</span>
+                                    </div>
+                                    <div class="info-item-modern">
+                                        <i data-lucide="phone" style="width:16px;height:16px;"></i>
+                                        <span class="label">Điện thoại:</span>
+                                        <span class="value">${escapeHtml(data.phone || 'Chưa cập nhật')}</span>
+                                    </div>
+                                    <div class="info-item-modern">
+                                        <i data-lucide="mail" style="width:16px;height:16px;"></i>
+                                        <span class="label">Email liên hệ:</span>
+                                        <span class="value" style="word-break: break-all;">${escapeHtml(data.email)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
         } else if (data.role === 'Admin') {
             const adminTagline = 'Quản trị viên hệ thống';
             const adminActivityHTML = data.reviews && data.reviews.length > 0
@@ -5485,6 +5611,10 @@
     // RENDER: Đánh giá
     // ============================================
     function renderReviewsView() {
+        renderGenericReviewsShell('Student');
+    }
+
+    function renderReviewsViewObsolete() {
         mainContent.innerHTML = `
             <div style="display: flex; align-items: center; justify-content: center; min-height: 250px; flex-direction: column; gap: 16px;">
                 <div class="spinner-border text-info" role="status" style="width: 2rem; height: 2rem;"></div>
@@ -7336,6 +7466,10 @@
     });
 
     function renderBusinessReviewsView() {
+        renderGenericReviewsShell('Business');
+    }
+
+    function renderBusinessReviewsViewObsolete() {
         businessReviewsPage = 1;
         mainContent.innerHTML = `
             <div class="page-header animate-in">
@@ -7576,6 +7710,718 @@
                     showToast('Có lỗi xảy ra khi lưu đánh giá.', 'error');
                 });
         });
+    }
+
+    function renderGenericReviewsShell(role) {
+        const title = 'Đánh giá';
+        const subtitle = role === 'Student'
+            ? 'Quản lý các đánh giá của bạn dành cho doanh nghiệp và các phản hồi qua lại'
+            : 'Quản lý các nhận xét của doanh nghiệp dành cho bạn và các phản hồi qua lại';
+
+        mainContent.innerHTML = `
+            <div class="page-header animate-in">
+                <h1 class="page-title"><i data-lucide="star" style="width:24px;height:24px;color:#F59E0B;"></i> ${title}</h1>
+                <p class="page-subtitle">${subtitle}</p>
+            </div>
+            
+            <div id="reviewsRatingChartContainer" class="animate-in" style="margin-bottom: 24px;"></div>
+            
+            <div class="reviews-tab-nav animate-in" style="margin-bottom: 24px; border-bottom: 1px solid #e2e8f0; display:flex; gap: 8px;">
+                <button class="review-tab-btn active" id="btnTabWrite" style="border:none; border-bottom:2px solid #2563eb; background:none; padding: 10px 16px; font-weight:600; color:#2563eb; cursor:pointer; display:flex; align-items:center; gap:6px;">
+                    <i data-lucide="edit-3" style="width:16px;height:16px;"></i> Viết đánh giá đối tác
+                </button>
+                <button class="review-tab-btn" id="btnTabReceived" style="border:none; border-bottom:2px solid transparent; background:none; padding: 10px 16px; font-weight:600; color:#64748b; cursor:pointer; display:flex; align-items:center; gap:6px;">
+                    <i data-lucide="message-square" style="width:16px;height:16px;"></i> Nhận xét từ đối tác
+                </button>
+            </div>
+            
+            <div id="reviewsContentPanel" class="animate-in">
+                <div style="display: flex; align-items: center; justify-content: center; min-height: 200px; flex-direction: column; gap: 12px;">
+                    <div class="spinner-border text-primary" role="status" style="width: 1.5rem; height: 1.5rem;"></div>
+                    <span style="color:#64748b; font-size:0.9rem;">Đang tải dữ liệu...</span>
+                </div>
+            </div>
+        `;
+
+        if (window.lucide) lucide.createIcons();
+
+        const chartContainer = document.getElementById('reviewsRatingChartContainer');
+        if (chartContainer) {
+            fetch('/Review/GetMyReviews')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        const reviews = data.reviews || [];
+                        const totalCount = reviews.length;
+                        let sum = 0;
+                        const counts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+                        reviews.forEach(r => {
+                            const val = r.rating || 0;
+                            if (val >= 1 && val <= 5) {
+                                counts[val]++;
+                                sum += val;
+                            }
+                        });
+                        const avgRating = totalCount > 0 ? (sum / totalCount) : 0;
+                        const avgRatingStr = avgRating > 0 ? avgRating.toFixed(1).replace('.', ',') : '0,0';
+
+                        const pct5 = totalCount > 0 ? Math.round((counts[5] / totalCount) * 100) : 0;
+                        const pct4 = totalCount > 0 ? Math.round((counts[4] / totalCount) * 100) : 0;
+                        const pct3 = totalCount > 0 ? Math.round((counts[3] / totalCount) * 100) : 0;
+                        const pct2 = totalCount > 0 ? Math.round((counts[2] / totalCount) * 100) : 0;
+                        const pct1 = totalCount > 0 ? Math.round((counts[1] / totalCount) * 100) : 0;
+
+                        const roundedRating = Math.round(avgRating);
+                        const starHTML = '★'.repeat(roundedRating) + '☆'.repeat(5 - roundedRating);
+
+                        chartContainer.innerHTML = `
+                            <style>
+                            @media (max-width: 576px) {
+                                .rating-chart-right {
+                                    border-left: none !important;
+                                    padding-left: 0 !important;
+                                    border-top: 1px solid #e2e8f0;
+                                    padding-top: 20px;
+                                    width: 100%;
+                                }
+                            }
+                            @media (min-width: 577px) {
+                                .rating-chart-right {
+                                    border-left: 1px solid #e2e8f0;
+                                }
+                            }
+                            </style>
+                            <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; display: flex; align-items: center; justify-content: space-between; gap: 40px; flex-wrap: wrap; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+                                <!-- Left: Breakdown bars -->
+                                <div style="flex: 1; min-width: 250px; display: flex; flex-direction: column; gap: 10px;">
+                                    <div style="display: flex; align-items: center; gap: 12px; font-size: 0.9rem; font-weight: 500; color: #475569;">
+                                        <span style="width: 12px; text-align: right;">5</span>
+                                        <div style="flex: 1; height: 8px; background: #f1f5f9; border-radius: 9999px; overflow: hidden; position: relative;">
+                                            <div style="width: ${pct5}%; height: 100%; background: #fbbf24; border-radius: 9999px;"></div>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 12px; font-size: 0.9rem; font-weight: 500; color: #475569;">
+                                        <span style="width: 12px; text-align: right;">4</span>
+                                        <div style="flex: 1; height: 8px; background: #f1f5f9; border-radius: 9999px; overflow: hidden; position: relative;">
+                                            <div style="width: ${pct4}%; height: 100%; background: #fbbf24; border-radius: 9999px;"></div>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 12px; font-size: 0.9rem; font-weight: 500; color: #475569;">
+                                        <span style="width: 12px; text-align: right;">3</span>
+                                        <div style="flex: 1; height: 8px; background: #f1f5f9; border-radius: 9999px; overflow: hidden; position: relative;">
+                                            <div style="width: ${pct3}%; height: 100%; background: #fbbf24; border-radius: 9999px;"></div>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 12px; font-size: 0.9rem; font-weight: 500; color: #475569;">
+                                        <span style="width: 12px; text-align: right;">2</span>
+                                        <div style="flex: 1; height: 8px; background: #f1f5f9; border-radius: 9999px; overflow: hidden; position: relative;">
+                                            <div style="width: ${pct2}%; height: 100%; background: #fbbf24; border-radius: 9999px;"></div>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 12px; font-size: 0.9rem; font-weight: 500; color: #475569;">
+                                        <span style="width: 12px; text-align: right;">1</span>
+                                        <div style="flex: 1; height: 8px; background: #f1f5f9; border-radius: 9999px; overflow: hidden; position: relative;">
+                                            <div style="width: ${pct1}%; height: 100%; background: #fbbf24; border-radius: 9999px;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Right: Avg rating and overall count -->
+                                <div class="rating-chart-right" style="text-align: center; min-width: 180px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-left: 40px;">
+                                    <span style="font-size: 3.5rem; font-weight: 800; color: #0f172a; line-height: 1; margin-bottom: 8px;">${avgRatingStr}</span>
+                                    <div style="color: #fbbf24; font-size: 1.25rem; margin-bottom: 8px; letter-spacing: 2px;">
+                                        ${starHTML}
+                                    </div>
+                                    <span style="font-size: 0.85rem; color: #64748b; font-weight: 600;">${totalCount} đánh giá</span>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        chartContainer.remove();
+                    }
+                })
+                .catch(err => {
+                    console.error('Error loading rating breakdown:', err);
+                    chartContainer.remove();
+                });
+        }
+
+        const btnTabWrite = document.getElementById('btnTabWrite');
+        const btnTabReceived = document.getElementById('btnTabReceived');
+
+        let activeSubTab = 'write';
+
+        function updateTabStyles() {
+            if (activeSubTab === 'write') {
+                btnTabWrite.style.color = '#2563eb';
+                btnTabWrite.style.borderBottomColor = '#2563eb';
+                btnTabReceived.style.color = '#64748b';
+                btnTabReceived.style.borderBottomColor = 'transparent';
+            } else {
+                btnTabReceived.style.color = '#2563eb';
+                btnTabReceived.style.borderBottomColor = '#2563eb';
+                btnTabWrite.style.color = '#64748b';
+                btnTabWrite.style.borderBottomColor = 'transparent';
+            }
+        }
+
+        btnTabWrite.addEventListener('click', () => {
+            if (activeSubTab === 'write') return;
+            activeSubTab = 'write';
+            updateTabStyles();
+            loadWriteReviewsTab(role);
+        });
+
+        btnTabReceived.addEventListener('click', () => {
+            if (activeSubTab === 'received') return;
+            activeSubTab = 'received';
+            updateTabStyles();
+            loadReceivedReviewsTab(role);
+        });
+
+        loadWriteReviewsTab(role);
+    }
+
+    function loadWriteReviewsTab(role) {
+        const panel = document.getElementById('reviewsContentPanel');
+        if (!panel) return;
+
+        panel.innerHTML = `
+            <div style="display: flex; align-items: center; justify-content: center; min-height: 200px; flex-direction: column; gap: 12px;">
+                <div class="spinner-border text-primary" role="status" style="width: 1.5rem; height: 1.5rem;"></div>
+                <span style="color:#64748b; font-size:0.9rem;">Đang tải danh sách hợp đồng...</span>
+            </div>
+        `;
+
+        const storageKey = 'j4s_pagesize_write_reviews';
+        let pageSize = Number(localStorage.getItem(storageKey)) || 10;
+        let currentPage = 1;
+
+        const url = role === 'Student'
+            ? '/Review/GetStudentCompletedContracts'
+            : '/Review/GetBusinessCompletedContracts';
+
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    panel.innerHTML = `<div class="alert alert-danger">${escapeHtml(data.message || 'Lỗi khi tải dữ liệu.')}</div>`;
+                    return;
+                }
+
+                const contracts = data.contracts || [];
+                if (contracts.length === 0) {
+                    panel.innerHTML = `
+                        <div style="text-align:center; padding:40px; background:#fff; border-radius:12px; border:1px solid #e2e8f0;">
+                            <div style="font-size:2.5rem; margin-bottom:12px;">💼</div>
+                            <h3 style="font-size:1.1rem; font-weight:700; color:#1e293b; margin:0 0 6px 0;">Chưa có hợp đồng nào hoàn thành</h3>
+                            <p style="font-size:0.9rem; color:#64748b; margin:0;">Sau khi dự án hoàn thành, bạn có thể đánh giá đối tác tại đây.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                panel.innerHTML = `
+                    <div id="writeReviewsListContainer" style="display:flex; flex-direction:column; gap:16px;"></div>
+                    <div id="writeReviewsPagination" style="display:flex; align-items:center; justify-content:space-between; margin-top:20px; padding-top:16px; border-top:1px solid #e2e8f0; flex-wrap:wrap; gap:12px;"></div>
+                `;
+
+                function renderPage(page) {
+                    currentPage = page;
+                    const totalPages = Math.ceil(contracts.length / pageSize);
+                    if (currentPage > totalPages) {
+                        currentPage = Math.max(1, totalPages);
+                    }
+
+                    const startIndex = (currentPage - 1) * pageSize;
+                    const pageContracts = contracts.slice(startIndex, startIndex + pageSize);
+
+                    const reviewsHTML = pageContracts.map(c => {
+                        let actionHTML = '';
+                        if (c.hasReview) {
+                            if (c.review.canEdit) {
+                                actionHTML = `<button class="btn btn-sm btn-outline-primary rounded-pill px-3 btn-edit-generic-review" data-contract-id="${c.contractId}"><i data-lucide="edit-3" style="width:14px;height:14px;margin-right:4px;"></i> Chỉnh sửa</button>`;
+                            } else {
+                                actionHTML = `<span class="text-muted small d-inline-flex align-items-center gap-1"><i data-lucide="lock" style="width:14px;height:14px;"></i> Đã khóa (Quá 24h)</span>`;
+                            }
+                        } else {
+                            actionHTML = `<button class="btn btn-sm btn-primary rounded-pill px-3 btn-write-generic-review" style="background:#0ea5e9; border:none;" data-contract-id="${c.contractId}"><i data-lucide="star" style="width:14px;height:14px;margin-right:4px;"></i> Viết đánh giá</button>`;
+                        }
+
+                        const avatarChar = (c.partnerName || "K").substring(0, 2).toUpperCase();
+
+                        return `
+                            <div class="review-modern-item animate-in" style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; background:#fff; display:flex; justify-content:space-between; align-items:flex-start; gap:16px;">
+                                <div style="display:flex; gap:16px; align-items:flex-start; width: 100%;">
+                                    <div class="user-avatar" style="width:48px; height:48px; border-radius:50%; overflow:hidden; background:#e2e8f0; flex-shrink:0;">
+                                        ${c.partnerAvatar ? `<img src="${c.partnerAvatar}" style="width:100%; height:100%; object-fit:cover;" />` : `<span style="display:flex; width:100%; height:100%; align-items:center; justify-content:center; font-weight:700; color:#475569;">${avatarChar}</span>`}
+                                    </div>
+                                    <div style="flex-grow: 1;">
+                                        <h5 style="margin:0 0 4px 0; font-size:1rem; font-weight:700; color:#1e293b;">${escapeHtml(c.partnerName)}</h5>
+                                        <p style="margin:0 0 6px 0; font-size:0.85rem; color:#64748b;">Dự án: <strong>${escapeHtml(c.jobTitle)}</strong></p>
+                                        <small class="text-muted" style="font-size:0.75rem;">Hoàn thành lúc: ${escapeHtml(c.completedAt)}</small>
+                                        
+                                        ${c.hasReview && c.review ? `
+                                            <div style="margin-top:10px; border-top:1px solid #f1f5f9; padding-top:8px;">
+                                                <div style="color:#fbbf24; font-size:0.95rem; margin-bottom:4px;">
+                                                    ${'★'.repeat(c.review.rating || 0)}${'☆'.repeat(5 - (c.review.rating || 0))}
+                                                    <span class="text-muted small" style="margin-left:4px; font-weight:600;">(${c.review.rating || 0}/5)</span>
+                                                </div>
+                                                <p style="margin:0; font-size:0.9rem; color:#334155; font-style:italic;">"${escapeHtml(c.review.comment || '')}"</p>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                                <div style="flex-shrink:0;">
+                                    ${actionHTML}
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    const listContainer = document.getElementById('writeReviewsListContainer');
+                    if (listContainer) {
+                        listContainer.innerHTML = reviewsHTML;
+                    }
+
+                    const paginationEl = document.getElementById('writeReviewsPagination');
+                    renderGenericPaginationControls(
+                        paginationEl,
+                        contracts.length,
+                        totalPages,
+                        currentPage,
+                        pageSize,
+                        (newSize) => {
+                            pageSize = newSize;
+                            currentPage = 1;
+                            renderPage(1);
+                        },
+                        (newPage) => {
+                            renderPage(newPage);
+                        },
+                        storageKey
+                    );
+
+                    if (window.lucide) lucide.createIcons();
+                    bindEvents();
+                }
+
+                function bindEvents() {
+                    panel.querySelectorAll('.btn-write-generic-review, .btn-edit-generic-review').forEach(btn => {
+                        btn.addEventListener('click', function () {
+                            const contractId = parseInt(this.dataset.contractId);
+                            const c = contracts.find(item => item.contractId === contractId);
+                            if (c) {
+                                openGenericReviewModal(
+                                    role,
+                                    c.contractId,
+                                    c.partnerName,
+                                    c.review ? c.review.rating : 5,
+                                    c.review ? c.review.comment : ''
+                                );
+                            }
+                        });
+                    });
+                }
+
+                renderPage(1);
+            })
+            .catch(err => {
+                console.error(err);
+                panel.innerHTML = `<div class="alert alert-danger">Không thể kết nối đến máy chủ.</div>`;
+            });
+    }
+
+    function openGenericReviewModal(role, contractId, partnerName, currentRating = 5, currentComment = '') {
+        document.getElementById('j4sReviewModal')?.remove();
+        const partnerLabel = role === 'Student' ? 'doanh nghiệp' : 'sinh viên';
+        const modalHTML = `
+            <div class="modal fade" id="j4sReviewModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+                <div class="modal-dialog modal-dialog-centered" style="max-width: 450px;">
+                    <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+                        <div class="modal-header border-0 pb-0" style="padding: 20px 20px 0 20px;">
+                            <h5 class="modal-title fw-bold text-slate-800" id="reviewModalTitle">${currentComment ? 'Chỉnh sửa đánh giá' : 'Viết đánh giá cho ' + partnerLabel}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body p-4">
+                            <div class="text-center mb-3">
+                                <p class="text-slate-600 font-semibold mb-1">Đối tác: <strong>${escapeHtml(partnerName)}</strong></p>
+                                <div class="review-stars-input d-flex justify-content-center gap-2 my-2" style="font-size: 2rem; cursor: pointer; color: #cbd5e1;">
+                                    <span data-star="1">★</span>
+                                    <span data-star="2">★</span>
+                                    <span data-star="3">★</span>
+                                    <span data-star="4">★</span>
+                                    <span data-star="5">★</span>
+                                </div>
+                                <input type="hidden" id="reviewRatingInput" value="${currentRating || 5}" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-slate-700 fw-bold small">Nhận xét của bạn (Tối thiểu 10 ký tự)</label>
+                                <textarea id="reviewCommentInput" class="form-control" rows="4" style="border-radius:10px; font-size:0.9rem;" placeholder="Nhập phản hồi, thái độ làm việc, chất lượng công việc...">${escapeHtml(currentComment)}</textarea>
+                            </div>
+                            <div class="d-flex gap-2 justify-content-end">
+                                <button type="button" class="btn btn-light rounded-pill px-4 py-2 fw-semibold text-slate-600 small" style="border: 1px solid #e2e8f0; font-size: 0.85rem;" data-bs-dismiss="modal">Hủy</button>
+                                <button type="button" id="btnSubmitReview" class="btn btn-primary rounded-pill px-4 py-2 fw-bold small" style="background: #0ea5e9; border: none; font-size: 0.85rem;">Gửi đánh giá</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        const modalEl = document.getElementById('j4sReviewModal');
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+
+        const stars = modalEl.querySelectorAll('.review-stars-input span');
+        const ratingInput = document.getElementById('reviewRatingInput');
+
+        function highlightStars(val) {
+            stars.forEach(star => {
+                const sVal = parseInt(star.dataset.star);
+                if (sVal <= val) {
+                    star.style.color = '#fbbf24';
+                } else {
+                    star.style.color = '#cbd5e1';
+                }
+            });
+        }
+
+        highlightStars(parseInt(ratingInput.value));
+
+        stars.forEach(star => {
+            star.addEventListener('click', () => {
+                const val = parseInt(star.dataset.star);
+                ratingInput.value = val;
+                highlightStars(val);
+            });
+            star.addEventListener('mouseover', () => {
+                highlightStars(parseInt(star.dataset.star));
+            });
+            star.addEventListener('mouseout', () => {
+                highlightStars(parseInt(ratingInput.value));
+            });
+        });
+
+        document.getElementById('btnSubmitReview').addEventListener('click', () => {
+            const rating = parseInt(ratingInput.value);
+            const comment = document.getElementById('reviewCommentInput').value.trim();
+
+            if (isNaN(rating) || rating < 1 || rating > 5) {
+                showToast('Vui lòng chọn số sao từ 1 đến 5.', 'warning');
+                return;
+            }
+
+            if (!comment || comment.length < 10) {
+                showToast('Nội dung nhận xét phải tối thiểu 10 ký tự.', 'warning');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('contractId', contractId);
+            formData.append('rating', rating);
+            formData.append('comment', comment);
+
+            fetch('/Review/SaveReview', {
+                method: 'POST',
+                body: formData
+            })
+                .then(r => r.json())
+                .then(data => {
+                    showToast(data.message || 'Đã gửi đánh giá thành công.', data.success ? 'success' : 'error');
+                    if (data.success) {
+                        modal.hide();
+                        modalEl.addEventListener('hidden.bs.modal', () => {
+                            modalEl.remove();
+                            loadWriteReviewsTab(role);
+                        }, { once: true });
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    showToast('Có lỗi xảy ra khi lưu đánh giá.', 'error');
+                });
+        });
+    }
+
+    function loadReceivedReviewsTab(role) {
+        const panel = document.getElementById('reviewsContentPanel');
+        if (!panel) return;
+
+        panel.innerHTML = `
+            <div style="display: flex; align-items: center; justify-content: center; min-height: 200px; flex-direction: column; gap: 12px;">
+                <div class="spinner-border text-primary" role="status" style="width: 1.5rem; height: 1.5rem;"></div>
+                <span style="color:#64748b; font-size:0.9rem;">Đang tải nhận xét...</span>
+            </div>
+        `;
+
+        const storageKey = 'j4s_pagesize_received_reviews';
+        let pageSize = Number(localStorage.getItem(storageKey)) || 10;
+        let currentPage = 1;
+
+        fetch('/Review/GetMyReviews')
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    panel.innerHTML = `<div class="alert alert-danger">${escapeHtml(data.message || 'Lỗi khi tải dữ liệu.')}</div>`;
+                    return;
+                }
+
+                const dbReviews = data.reviews || [];
+                if (dbReviews.length === 0) {
+                    panel.innerHTML = `
+                        <div style="text-align:center; padding:40px; background:#fff; border-radius:12px; border:1px solid #e2e8f0;">
+                            <div style="font-size:2.5rem; margin-bottom:12px;">💬</div>
+                            <h3 style="font-size:1.1rem; font-weight:700; color:#1e293b; margin:0 0 6px 0;">Chưa nhận được đánh giá nào</h3>
+                            <p style="font-size:0.9rem; color:#64748b; margin:0;">Khi đối tác gửi nhận xét cho bạn, thông tin sẽ hiển thị tại đây.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                panel.innerHTML = `
+                    <div id="receivedReviewsListContainer" style="display:flex; flex-direction:column; gap:20px;"></div>
+                    <div id="receivedReviewsPagination" style="display:flex; align-items:center; justify-content:space-between; margin-top:20px; padding-top:16px; border-top:1px solid #e2e8f0; flex-wrap:wrap; gap:12px;"></div>
+                `;
+
+                const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
+
+                function renderPage(page) {
+                    currentPage = page;
+                    const totalPages = Math.ceil(dbReviews.length / pageSize);
+                    if (currentPage > totalPages) {
+                        currentPage = Math.max(1, totalPages);
+                    }
+
+                    const startIndex = (currentPage - 1) * pageSize;
+                    const pageReviews = dbReviews.slice(startIndex, startIndex + pageSize);
+
+                    const reviewsHTML = pageReviews.map((r, idx) => {
+                        const avatarColor = colors[idx % colors.length];
+                        const initials = (r.reviewer || "K").split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                        const partnerText = role === 'Student' ? 'doanh nghiệp' : 'sinh viên';
+
+                        const repliesHTML = (r.replies || []).map(rep => {
+                            const isSelfReply = rep.reviewer === r.reviewer ? false : true;
+                            const replyAvatarInitials = (rep.reviewer || "K").split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                            return `
+                                <div class="review-reply-box animate-in" style="margin-top:10px; background:${isSelfReply ? '#f0fdf4' : '#f8fafc'}; border:1px solid ${isSelfReply ? '#bbf7d0' : '#e2e8f0'}; border-radius:8px; padding:10px 12px; font-size:0.85rem;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                        <div style="display:flex; align-items:center; gap:6px;">
+                                            <div style="width:20px; height:20px; border-radius:50%; background:#e2e8f0; font-size:9px; display:flex; align-items:center; justify-content:center; font-weight:700; color:#475569;">${replyAvatarInitials}</div>
+                                            <strong style="color:${isSelfReply ? '#15803d' : '#334155'};">${escapeHtml(rep.reviewer)} ${isSelfReply ? '(Bạn)' : `(${partnerText})`}</strong>
+                                        </div>
+                                        <span style="font-size:0.75rem; color:#64748b;">${escapeHtml(rep.date)}</span>
+                                    </div>
+                                    <p style="margin:0; color:#334155; font-style:italic;">"${escapeHtml(rep.comment)}"</p>
+                                </div>
+                            `;
+                        }).join('');
+
+                        const ownReply = (r.replies || []).find(rep => rep.isOwnReply);
+                        let replyActionHTML = '';
+                        if (ownReply) {
+                            if (ownReply.canEdit) {
+                                replyActionHTML = `<button class="btn-generic-reply-trigger" style="border:none; background:none; padding:4px 8px; font-weight:600; color:#2563eb; font-size:0.8rem; cursor:pointer; display:flex; align-items:center; gap:4px;" data-id="${r.id}"><i data-lucide="edit-3" style="width:14px;height:14px;"></i> Chỉnh sửa phản hồi</button>`;
+                            } else {
+                                replyActionHTML = `<span class="text-muted small d-inline-flex align-items-center gap-1" style="font-size:0.8rem; padding:4px 8px;"><i data-lucide="lock" style="width:12px;height:12px;"></i> Phản hồi đã khóa (Quá 24h)</span>`;
+                            }
+                        } else {
+                            replyActionHTML = `<button class="btn-generic-reply-trigger" style="border:none; background:none; padding:4px 8px; font-weight:600; color:#2563eb; font-size:0.8rem; cursor:pointer; display:flex; align-items:center; gap:4px;" data-id="${r.id}"><i data-lucide="message-square" style="width:14px;height:14px;"></i> Phản hồi</button>`;
+                        }
+
+                        return `
+                            <div class="review-card ${r.isReported ? 'reported-dimmed' : ''}" style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; background:#fff; margin-bottom:0;" data-id="${r.id}">
+                                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; flex-wrap:wrap; gap:12px;">
+                                    <div style="display:flex; gap:12px; align-items:center;">
+                                        <div style="width:40px; height:40px; border-radius:50%; overflow:hidden; background: linear-gradient(135deg, ${avatarColor}, ${avatarColor}aa); display:flex; align-items:center; justify-content:center; font-weight:700; color:#fff; flex-shrink:0;">
+                                            ${r.reviewerAvatar ? `<img src="${r.reviewerAvatar}" style="width:100%; height:100%; object-fit:cover;" />` : `<span>${initials}</span>`}
+                                        </div>
+                                        <div>
+                                            <div style="font-weight:700; color:#1e293b; font-size:0.95rem;">${escapeHtml(r.reviewer)} <span style="font-weight:400; color:#64748b; font-size:0.8rem;">(${partnerText})</span></div>
+                                            <div style="font-size:0.8rem; color:#64748b; display:flex; align-items:center; gap:4px;"><i data-lucide="briefcase" style="width:12px;height:12px;"></i> ${escapeHtml(r.project)}</div>
+                                        </div>
+                                    </div>
+                                    <div style="text-align:right;">
+                                        <div style="color:#fbbf24; font-size:0.95rem; margin-bottom:2px;">
+                                            ${'★'.repeat(r.rating || 0)}${'☆'.repeat(5 - (r.rating || 0))}
+                                        </div>
+                                        <small style="color:#64748b; font-size:0.75rem;">${escapeHtml(r.date)}</small>
+                                    </div>
+                                </div>
+                                
+                                <p style="margin:0 0 12px 0; font-size:0.9rem; color:#334155; font-style:italic; line-height:1.5;">"${escapeHtml(r.comment)}"</p>
+                                
+                                ${repliesHTML}
+                                
+                                <div style="margin-top:14px; border-top:1px dashed #e2e8f0; padding-top:12px;">
+                                    <div style="display:flex; gap:8px; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+                                        <div style="display:flex; gap:8px;">
+                                            ${r.isReported ? `
+                                                <span class="report-badge pending" style="background:#fef3c7; color:#b45309; font-size:0.75rem; padding:4px 8px; border-radius:12px; display:inline-flex; align-items:center; gap:4px;"><i data-lucide="alert-triangle" style="width:12px;height:12px;"></i> Đang xem xét báo cáo không phù hợp</span>
+                                            ` : `
+                                                ${replyActionHTML}
+                                                <button class="btn-generic-report-trigger" style="border:none; background:none; padding:4px 8px; font-weight:600; color:#94a3b8; font-size:0.8rem; cursor:pointer; display:flex; align-items:center; gap:4px;" data-id="${r.id}"><i data-lucide="flag" style="width:14px;height:14px;"></i> Báo cáo</button>
+                                            `}
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="replyArea-${r.id}" style="display:none; margin-top:10px;">
+                                        <textarea id="replyText-${r.id}" class="form-control" rows="2" style="font-size:0.85rem; border-radius:8px;" placeholder="Nhập nội dung phản hồi (tối thiểu 10 ký tự)..."></textarea>
+                                        <div style="display:flex; gap:6px; justify-content:flex-end; margin-top:6px;">
+                                            <button class="btn btn-sm btn-light btn-generic-reply-cancel" style="font-size:0.75rem; border-radius:12px;" data-id="${r.id}">Hủy</button>
+                                            <button class="btn btn-sm btn-primary btn-generic-reply-submit" style="font-size:0.75rem; background:#2563eb; border:none; border-radius:12px;" data-id="${r.id}">Gửi phản hồi</button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="reportArea-${r.id}" style="display:none; margin-top:10px; background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:10px;">
+                                        <div style="font-size:0.8rem; font-weight:700; color:#92400E; margin-bottom:6px;">Lý do báo cáo không phù hợp:</div>
+                                        <div style="display:flex; flex-direction:column; gap:4px; font-size:0.8rem; color:#4B5563;">
+                                            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="radio" name="reportReason-${r.id}" value="Thông tin sai sự thật" checked> Đánh giá không đúng sự thật, bôi nhọ</label>
+                                            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="radio" name="reportReason-${r.id}" value="Ngôn từ thô tục"> Có ngôn từ thiếu văn hóa, công kích</label>
+                                            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="radio" name="reportReason-${r.id}" value="Spam/Quảng cáo"> Spam quảng cáo hoặc không liên quan</label>
+                                        </div>
+                                        <div style="display:flex; gap:6px; justify-content:flex-end; margin-top:8px;">
+                                            <button class="btn btn-sm btn-light btn-generic-report-cancel" style="font-size:0.75rem; border-radius:12px;" data-id="${r.id}">Hủy</button>
+                                            <button class="btn btn-sm btn-warning btn-generic-report-submit" style="font-size:0.75rem; border-radius:12px; color:#fff;" data-id="${r.id}">Báo cáo</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    const listContainer = document.getElementById('receivedReviewsListContainer');
+                    if (listContainer) {
+                        listContainer.innerHTML = reviewsHTML;
+                    }
+
+                    const paginationEl = document.getElementById('receivedReviewsPagination');
+                    renderGenericPaginationControls(
+                        paginationEl,
+                        dbReviews.length,
+                        totalPages,
+                        currentPage,
+                        pageSize,
+                        (newSize) => {
+                            pageSize = newSize;
+                            currentPage = 1;
+                            renderPage(1);
+                        },
+                        (newPage) => {
+                            renderPage(newPage);
+                        },
+                        storageKey
+                    );
+
+                    if (window.lucide) lucide.createIcons();
+                    bindEvents();
+                }
+
+                function bindEvents() {
+                    panel.querySelectorAll('.btn-generic-reply-trigger').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            const id = btn.dataset.id;
+                            const reviewObj = dbReviews.find(rev => rev.id == id);
+                            const ownReply = (reviewObj?.replies || []).find(rep => rep.isOwnReply);
+                            const textarea = document.getElementById(`replyText-${id}`);
+                            if (ownReply && textarea) {
+                                textarea.value = ownReply.comment;
+                            } else if (textarea) {
+                                textarea.value = '';
+                            }
+                            document.getElementById(`replyArea-${id}`).style.display = 'block';
+                            document.getElementById(`reportArea-${id}`).style.display = 'none';
+                        });
+                    });
+
+                    panel.querySelectorAll('.btn-generic-reply-cancel').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            const id = btn.dataset.id;
+                            document.getElementById(`replyArea-${id}`).style.display = 'none';
+                        });
+                    });
+
+                    panel.querySelectorAll('.btn-generic-report-trigger').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            const id = btn.dataset.id;
+                            document.getElementById(`reportArea-${id}`).style.display = 'block';
+                            document.getElementById(`replyArea-${id}`).style.display = 'none';
+                        });
+                    });
+
+                    panel.querySelectorAll('.btn-generic-report-cancel').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            const id = btn.dataset.id;
+                            document.getElementById(`reportArea-${id}`).style.display = 'none';
+                        });
+                    });
+
+                    panel.querySelectorAll('.btn-generic-reply-submit').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            const id = parseInt(btn.dataset.id);
+                            const text = document.getElementById(`replyText-${id}`).value.trim();
+                            if (!text || text.length < 10) {
+                                showToast('Phản hồi phải tối thiểu 10 ký tự.', 'warning');
+                                return;
+                            }
+
+                            const formData = new FormData();
+                            formData.append('parentReviewId', id);
+                            formData.append('comment', text);
+
+                            fetch('/Review/Reply', {
+                                method: 'POST',
+                                body: formData
+                            })
+                                .then(res => res.json())
+                                .then(resData => {
+                                    showToast(resData.message || 'Đã gửi phản hồi thành công.', resData.success ? 'success' : 'error');
+                                    if (resData.success) {
+                                        loadReceivedReviewsTab(role);
+                                    }
+                                })
+                                .catch(err => {
+                                    console.error(err);
+                                    showToast('Có lỗi xảy ra khi phản hồi.', 'error');
+                                });
+                        });
+                    });
+
+                    panel.querySelectorAll('.btn-generic-report-submit').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            const id = parseInt(btn.dataset.id);
+                            const reason = panel.querySelector(`input[name="reportReason-${id}"]:checked`)?.value || "Lý do khác";
+
+                            const formData = new FormData();
+                            formData.append('id', id);
+                            formData.append('reason', reason);
+
+                            fetch('/Review/Report', {
+                                method: 'POST',
+                                body: formData
+                            })
+                                .then(res => res.json())
+                                .then(resData => {
+                                    showToast(resData.message || 'Báo cáo thành công.', resData.success ? 'success' : 'error');
+                                    if (resData.success) {
+                                        loadReceivedReviewsTab(role);
+                                    }
+                                })
+                                .catch(err => {
+                                    console.error(err);
+                                    showToast('Có lỗi xảy ra khi báo cáo.', 'error');
+                                });
+                        });
+                    });
+                }
+
+                renderPage(1);
+            })
+            .catch(err => {
+                console.error(err);
+                panel.innerHTML = `<div class="alert alert-danger">Không thể kết nối đến máy chủ.</div>`;
+            });
     }
 
     window.openReviewModal = openReviewModal;
