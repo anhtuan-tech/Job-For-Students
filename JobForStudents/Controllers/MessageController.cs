@@ -44,6 +44,17 @@ public class MessageController : Controller
 
         var contactUserIds = sentUserIds.Union(receivedUserIds).ToList();
 
+        // Get last message time for each conversation
+        var lastMessageTimes = await _context.Messages
+            .Where(m => m.SenderId == currentUserId.Value || m.ReceiverId == currentUserId.Value)
+            .GroupBy(m => m.SenderId == currentUserId.Value ? m.ReceiverId : m.SenderId)
+            .Select(g => new
+            {
+                ContactId = g.Key,
+                LastMessageTime = g.Max(m => m.SentAt)
+            })
+            .ToDictionaryAsync(x => x.ContactId, x => x.LastMessageTime);
+
         var contacts = await _context.Users
             .Include(u => u.StudentProfile)
             .Include(u => u.BusinessProfile)
@@ -58,7 +69,11 @@ public class MessageController : Controller
             })
             .ToListAsync();
 
-        return Json(new { success = true, contacts });
+        var sortedContacts = contacts
+            .OrderByDescending(c => lastMessageTimes.ContainsKey(c.Id) ? lastMessageTimes[c.Id] : DateTime.MinValue)
+            .ToList();
+
+        return Json(new { success = true, contacts = sortedContacts });
     }
 
     [HttpGet]
@@ -99,6 +114,17 @@ public class MessageController : Controller
             contactUserIds.Add(userId.Value);
         }
 
+        // Get last message time for each conversation
+        var lastMessageTimes = await _context.Messages
+            .Where(m => m.SenderId == currentUserId.Value || m.ReceiverId == currentUserId.Value)
+            .GroupBy(m => m.SenderId == currentUserId.Value ? m.ReceiverId : m.SenderId)
+            .Select(g => new
+            {
+                ContactId = g.Key,
+                LastMessageTime = g.Max(m => m.SentAt)
+            })
+            .ToDictionaryAsync(x => x.ContactId, x => x.LastMessageTime);
+
         var contacts = await _context.Users
             .Include(u => u.StudentProfile)
             .Include(u => u.BusinessProfile)
@@ -111,9 +137,14 @@ public class MessageController : Controller
             })
             .ToListAsync();
 
+        // Sort: currently selected userId at the very top, others by last message time descending
+        var sortedContacts = contacts
+            .OrderByDescending(c => c.Id == userId ? DateTime.MaxValue : (lastMessageTimes.ContainsKey(c.Id) ? lastMessageTimes[c.Id] : DateTime.MinValue))
+            .ToList();
+
         ViewBag.CurrentUserId = currentUserId.Value;
         ViewBag.SelectedUserId = userId;
-        ViewBag.Contacts = contacts;
+        ViewBag.Contacts = sortedContacts;
 
         return View();
     }
