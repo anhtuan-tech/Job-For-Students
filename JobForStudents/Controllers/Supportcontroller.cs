@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using JobForStudents.Data;
+using JobForStudents.Helpers;
 using JobForStudents.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -97,7 +98,7 @@ public class SupportController : Controller
                 supportRequest.Subject,
                 Category = CategoryLabel(supportRequest.Category),
                 Status = StatusLabel(supportRequest.Status),
-                CreatedAt = supportRequest.CreatedAt.ToString("HH:mm dd/MM/yyyy")
+                CreatedAt = VietnamTime.Format(supportRequest.CreatedAt, "HH:mm dd/MM/yyyy")
             }
         });
     }
@@ -128,7 +129,7 @@ public class SupportController : Controller
             sr.Subject,
             Category = CategoryLabel(sr.Category),
             Status = StatusLabel(sr.Status),
-            CreatedAt = sr.CreatedAt.ToString("HH:mm dd/MM/yyyy")
+            CreatedAt = VietnamTime.Format(sr.CreatedAt, "HH:mm dd/MM/yyyy")
         });
 
         return Json(new { success = true, requests = result });
@@ -169,7 +170,7 @@ public class SupportController : Controller
             Category = CategoryLabel(sr.Category),
             Status = sr.Status.ToString(),
             StatusLabel = StatusLabel(sr.Status),
-            CreatedAt = sr.CreatedAt.ToString("HH:mm dd/MM/yyyy"),
+            CreatedAt = VietnamTime.Format(sr.CreatedAt, "HH:mm dd/MM/yyyy"),
             sr.UserEmail,
             sr.UserName
         });

@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using JobForStudents.Data;
+using JobForStudents.Helpers;
 using JobForStudents.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -165,7 +166,7 @@ public class MessageController : Controller
                 m.SenderId,
                 m.ReceiverId,
                 m.Content,
-                SentAt = m.SentAt.ToString("HH:mm dd/MM/yyyy"),
+                SentAt = VietnamTime.Format(m.SentAt, "HH:mm dd/MM/yyyy"),
                 IsMine = m.SenderId == currentUserId.Value
             })
             .ToListAsync();
@@ -232,7 +233,7 @@ public class MessageController : Controller
             message.SenderId,
             message.ReceiverId,
             message.Content,
-            SentAt = message.SentAt.ToString("HH:mm dd/MM/yyyy"),
+            SentAt = VietnamTime.Format(message.SentAt, "HH:mm dd/MM/yyyy"),
             IsMine = true
         }});
     }

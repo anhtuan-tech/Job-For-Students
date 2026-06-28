@@ -1,0 +1,40 @@
+@{
+    ViewData["Title"] = "Block DevTool";
+    var returnUrl = ViewData["ReturnUrl"]?.ToString() ?? "/";
+}
+
+<main class="devtool-block-page">
+    <section class="devtool-block-card">
+        <div class="devtool-block-mark">J4S</div>
+        <h1>Access Paused</h1>
+        <p>You have triggered the Developer Tools. Please close them; the page will automatically return to J4S once it is safe to do so.</p>
+        <button type="button" id="btnRetryAfterDevToolBlock" class="devtool-block-button" data-return-url="@returnUrl">Retry</button>
+    </section>
+</main>
+
+<script>
+    (function () {
+        const returnUrl = new URL('@Html.Raw(System.Web.HttpUtility.JavaScriptStringEncode(returnUrl))', window.location.origin);
+        const publicSafePaths = ['/auth/login', '/auth/register', '/auth/forgotpassword', '/auth/accessdenied'];
+        const pathname = returnUrl.pathname.toLowerCase();
+        const isPublicSafe = publicSafePaths.some(path => pathname === path || pathname.startsWith(path + '/'));
+
+        function goBack() {
+            if (returnUrl.origin === window.location.origin) {
+                window.location.replace(returnUrl.pathname + returnUrl.search + returnUrl.hash);
+            } else {
+                window.location.replace('/');
+            }
+        }
+
+        document.getElementById('btnRetryAfterDevToolBlock')?.addEventListener('click', function () {
+            if (isPublicSafe) {
+                goBack();
+            }
+        });
+
+        if (isPublicSafe) {
+            window.setTimeout(goBack, 600);
+        }
+    })();
+</script>

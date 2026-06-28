@@ -279,6 +279,9 @@
     <!-- Bootstrap 5 Bundle JS with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
+    <!-- Best-effort browser guard. This is a deterrent, not a security boundary. -->
+    <script src="~/js/browser-guard.js" asp-append-version="true"></script>
+
     <!-- Initialize Lucide Icons & Toast Helper -->
     <script>
         lucide.createIcons();
@@ -388,6 +391,15 @@
                 let activeContactName = '';
                 let pollingInterval = null;
 
+                function escapeHtml(value) {
+                    return String(value ?? '')
+                        .replaceAll('&', '&amp;')
+                        .replaceAll('<', '&lt;')
+                        .replaceAll('>', '&gt;')
+                        .replaceAll('"', '&quot;')
+                        .replaceAll("'", '&#39;');
+                }
+
                 // Poll unread messages count every 15 seconds
                 function updateUnreadBadge() {
                     fetch('/Message/GetUnreadCount')
@@ -461,15 +473,17 @@
 
                                 panelBody.innerHTML = '';
                                 data.contacts.forEach(c => {
-                                    const initials = c.fullName.substring(0, 2).toUpperCase();
-                                    const avatarContent = c.avatarUrl ? `<img src="${c.avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />` : initials;
+                                    const safeName = escapeHtml(c.fullName);
+                                    const safeAvatarUrl = escapeHtml(c.avatarUrl || '');
+                                    const initials = safeName.substring(0, 2).toUpperCase();
+                                    const avatarContent = safeAvatarUrl ? `<img src="${safeAvatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />` : initials;
                                     const unreadDot = c.unreadCount > 0 ? `<div style="background:#ef4444;color:white;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;margin-left:auto;flex-shrink:0;">${c.unreadCount}</div>` : '';
                                     const itemHTML = `
-                                        <div class="chat-bubble-contact-item" data-id="${c.id}" data-name="${c.fullName}" data-avatar="${c.avatarUrl || ''}">
+                                        <div class="chat-bubble-contact-item" data-id="${c.id}" data-name="${safeName}" data-avatar="${safeAvatarUrl}">
                                             <div class="chat-bubble-avatar">${avatarContent}</div>
                                             <div class="chat-bubble-contact-info" style="display:flex;align-items:center;width:100%;gap:8px;">
                                                 <div style="flex-grow:1;min-width:0;">
-                                                    <div class="chat-bubble-contact-name" style="${c.unreadCount > 0 ? 'font-weight: 800;' : ''}">${c.fullName}</div>
+                                                    <div class="chat-bubble-contact-name" style="${c.unreadCount > 0 ? 'font-weight: 800;' : ''}">${safeName}</div>
                                                     <div class="chat-bubble-contact-role">${c.role === 'Student' ? 'Sinh viên' : 'Doanh nghiệp'}</div>
                                                 </div>
                                                 ${unreadDot}
@@ -498,12 +512,14 @@
                     const item = panelBody.querySelector(`.chat-bubble-contact-item[data-id="${activeContactId}"]`);
                     const avatarUrl = item ? item.dataset.avatar : '';
                     const initials = activeContactName.substring(0, 2).toUpperCase();
-                    const avatarHTML = avatarUrl ? `<img src="${avatarUrl}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;" />` : `<div class="chat-bubble-avatar" style="width:28px;height:28px;font-size:11px;">${initials}</div>`;
+                    const safeActiveName = escapeHtml(activeContactName);
+                    const safeAvatarUrl = escapeHtml(avatarUrl);
+                    const avatarHTML = safeAvatarUrl ? `<img src="${safeAvatarUrl}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;" />` : `<div class="chat-bubble-avatar" style="width:28px;height:28px;font-size:11px;">${initials}</div>`;
 
                     panelTitle.innerHTML = `
                         <div style="display:flex;align-items:center;gap:8px;">
                             ${avatarHTML}
-                            <span style="font-weight:700;">${activeContactName}</span>
+                            <span style="font-weight:700;">${safeActiveName}</span>
                         </div>
                     `;
                     
@@ -528,8 +544,8 @@
                                     const msgClass = msg.isMine ? 'mine' : 'theirs';
                                     const msgHTML = `
                                         <div class="bubble-msg ${msgClass}">
-                                            <div>${msg.content}</div>
-                                            <div class="bubble-msg-time">${msg.sentAt}</div>
+                                            <div>${escapeHtml(msg.content)}</div>
+                                            <div class="bubble-msg-time">${escapeHtml(msg.sentAt)}</div>
                                         </div>
                                     `;
                                     list.insertAdjacentHTML('beforeend', msgHTML);

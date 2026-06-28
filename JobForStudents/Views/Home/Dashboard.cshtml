@@ -1812,15 +1812,37 @@
     <script src="~/js/notifications.js" asp-append-version="true"></script>
     <script>
         // Hamburger menu toggle
-        document.getElementById('menuToggle')?.addEventListener('click', function () {
-        const sidebar = document.getElementById('sidebar');
-        if (!sidebar) return;
+        const mobileSidebarQuery = window.matchMedia('(max-width: 768px)');
+        const sidebarEl = document.getElementById('sidebar');
+        const layoutEl = document.querySelector('.dashboard-layout');
 
-        if (window.matchMedia('(max-width: 768px)').matches) {
-            sidebar.classList.toggle('open');
-        } else {
-            document.body.classList.toggle('sidebar-collapsed');
-        }
+        document.getElementById('menuToggle')?.addEventListener('click', function () {
+            if (!sidebarEl) return;
+
+            if (mobileSidebarQuery.matches) {
+                sidebarEl.classList.toggle('open');
+            } else {
+                document.body.classList.toggle('sidebar-collapsed');
+            }
+        });
+
+        sidebarEl?.addEventListener('click', function (event) {
+            if (mobileSidebarQuery.matches && event.target.closest('.sidebar-item')) {
+                sidebarEl.classList.remove('open');
+            }
+        });
+
+        layoutEl?.addEventListener('click', function (event) {
+            if (!mobileSidebarQuery.matches || !sidebarEl?.classList.contains('open')) return;
+            if (!event.target.closest('.sidebar') && !event.target.closest('#menuToggle')) {
+                sidebarEl.classList.remove('open');
+            }
+        });
+
+        window.addEventListener('resize', function () {
+            if (!mobileSidebarQuery.matches) {
+                sidebarEl?.classList.remove('open');
+            }
         });
     </script>
 
@@ -2110,7 +2132,9 @@
 
                 listEl.innerHTML = pageDeposits.map(d => {
                     let statusBadge = '';
-                    if (d.status === 'Success') {
+                    if (d.isExpired) {
+                        statusBadge = '<span class="badge bg-danger px-2.5 py-1.5 small rounded-pill"><i data-lucide="clock-x" class="me-1" style="width:12px;height:12px;"></i>H&#7871;t h&#7841;n</span>';
+                    } else if (d.status === 'Success') {
                         statusBadge = '<span class="badge bg-success px-2.5 py-1.5 small rounded-pill"><i data-lucide="check" class="me-1" style="width:12px;height:12px;"></i>Thành công</span>';
                     } else if (d.status === 'Pending') {
                         statusBadge = '<span class="badge bg-warning text-dark px-2.5 py-1.5 small rounded-pill"><i data-lucide="loader" class="me-1 animate-spin" style="width:12px;height:12px;"></i>Đang chờ</span>';
@@ -2122,7 +2146,7 @@
                         <div class="service-payment-item">
                             <div>
                                 <strong>${d.description || 'Nạp tiền vào ví'}</strong>
-                                <span>${d.transactionCode || d.id} · ${d.createdAt}</span>
+                                <span>${d.transactionCode || d.id} · ${d.createdAt}${d.expiresAt ? ` · H&#7871;t h&#7841;n: ${d.expiresAt}` : ''}</span>
                             </div>
                             <div>
                                 <strong class="text-success">+ ${new Intl.NumberFormat('vi-VN').format(d.amount)} đ</strong>
@@ -2172,7 +2196,8 @@
             const submitBtn = document.querySelector('[onclick="generateDepositQR()"]');
             if (submitBtn) {
             submitBtn.disabled = true;
-            submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Đang tạo mã...`;
+            submitBtn.classList.add('j4s-btn-loading');
+            submitBtn.innerHTML = `<span class="j4s-mini-spinner" aria-hidden="true"></span><span>Đang tạo mã</span><span class="j4s-loading-dots" aria-hidden="true"><span></span><span></span><span></span></span>`;
             }
 
             try {
@@ -2192,6 +2217,7 @@
             showToast(data.message || 'Tạo mã nạp tiền thất bại.', 'error');
             if (submitBtn) {
             submitBtn.disabled = false;
+            submitBtn.classList.remove('j4s-btn-loading');
             submitBtn.innerHTML = `<i data-lucide="qr-code" class="me-2" style="width:20px;height:20px;"></i>Tạo mã QR nạp tiền`;
             if (window.lucide) lucide.createIcons();
             }
@@ -2201,6 +2227,7 @@
             showToast('Không thể kết nối đến máy chủ.', 'error');
             if (submitBtn) {
             submitBtn.disabled = false;
+            submitBtn.classList.remove('j4s-btn-loading');
             submitBtn.innerHTML = `<i data-lucide="qr-code" class="me-2" style="width:20px;height:20px;"></i>Tạo mã QR nạp tiền`;
             if (window.lucide) lucide.createIcons();
             }
@@ -2301,7 +2328,7 @@
 
             if (timeLeft <= 0) {
             clearInterval(window.depositCountdownInterval);
-            expireQRPanel();
+            expireQRPanel(data.transactionId);
             }
             }, 1000);
             }
@@ -2313,10 +2340,21 @@
             window.renderBusinessWalletDeposit();
             }
 
-            function expireQRPanel() {
+            async function expireQRPanel(transactionId) {
             const leftPanel = document.getElementById('depositFormCol');
             const rightPanel = document.getElementById('depositInstructionsCol');
             if (!leftPanel || !rightPanel) return;
+
+            if (transactionId) {
+                fetch('/Home/ExpireDepositTransfer', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                    },
+                    body: JSON.stringify({ TransactionId: transactionId })
+                }).catch(err => console.warn('Could not expire deposit transaction:', err));
+            }
 
             leftPanel.innerHTML = `
             <div class="card border-0 shadow-sm p-4 text-center d-flex flex-column justify-content-center align-items-center" style="border-radius: 16px; min-height: 400px; border: 1px solid #fee2e2 !important; background: #fff5f5;">
@@ -2325,7 +2363,7 @@
             </div>
             <h4 class="fw-bold text-danger mb-2">Hóa đơn đã hết hạn</h4>
             <p class="text-muted small px-4 mb-4">Giao dịch nạp tiền này đã quá thời gian hiệu lực 5 phút và đã tự động hủy. Vui lòng tạo mã mới.</p>
-            <button class="btn btn-danger py-2.5 px-4 fw-bold text-white" style="border-radius:10px;" onclick="window.renderBusinessWalletDeposit()">
+            <button class="btn btn-danger py-2.5 px-4 fw-bold text-white" style="border-radius:10px;" onclick="this.classList.add('j4s-btn-loading'); this.disabled=true; window.renderBusinessWalletDeposit()">
             Tạo mã nạp tiền mới
             </button>
             </div>
@@ -2356,7 +2394,8 @@
             const verifyBtn = document.getElementById('verifyDepositBtn');
             if (verifyBtn) {
             verifyBtn.disabled = true;
-            verifyBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Đang đối soát giao dịch...`;
+            verifyBtn.classList.add('j4s-btn-loading');
+            verifyBtn.innerHTML = `<span class="j4s-mini-spinner" aria-hidden="true"></span><span>Đang đối soát giao dịch</span><span class="j4s-loading-dots" aria-hidden="true"><span></span><span></span><span></span></span>`;
             }
 
             try {
@@ -2383,6 +2422,7 @@
             showToast(data.message || 'Chưa nhận được giao dịch. Vui lòng thử lại sau 1 phút.', 'warning');
             if (verifyBtn) {
             verifyBtn.disabled = false;
+            verifyBtn.classList.remove('j4s-btn-loading');
             verifyBtn.innerHTML = `<i data-lucide="check-circle" class="me-2" style="width:20px;height:20px;vertical-align:text-bottom;"></i>Tôi đã chuyển khoản thành công`;
             if (window.lucide) lucide.createIcons();
             }
@@ -2392,6 +2432,7 @@
             showToast('Không thể kết nối đối soát. Vui lòng thử lại.', 'error');
             if (verifyBtn) {
             verifyBtn.disabled = false;
+            verifyBtn.classList.remove('j4s-btn-loading');
             verifyBtn.innerHTML = `<i data-lucide="check-circle" class="me-2" style="width:20px;height:20px;vertical-align:text-bottom;"></i>Tôi đã chuyển khoản thành công`;
             if (window.lucide) lucide.createIcons();
             }
@@ -3515,4 +3556,3 @@
         </script>
     }
 }
-

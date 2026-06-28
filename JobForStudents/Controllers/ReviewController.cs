@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using JobForStudents.Data;
+using JobForStudents.Helpers;
 using JobForStudents.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -57,13 +58,13 @@ public class ReviewController : Controller
                 partnerId = c.BusinessId,
                 partnerName = c.JobPost.BusinessProfile != null ? c.JobPost.BusinessProfile.CompanyName : "Doanh nghiệp ẩn",
                 partnerAvatar = c.JobPost.BusinessProfile != null ? (c.JobPost.BusinessProfile.LogoUrl ?? "") : "",
-                completedAt = c.CompletedAt?.ToString("dd/MM/yyyy HH:mm") ?? "",
+                completedAt = VietnamTime.Format(c.CompletedAt, "dd/MM/yyyy HH:mm"),
                 hasReview = review != null,
                 review = review == null ? null : new {
                     id = review.Id,
                     rating = review.Rating,
                     comment = review.Comment,
-                    createdAt = review.CreatedAt.ToString("dd/MM/yyyy HH:mm"),
+                    createdAt = VietnamTime.Format(review.CreatedAt, "dd/MM/yyyy HH:mm"),
                     canEdit = canEdit
                 }
             };
@@ -101,13 +102,13 @@ public class ReviewController : Controller
                 partnerId = c.StudentId,
                 partnerName = c.StudentProfile.FullName,
                 partnerAvatar = c.StudentProfile.AvatarUrl ?? "",
-                completedAt = c.CompletedAt?.ToString("dd/MM/yyyy HH:mm") ?? "",
+                completedAt = VietnamTime.Format(c.CompletedAt, "dd/MM/yyyy HH:mm"),
                 hasReview = review != null,
                 review = review == null ? null : new {
                     id = review.Id,
                     rating = review.Rating,
                     comment = review.Comment,
-                    createdAt = review.CreatedAt.ToString("dd/MM/yyyy HH:mm"),
+                    createdAt = VietnamTime.Format(review.CreatedAt, "dd/MM/yyyy HH:mm"),
                     canEdit = canEdit
                 }
             };
@@ -303,7 +304,7 @@ public class ReviewController : Controller
                     : "",
                 project = r.JobContract != null && r.JobContract.JobPost != null ? r.JobContract.JobPost.Title : "Dự án không xác định",
                 rating = r.Rating,
-                date = r.CreatedAt.ToString("dd/MM/yyyy HH:mm"),
+                date = VietnamTime.Format(r.CreatedAt, "dd/MM/yyyy HH:mm"),
                 comment = r.Comment ?? "",
                 replies = r.Replies.OrderBy(rep => rep.CreatedAt).Select(rep => new {
                     id = rep.Id,
@@ -318,7 +319,7 @@ public class ReviewController : Controller
                             : (rep.Reviewer.StudentProfile != null ? rep.Reviewer.StudentProfile.AvatarUrl : "")) 
                         : "",
                     comment = rep.Comment,
-                    date = rep.CreatedAt.ToString("dd/MM/yyyy HH:mm"),
+                    date = VietnamTime.Format(rep.CreatedAt, "dd/MM/yyyy HH:mm"),
                     reviewerId = rep.ReviewerId,
                     isOwnReply = rep.ReviewerId == currentUserId.Value,
                     canEdit = rep.ReviewerId == currentUserId.Value && (DateTime.UtcNow - rep.CreatedAt).TotalHours <= 24

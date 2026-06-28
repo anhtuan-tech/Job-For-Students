@@ -9,8 +9,10 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using JobForStudents.Data;
+using JobForStudents.Helpers;
 using JobForStudents.Models;
 
 namespace JobForStudents.Controllers;
@@ -18,12 +20,15 @@ namespace JobForStudents.Controllers;
 public class HomeController : Controller
 {
     private readonly AppDbContext _context;
+    private readonly IConfiguration _configuration;
     private static readonly HttpClient AcbHttpClient = new();
-    private const string AcbHistoryUrl = "http://api.dopamind.net/api/ACB/history?token=KHANGDZ"; // Phần API check lịch sử giao dịch ở đây 
+    private static readonly TimeSpan DepositQrLifetime = TimeSpan.FromMinutes(5);
+    private const string DepositExpiredNote = "EXPIRED_5_MIN";
 
-    public HomeController(AppDbContext context)
+    public HomeController(AppDbContext context, IConfiguration configuration)
     {
         _context = context;
+        _configuration = configuration;
     }
 
     // GET: / — Main Dashboard — Public: ai cũng xem được
@@ -143,7 +148,7 @@ public class HomeController : Controller
                     Id = j.Id,
                     Title = j.Title,
                     CompanyName = j.BusinessProfile?.CompanyName ?? "Unknown",
-                    CreatedAt = j.CreatedAt.ToString("dd/MM/yyyy HH:mm"),
+                    CreatedAt = VietnamTime.Format(j.CreatedAt, "dd/MM/yyyy HH:mm"),
                     IsVip = j.IsVip
                 }).ToList();
             }
@@ -184,7 +189,7 @@ public class HomeController : Controller
                     JobTitle = b.JobPost.Title,
                     CompanyName = b.JobPost.BusinessProfile?.CompanyName ?? "Unknown",
                     Status = b.Status.ToString(), // "Pending", "Accepted", "Rejected"
-                    AppliedAt = b.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                    AppliedAt = VietnamTime.Format(b.CreatedAt, "dd/MM/yyyy HH:mm")
                 }).ToList();
 
                 // Populate StudentActiveContracts
@@ -223,6 +228,15 @@ public class HomeController : Controller
         }
 
         return View("Dashboard", dashboard);
+    }
+
+    [AllowAnonymous]
+    [HttpGet("/BlockDevTool")]
+    public IActionResult BlockDevTool(string? returnUrl = null)
+    {
+        ViewData["Title"] = "Block DevTool";
+        ViewData["ReturnUrl"] = !string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl) ? returnUrl : "/";
+        return View();
     }
 
     // GET: /Home/FilterByCategory?category=Design — Public (allow anonymous browsing)
@@ -555,7 +569,7 @@ public class HomeController : Controller
                 jobTitle = b.JobPost.Title,
                 companyName = b.JobPost.BusinessProfile != null ? b.JobPost.BusinessProfile.CompanyName : "Unknown",
                 status = b.Status.ToString(), // "Pending", "Accepted", "Rejected", "Hired"
-                appliedAt = b.CreatedAt.ToString("dd/MM/yyyy HH:mm"),
+                appliedAt = VietnamTime.Format(b.CreatedAt, "dd/MM/yyyy HH:mm"),
                 bidAmount = b.BidAmount,
                 proposal = b.Proposal ?? "",
                 estimatedDays = b.EstimatedDays
@@ -862,7 +876,7 @@ public class HomeController : Controller
                 description = j.Description,
                 budget = j.Budget,
                 deadline = j.Deadline.ToString("dd/MM/yyyy"),
-                createdAt = j.CreatedAt.ToString("dd/MM/yyyy HH:mm"),
+                createdAt = VietnamTime.Format(j.CreatedAt, "dd/MM/yyyy HH:mm"),
                 category = j.Category ?? (j.JobPostSkills.Select(s => s.Skill.Category).FirstOrDefault() ?? "Khac"),
                 tags = j.JobPostSkills.Select(s => s.Skill.Name).ToList(),
                 applicantsCount = j.JobBids.Count,
@@ -941,7 +955,7 @@ public class HomeController : Controller
                 bidAmount = b.BidAmount,
                 estimatedDays = b.EstimatedDays,
                 status = b.Status.ToString(),
-                appliedAt = b.CreatedAt.ToString("dd/MM/yyyy HH:mm"),
+                appliedAt = VietnamTime.Format(b.CreatedAt, "dd/MM/yyyy HH:mm"),
                 role = b.StudentProfile.StudentSkills.Select(s => s.Skill.Name).FirstOrDefault() ?? "Ung vien",
                 skills = b.StudentProfile.StudentSkills.Select(s => s.Skill.Name).ToList()
             })
@@ -1182,7 +1196,7 @@ public class HomeController : Controller
                         : string.Empty,
             Rating = r.Rating ?? 0,
             Comment = r.Comment,
-            CreatedAt = r.CreatedAt.ToString("dd/MM/yyyy")
+            CreatedAt = VietnamTime.Format(r.CreatedAt, "dd/MM/yyyy")
         })
             .ToList();
 
@@ -1212,6 +1226,7 @@ public class HomeController : Controller
 
     [Authorize(Roles = "Business")]
     [HttpPost]
+    [EnableRateLimiting("payment")]
     public async Task<IActionResult> GenerateDepositQr([FromBody] DepositQrRequest request)
     {
         var currentUserId = GetCurrentUserId();
@@ -1249,7 +1264,7 @@ public class HomeController : Controller
         }
 
         var transactionCode = $"DEP-{DateTime.UtcNow:yyyyMMddHHmmss}-{currentUserId.Value}-{Random.Shared.Next(1000, 9999)}";
-        var expiresAt = DateTime.UtcNow.AddMinutes(15);
+        var expiresAt = DateTime.UtcNow.Add(DepositQrLifetime);
         var qrPayload = $"J4S|DEPOSIT|{transactionCode}|USER:{currentUserId.Value}|AMOUNT:{request.Amount:0}|EXPIRES:{expiresAt:O}";
 
         _context.Transactions.Add(new Transaction
@@ -1260,7 +1275,7 @@ public class HomeController : Controller
             TransactionCode = transactionCode,
             PaymentMethod = "QR_TRANSFER",
             Status = TransactionStatus.Pending,
-            Description = $"Yêu cầu nạp tiền qua mã QR dùng một lần, hết hạn {expiresAt:dd/MM/yyyy HH:mm} UTC.",
+            Description = $"Yêu cầu nạp tiền qua mã QR dùng một lần, hết hạn {VietnamTime.Format(expiresAt, "dd/MM/yyyy HH:mm")}.",
             CreatedAt = DateTime.UtcNow
         });
         _context.Notifications.Add(new Notification
@@ -1280,7 +1295,7 @@ public class HomeController : Controller
             success = true,
             amount = request.Amount,
             transactionCode,
-            expiresAt = expiresAt.ToString("dd/MM/yyyy HH:mm"),
+            expiresAt = VietnamTime.Format(expiresAt, "dd/MM/yyyy HH:mm"),
             qrPayload
         });
     }
@@ -1342,7 +1357,7 @@ public class HomeController : Controller
                 reviewerAvatar = r.Reviewer.StudentProfile != null ? r.Reviewer.StudentProfile.AvatarUrl : (r.Reviewer.BusinessProfile != null ? r.Reviewer.BusinessProfile.LogoUrl : ""),
                 rating = r.Rating,
                 comment = r.Comment,
-                createdAt = r.CreatedAt.ToString("dd/MM/yyyy")
+                createdAt = VietnamTime.Format(r.CreatedAt, "dd/MM/yyyy")
             }).ToList();
 
             return Json(new
@@ -1418,7 +1433,7 @@ public class HomeController : Controller
                 reviewerAvatar = r.Reviewer.StudentProfile != null ? r.Reviewer.StudentProfile.AvatarUrl : (r.Reviewer.BusinessProfile != null ? r.Reviewer.BusinessProfile.LogoUrl : ""),
                 rating = r.Rating,
                 comment = r.Comment,
-                createdAt = r.CreatedAt.ToString("dd/MM/yyyy")
+                createdAt = VietnamTime.Format(r.CreatedAt, "dd/MM/yyyy")
             }).ToList();
 
             return Json(new
@@ -1466,7 +1481,7 @@ public class HomeController : Controller
                 reviewerAvatar = r.Reviewer.StudentProfile != null ? r.Reviewer.StudentProfile.AvatarUrl : (r.Reviewer.BusinessProfile != null ? r.Reviewer.BusinessProfile.LogoUrl : ""),
                 rating = r.Rating,
                 comment = r.Comment,
-                createdAt = r.CreatedAt.ToString("dd/MM/yyyy")
+                createdAt = VietnamTime.Format(r.CreatedAt, "dd/MM/yyyy")
             }).ToList();
 
             return Json(new
@@ -1477,7 +1492,7 @@ public class HomeController : Controller
                 email = user.Email,
                 phone = user.Phone,
                 avatarUrl = string.Empty,
-                joinedAt = user.CreatedAt.ToString("dd/MM/yyyy"),
+                joinedAt = VietnamTime.Format(user.CreatedAt, "dd/MM/yyyy"),
                 totalUsers,
                 totalJobs,
                 totalContracts,
@@ -2020,7 +2035,7 @@ public class HomeController : Controller
                 amount = t.Amount,
                 status = t.Status.ToString(),
                 description = t.Description ?? "",
-                createdAt = t.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                createdAt = VietnamTime.Format(t.CreatedAt, "dd/MM/yyyy HH:mm")
             })
             .ToListAsync();
 
@@ -2083,7 +2098,7 @@ public class HomeController : Controller
                 hiredCount = j.JobBids.Count(b => b.Status == BidStatus.Hired),
                 skills = j.JobPostSkills.Select(jps => jps.Skill.Name).ToList(),
                 category = j.Category ?? (j.JobPostSkills.FirstOrDefault()?.Skill.Category ?? "Khác"),
-                createdAt = j.CreatedAt.ToString("dd/MM/yyyy"),
+                createdAt = VietnamTime.Format(j.CreatedAt, "dd/MM/yyyy"),
                 contracts = j.JobContracts.Select(c => new
                 {
                     id = c.Id,
@@ -2375,7 +2390,7 @@ public class HomeController : Controller
                     estimatedDays = b.EstimatedDays,
                     proposal = b.Proposal,
                     status = b.Status.ToString(),
-                    createdAt = b.CreatedAt.ToString("dd/MM/yyyy"),
+                    createdAt = VietnamTime.Format(b.CreatedAt, "dd/MM/yyyy"),
                     skills = b.StudentProfile.StudentSkills.Select(ss => ss.Skill.Name).ToList(),
                     contractId = contract?.Id,
                     contractStatus = contract?.Status.ToString(),
@@ -2491,7 +2506,7 @@ public class HomeController : Controller
                 bidAmount = b.BidAmount,
                 estimatedDays = b.EstimatedDays,
                 proposal = b.Proposal,
-                appliedAt = b.CreatedAt.ToString("dd/MM/yyyy"),
+                appliedAt = VietnamTime.Format(b.CreatedAt, "dd/MM/yyyy"),
                 appliedAgo = GetTimeAgo(b.CreatedAt),
                 status = b.Status.ToString(),
                 skills = b.StudentProfile != null ? b.StudentProfile.StudentSkills.Select(ss => ss.Skill.Name).Take(6).ToList() : new List<string>()
@@ -2639,7 +2654,7 @@ public class HomeController : Controller
             {
                 fromMe = m.SenderId == currentUserId.Value,
                 text = m.Content,
-                time = m.SentAt.ToString("HH:mm")
+                time = VietnamTime.Format(m.SentAt, "HH:mm")
             }).ToList()
         });
     }
@@ -2715,7 +2730,7 @@ public class HomeController : Controller
             {
                 fromMe = true,
                 text = message.Content,
-                time = message.SentAt.ToString("HH:mm")
+                time = VietnamTime.Format(message.SentAt, "HH:mm")
             }
         });
     }
@@ -2908,7 +2923,7 @@ public class HomeController : Controller
                     reviewer = r.Reviewer.Email,
                     rating = r.Rating,
                     comment = r.Comment,
-                    createdAt = r.CreatedAt.ToString("dd/MM/yyyy")
+                    createdAt = VietnamTime.Format(r.CreatedAt, "dd/MM/yyyy")
                 }).ToList()
             }
         });
@@ -3276,7 +3291,7 @@ public class HomeController : Controller
                 phone = u.Phone,
                 role = u.Role.ToString(),
                 status = u.Status.ToString(),
-                createdAt = u.CreatedAt.ToString("dd/MM/yyyy HH:mm"),
+                createdAt = VietnamTime.Format(u.CreatedAt, "dd/MM/yyyy HH:mm"),
                 displayName = u.Role == UserRole.Student
                     ? (u.StudentProfile != null ? u.StudentProfile.FullName : null)
                     : (u.BusinessProfile != null ? u.BusinessProfile.CompanyName : null)
@@ -3334,7 +3349,7 @@ public class HomeController : Controller
             j.budget,
             deadline = j.deadline.ToString("dd/MM/yyyy"),
             status = j.status.ToString(),
-            createdAt = j.createdAt.ToString("dd/MM/yyyy HH:mm")
+            createdAt = VietnamTime.Format(j.createdAt, "dd/MM/yyyy HH:mm")
         }).ToList();
 
         return Json(jobs);
@@ -3369,7 +3384,7 @@ public class HomeController : Controller
                 amount = t.Amount,
                 type = t.Type.ToString(),
                 status = t.Status.ToString(),
-                createdAt = t.CreatedAt.ToString("dd/MM/yyyy HH:mm"),
+                createdAt = VietnamTime.Format(t.CreatedAt, "dd/MM/yyyy HH:mm"),
                 description = t.Description
             })
             .ToListAsync();
@@ -3403,6 +3418,8 @@ public class HomeController : Controller
             await _context.SaveChangesAsync();
         }
 
+        await ExpirePendingDepositTransactionsAsync(wallet.Id, DateTime.UtcNow);
+
         // Fetch transactions for this wallet
         var transactions = await _context.Transactions
             .Where(t => t.WalletId == wallet.Id)
@@ -3415,7 +3432,9 @@ public class HomeController : Controller
                 transactionCode = t.TransactionCode,
                 status = t.Status.ToString(),
                 description = t.Description,
-                createdAt = t.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                createdAt = VietnamTime.Format(t.CreatedAt, "dd/MM/yyyy HH:mm"),
+                expiresAt = VietnamTime.Format(t.CreatedAt.Add(DepositQrLifetime), "dd/MM/yyyy HH:mm"),
+                isExpired = t.AdminNote == DepositExpiredNote
             })
             .ToListAsync();
 
@@ -3461,6 +3480,7 @@ public class HomeController : Controller
 
     [Authorize]
     [HttpPost]
+    [EnableRateLimiting("payment")]
     public async Task<IActionResult> DepositMoney([FromBody] DepositRequest request)
     {
         var currentUserId = GetCurrentUserId();
@@ -3530,6 +3550,7 @@ public class HomeController : Controller
 
     [Authorize]
     [HttpPost]
+    [EnableRateLimiting("payment")]
     public async Task<IActionResult> ConfirmDepositTransfer([FromBody] ConfirmDepositRequest request)
     {
         var currentUserId = GetCurrentUserId();
@@ -3552,11 +3573,12 @@ public class HomeController : Controller
             return Json(new { success = false, message = "Giao dịch đã được hoàn thành trước đó." });
         }
 
-        if (transaction.CreatedAt.AddMinutes(5) < DateTime.UtcNow)
+        if (transaction.CreatedAt.Add(DepositQrLifetime) <= DateTime.UtcNow)
         {
             if (transaction.Status == TransactionStatus.Pending)
             {
                 transaction.Status = TransactionStatus.Failed;
+                transaction.AdminNote = DepositExpiredNote;
                 transaction.Description += " (Đã quá hạn 5 phút - Hủy)";
                 await _context.SaveChangesAsync();
             }
@@ -3605,6 +3627,47 @@ public class HomeController : Controller
 
     [Authorize]
     [HttpPost]
+    [EnableRateLimiting("payment")]
+    public async Task<IActionResult> ExpireDepositTransfer([FromBody] ConfirmDepositRequest request)
+    {
+        var currentUserId = GetCurrentUserId();
+        if (!currentUserId.HasValue)
+        {
+            return Json(new { success = false, message = "Chưa đăng nhập." });
+        }
+
+        var transaction = await _context.Transactions
+            .Include(t => t.Wallet)
+            .FirstOrDefaultAsync(t => t.Id == request.TransactionId &&
+                                      t.Wallet.UserId == currentUserId.Value &&
+                                      t.Type == TransactionType.Deposit);
+
+        if (transaction == null)
+        {
+            return Json(new { success = false, message = "Không tìm thấy giao dịch." });
+        }
+
+        if (transaction.Status != TransactionStatus.Pending)
+        {
+            return Json(new { success = true, status = transaction.Status.ToString() });
+        }
+
+        if (transaction.CreatedAt.Add(DepositQrLifetime) > DateTime.UtcNow)
+        {
+            return Json(new { success = false, message = "Giao dịch vẫn còn hiệu lực." });
+        }
+
+        transaction.Status = TransactionStatus.Failed;
+        transaction.AdminNote = DepositExpiredNote;
+        transaction.Description = $"{transaction.Description} (Đã quá hạn 5 phút - Hủy)".Trim();
+        await _context.SaveChangesAsync();
+
+        return Json(new { success = true, status = TransactionStatus.Failed.ToString(), expired = true });
+    }
+
+    [Authorize]
+    [HttpPost]
+    [EnableRateLimiting("payment")]
     public async Task<IActionResult> PurchasePackage([FromBody] PurchasePackageRequest request)
     {
         var currentUserId = GetCurrentUserId();
@@ -3686,9 +3749,44 @@ public class HomeController : Controller
         return $"J4S {DateTime.UtcNow.Ticks.ToString()[^4..]}";
     }
 
-    private static async Task<AcbBankTransaction?> FindMatchingAcbTransactionAsync(string transferCode, decimal expectedAmount)
+    private async Task ExpirePendingDepositTransactionsAsync(int walletId, DateTime now)
     {
-        using var response = await AcbHttpClient.GetAsync(AcbHistoryUrl);
+        var expiredAt = now.Subtract(DepositQrLifetime);
+        var expiredTransactions = await _context.Transactions
+            .Where(t => t.WalletId == walletId &&
+                        t.Type == TransactionType.Deposit &&
+                        t.Status == TransactionStatus.Pending &&
+                        t.CreatedAt <= expiredAt)
+            .ToListAsync();
+
+        if (expiredTransactions.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var transaction in expiredTransactions)
+        {
+            transaction.Status = TransactionStatus.Failed;
+            transaction.AdminNote = DepositExpiredNote;
+            if (string.IsNullOrWhiteSpace(transaction.Description) ||
+                !transaction.Description.Contains("5 phút", StringComparison.OrdinalIgnoreCase))
+            {
+                transaction.Description = $"{transaction.Description} (Đã quá hạn 5 phút - Hủy)".Trim();
+            }
+        }
+
+        await _context.SaveChangesAsync();
+    }
+
+    private async Task<AcbBankTransaction?> FindMatchingAcbTransactionAsync(string transferCode, decimal expectedAmount)
+    {
+        var acbHistoryUrl = _configuration["Banking:AcbHistoryUrl"];
+        if (string.IsNullOrWhiteSpace(acbHistoryUrl))
+        {
+            throw new InvalidOperationException("Missing Banking:AcbHistoryUrl configuration.");
+        }
+
+        using var response = await AcbHttpClient.GetAsync(acbHistoryUrl);
         response.EnsureSuccessStatusCode();
 
         await using var stream = await response.Content.ReadAsStreamAsync();
@@ -4311,4 +4409,3 @@ public class SendConversationMessageRequest
     public int ReceiverId { get; set; }
     public string Content { get; set; } = string.Empty;
 }
-

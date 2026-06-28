@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
@@ -52,6 +53,7 @@ public class AuthController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("auth")]
     public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
     {
         ViewData["ReturnUrl"] = returnUrl;
@@ -165,6 +167,7 @@ public class AuthController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("auth")]
     public async Task<IActionResult> Register(RegisterViewModel model)
     {
         if (!ModelState.IsValid)
@@ -307,6 +310,7 @@ public class AuthController : Controller
     }
 
     [HttpPost]
+    [EnableRateLimiting("auth")]
     public async Task<IActionResult> SendOtp([FromBody] SendOtpRequest request)
     {
         if (!ModelState.IsValid)
@@ -364,6 +368,7 @@ public class AuthController : Controller
     }
 
     [HttpPost]
+    [EnableRateLimiting("auth")]
     public IActionResult VerifyOtp([FromBody] VerifyOtpRequest request)
     {
         if (!ModelState.IsValid)
@@ -397,6 +402,7 @@ public class AuthController : Controller
     }
 
     [HttpPost]
+    [EnableRateLimiting("auth")]
     public async Task<IActionResult> VerifyOtpAndResetPassword([FromBody] ResetPasswordRequest request)
     {
         if (!ModelState.IsValid)

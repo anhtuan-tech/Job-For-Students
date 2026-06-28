@@ -6784,7 +6784,7 @@
                     <div class="form-group">
                         <label class="form-label">Số tiền nạp</label>
                         <input type="number" class="form-input" id="depositAmountInput" min="50000" step="50000" value="50000" />
-                        <small style="display:block;margin-top:6px;color:var(--text-muted);font-weight:600;">Số tiền phải là bội của 50.000 đ. Mã QR chỉ dùng một lần và hết hạn sau 15 phút.</small>
+                        <small style="display:block;margin-top:6px;color:var(--text-muted);font-weight:600;">Số tiền phải là bội của 50.000 đ. Mã QR chỉ dùng một lần và hết hạn sau 5 phút.</small>
                     </div>
                     <div id="depositQrResult"></div>
                 </div>
@@ -6812,7 +6812,8 @@
             const btn = this;
             const original = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm" style="margin-right:8px;"></span> Đang tạo...';
+            btn.classList.add('j4s-btn-loading');
+            btn.innerHTML = '<span class="j4s-mini-spinner" aria-hidden="true"></span><span>Đang tạo</span><span class="j4s-loading-dots" aria-hidden="true"><span></span><span></span><span></span></span>';
 
             fetch('/Home/GenerateDepositQr', {
                 method: 'POST',
@@ -6843,6 +6844,7 @@
                 })
                 .finally(() => {
                     btn.disabled = false;
+                    btn.classList.remove('j4s-btn-loading');
                     btn.innerHTML = original;
                 });
         });
@@ -8742,4 +8744,3 @@
     window.setupCurrencyInput = setupCurrencyInput;
     window.renderGenericPaginationControls = renderGenericPaginationControls;
 })();
-

@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using JobForStudents.Data;
+using JobForStudents.Helpers;
 using JobForStudents.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -93,7 +94,7 @@ public class FeedbackController : Controller
                 feedback.Title,
                 Type = TypeLabel(feedback.Type),
                 Status = StatusLabel(feedback.Status),
-                CreatedAt = feedback.CreatedAt.ToString("HH:mm dd/MM/yyyy")
+                CreatedAt = VietnamTime.Format(feedback.CreatedAt, "HH:mm dd/MM/yyyy")
             }
         });
     }
@@ -124,7 +125,7 @@ public class FeedbackController : Controller
             f.Title,
             Type = TypeLabel(f.Type),
             Status = StatusLabel(f.Status),
-            CreatedAt = f.CreatedAt.ToString("HH:mm dd/MM/yyyy")
+            CreatedAt = VietnamTime.Format(f.CreatedAt, "HH:mm dd/MM/yyyy")
         });
 
         return Json(new { success = true, items = result });
@@ -165,7 +166,7 @@ public class FeedbackController : Controller
             Type = TypeLabel(f.Type),
             Status = f.Status.ToString(),
             StatusLabel = StatusLabel(f.Status),
-            CreatedAt = f.CreatedAt.ToString("HH:mm dd/MM/yyyy"),
+            CreatedAt = VietnamTime.Format(f.CreatedAt, "HH:mm dd/MM/yyyy"),
             f.UserEmail,
             f.UserName
         });
