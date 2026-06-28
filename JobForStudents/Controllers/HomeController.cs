@@ -31,9 +31,13 @@ public class HomeController : Controller
         _configuration = configuration;
     }
 
-    // GET: / — Main Dashboard — Public: ai cũng xem được
+    // GET: / — Main Dashboard — Public: ai cũng xem được (Redirects to Login if not authenticated)
     public async Task<IActionResult> Index()
     {
+        if (User.Identity?.IsAuthenticated != true)
+        {
+            return RedirectToAction("Login", "Auth");
+        }
         var currentUserId = GetCurrentUserId();
         var isStudent = User.IsInRole("Student");
 

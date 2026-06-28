@@ -158,6 +158,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
+            localStorage.setItem('j4s_active_tab', 'home');
             // Validate captcha before submit
             var form = document.querySelector('form');
             var captchaInput = document.getElementById('recaptchaTokenInput');

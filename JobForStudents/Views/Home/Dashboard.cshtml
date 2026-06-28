@@ -1958,11 +1958,7 @@
                         ${activePackageName.includes("VIP") ? `
                             <span><i data-lucide="check" style="color:#f59e0b;"></i>Đăng tin VIP (1 lần, 7 ngày)</span>
                         ` : ''}
-                    ` : `
-                        <span><i data-lucide="check"></i>Đăng tối đa 1 tin tuyển dụng</span>
-                        <span><i data-lucide="x" style="color:#ef4444;"></i>Không có nhãn nổi bật</span>
-                        <span><i data-lucide="x" style="color:#ef4444;"></i>Không có đặc quyền Premium</span>
-                    `}
+                    ` : ''}
                 </div>
                 <div class="plan-progress-row" style="${hasPlan ? '' : 'display:none;'}">
                     <span>Đã sử dụng ${activePackageUsedCount}/${limit} tin</span>

@@ -120,6 +120,7 @@
         bindSearchInput();
         bindCategoryCards();
         bindSidebarNav();
+        bindBrandLogoClick();
         bindFilterSelect();
         bindFinancialButtons();
         bindJobFeedEvents();
@@ -517,6 +518,23 @@
                 .then(r => r.json())
                 .then(jobs => renderJobs(jobs))
                 .catch(err => console.error('Dropdown filter error:', err));
+        });
+    }
+
+    function bindBrandLogoClick() {
+        document.querySelectorAll('.j4s-brand').forEach(brand => {
+            brand.addEventListener('click', function(e) {
+                localStorage.setItem('j4s_active_tab', 'home');
+                const userProfile = document.getElementById('userProfile');
+                const isAuthenticated = userProfile !== null;
+                if (isAuthenticated) {
+                    const homeItem = document.getElementById('navHome') || document.getElementById('adminNavHome');
+                    if (homeItem) {
+                        e.preventDefault();
+                        homeItem.click();
+                    }
+                }
+            });
         });
     }
 
