@@ -1614,46 +1614,102 @@
              ============================================ -->
         <main class="main-content" id="mainContent" style="padding: 60px 24px; max-width: 1200px; margin: 0 auto; width: 100%;">
             
-            <!-- Hero Section -->
-            <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 50%, #e0e7ff 100%); border-radius: 24px; padding: 60px 48px; display: flex; align-items: center; justify-content: space-between; gap: 40px; margin-bottom: 50px; box-shadow: 0 10px 30px rgba(37, 99, 235, 0.04);">
-                <div style="flex: 1; max-width: 600px;">
-                    <span style="background: #2563eb; color: white; font-size: 0.75rem; font-weight: 700; padding: 6px 16px; border-radius: 9999px; text-transform: uppercase; letter-spacing: 1px; display: inline-block; margin-bottom: 20px;">Micro-Freelance Marketplace dành cho Sinh Viên</span>
-                    <h1 style="font-size: 2.8rem; font-weight: 900; color: #1e293b; line-height: 1.2; margin-bottom: 20px;">
-                        Kết nối kỹ năng sinh viên với <span style="color: #2563eb;">dự án ngắn hạn</span>
-                    </h1>
-                    <p style="font-size: 1.1rem; color: #475569; line-height: 1.6; margin-bottom: 32px;">
-                        J4S giúp cá nhân, shop bán hàng, câu lạc bộ và startup dễ dàng thuê sinh viên làm thiết kế, dịch thuật, dựng video, viết bài hay lập trình web với chi phí hợp lý và thời gian hoàn thành nhanh chóng.
+            
+            <!-- About Section (Embedded Project & Founder Info) -->
+            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 24px; padding: 40px; margin-top: 40px; margin-bottom: 60px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);">
+                <div style="text-align: center; margin-bottom: 35px;">
+                    <span style="background: #e0f2fe; color: #0284c7; font-size: 0.75rem; font-weight: 700; padding: 6px 16px; border-radius: 9999px; text-transform: uppercase; letter-spacing: 1px; display: inline-block; margin-bottom: 12px;">Thông Tin Dự Án Khởi Nghiệp</span>
+                    <h2 style="font-size: 2rem; font-weight: 900; color: #0f172a; margin-bottom: 10px;">Về Chúng Tôi - J4S</h2>
+                    <p style="color: #2563eb; font-size: 1.1rem; font-weight: 700; max-width: 800px; margin: 0 auto; line-height: 1.5;">
+                        J4S là sản phẩm khởi nghiệp của sinh viên Trường Đại học FPT Cần Thơ
                     </p>
-                    <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-                        <a href="/Auth/Register" class="btn btn-primary" style="background: #2563eb; border: none; padding: 14px 32px; border-radius: 12px; font-weight: 700; font-size: 1rem; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3); transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; color: white;" onmouseover="this.style.background='#1d4ed8'; this.style.transform='translateY(-2px)';" onmouseout="this.style.background='#2563eb'; this.style.transform='translateY(0)';">
-                            Tham gia J4S ngay
-                        </a>
-                        <a href="/Auth/Login" class="btn btn-outline-primary" style="border: 2px solid #2563eb; color: #2563eb; background: transparent; padding: 12px 32px; border-radius: 12px; font-weight: 700; font-size: 1rem; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center;" onmouseover="this.style.background='#eff6ff'; this.style.transform='translateY(-2px)';" onmouseout="this.style.background='transparent'; this.style.transform='translateY(0)';">
-                            Đăng nhập hệ thống
-                        </a>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 40px; align-items: start;">
+                    <div style="background: #f8fafc; border-radius: 16px; padding: 24px; border: 1px solid #f1f5f9;">
+                        <h4 style="font-size: 1.15rem; font-weight: 800; color: #1e293b; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+                            🚀 Về Dự Án J4S
+                        </h4>
+                        <p style="color: #475569; font-size: 0.92rem; line-height: 1.6; text-align: justify; margin: 0;">
+                            <strong>J4S (Jobs For Students)</strong> là nền tảng trực tuyến kết nối các cơ hội việc làm tự do (freelance) và việc làm ngắn hạn (micro-jobs) dành riêng cho sinh viên. Dự án được phát triển nhằm mục tiêu giúp sinh viên tối ưu hóa thời gian rảnh để tích lũy thu nhập, trau dồi kỹ năng thực tế và xây dựng hồ sơ năng lực chuyên nghiệp ngay từ khi còn ngồi trên ghế nhà trường. Đồng thời, J4S mang đến giải pháp tối ưu cho doanh nghiệp và cá nhân tìm kiếm nguồn nhân sự trẻ, năng động với chi phí hợp lý.
+                        </p>
+                    </div>
+
+                    <div style="background: #f8fafc; border-radius: 16px; padding: 24px; border: 1px solid #f1f5f9; height: 100%;">
+                        <h4 style="font-size: 1.15rem; font-weight: 800; color: #1e293b; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+                            📞 Thông Tin Liên Hệ CSKH
+                        </h4>
+                        <div style="display: flex; flex-direction: column; gap: 14px;">
+                            <div style="display: flex; align-items: center; gap: 12px; background: white; padding: 12px 16px; border-radius: 10px; border: 1px solid #e2e8f0;">
+                                <div style="background: #e0f2fe; color: #0284c7; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                    <i data-lucide="mail" style="width: 18px; height: 18px;"></i>
+                                </div>
+                                <div style="min-width: 0;">
+                                    <div style="font-weight: 700; color: #334155; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">Email Dự Án</div>
+                                    <a href="https://mail.google.com/mail/?view=cm&fs=1&to=j4s.job4stu@gmail.com" target="_blank" style="color: #2563eb; text-decoration: none; font-size: 0.9rem; font-weight: 600; word-break: break-all;">j4s.job4stu@gmail.com</a>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 12px; background: white; padding: 12px 16px; border-radius: 10px; border: 1px solid #e2e8f0;">
+                                <div style="background: #eef2ff; color: #4f46e5; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+                                </div>
+                                <div style="min-width: 0;">
+                                    <div style="font-weight: 700; color: #334155; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">Fanpage Chính Thức</div>
+                                    <a href="https://www.facebook.com/job4stu" target="_blank" style="color: #2563eb; text-decoration: none; font-size: 0.9rem; font-weight: 600; word-break: break-all;">facebook.com/job4stu</a>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div style="flex: 1; display: flex; justify-content: center; align-items: center; max-width: 480px;">
-                    <img src="https://img.freepik.com/free-vector/hiring-agency-concept-illustration_114360-6927.jpg" alt="Tuyển dụng sinh viên J4S" style="width: 100%; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.06);" />
-                </div>
-            </div>
 
-            <!-- Stats Grid -->
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 60px;">
-                <div style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 30px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.01);">
-                    <div style="background: #eff6ff; color: #2563eb; width: 60px; height: 60px; border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px;"><i data-lucide="users" style="width: 30px; height: 30px;"></i></div>
-                    <h3 style="font-size: 1.8rem; font-weight: 800; color: #0f172a; margin-bottom: 8px;">10,000+</h3>
-                    <p style="color: #64748b; font-size: 0.95rem; margin: 0; font-weight: 500;">Sinh viên có kỹ năng sẵn sàng làm việc</p>
-                </div>
-                <div style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 30px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.01);">
-                    <div style="background: #ecfdf5; color: #10b981; width: 60px; height: 60px; border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px;"><i data-lucide="file-check" style="width: 30px; height: 30px;"></i></div>
-                    <h3 style="font-size: 1.8rem; font-weight: 800; color: #0f172a; margin-bottom: 8px;">5,000+</h3>
-                    <p style="color: #64748b; font-size: 0.95rem; margin: 0; font-weight: 500;">Dự án ngắn hạn đã hoàn thành xuất sắc</p>
-                </div>
-                <div style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 30px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.01);">
-                    <div style="background: #fffbeb; color: #f59e0b; width: 60px; height: 60px; border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px;"><i data-lucide="clock" style="width: 30px; height: 30px;"></i></div>
-                    <h3 style="font-size: 1.8rem; font-weight: 800; color: #0f172a; margin-bottom: 8px;">24 Giờ</h3>
-                    <p style="color: #64748b; font-size: 0.95rem; margin: 0; font-weight: 500;">Thời gian trung bình để kết nối freelancer phù hợp</p>
+                <div style="border-top: 1px solid #e2e8f0; padding-top: 30px;">
+                    <h4 style="font-size: 1.2rem; font-weight: 800; color: #1e293b; margin-bottom: 20px; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        👥 Đội Ngũ Sáng Lập (Group 4 - Lớp EXE101_G01)
+                    </h4>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+                        <!-- Thành viên 1 -->
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; text-align: center;">
+                            <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #0ea5e9, #38bdf8); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; margin: 0 auto 10px;">LP</div>
+                            <div style="font-weight: 700; color: #0f172a; font-size: 0.92rem; margin-bottom: 2px;">Lâm Ngọc Phượng</div>
+                            <div style="color: #64748b; font-size: 0.78rem; margin-bottom: 8px;">MSSV: CA190839</div>
+                            <span style="font-size: 0.72rem; background-color: #e0f2fe; color: #0284c7; padding: 4px 12px; border-radius: 9999px; font-weight: 600; display: inline-block;">Giám đốc Điều hành (CEO)</span>
+                        </div>
+                        <!-- Thành viên 2 -->
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; text-align: center;">
+                            <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #2563eb, #38bdf8); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; margin: 0 auto 10px;">AT</div>
+                            <div style="font-weight: 700; color: #0f172a; font-size: 0.92rem; margin-bottom: 2px;">Lê Anh Tuấn</div>
+                            <div style="color: #64748b; font-size: 0.78rem; margin-bottom: 8px;">MSSV: CE180905</div>
+                            <span style="font-size: 0.72rem; background-color: #d1fae5; color: #065f46; padding: 4px 12px; border-radius: 9999px; font-weight: 600; display: inline-block;">Giám đốc Công nghệ (CTO)</span>
+                        </div>
+                        <!-- Thành viên 3 -->
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; text-align: center;">
+                            <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #10b981, #34d399); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; margin: 0 auto 10px;">GH</div>
+                            <div style="font-weight: 700; color: #0f172a; font-size: 0.92rem; margin-bottom: 2px;">Tiêu Gia Huy</div>
+                            <div style="color: #64748b; font-size: 0.78rem; margin-bottom: 8px;">MSSV: CE191594</div>
+                            <span style="font-size: 0.72rem; background-color: #ecfeff; color: #0891b2; padding: 4px 12px; border-radius: 9999px; font-weight: 600; display: inline-block;">Giám đốc Truyền thông (CCO)</span>
+                        </div>
+                        <!-- Thành viên 4 -->
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; text-align: center;">
+                            <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b, #fbbf24); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; margin: 0 auto 10px;">PT</div>
+                            <div style="font-weight: 700; color: #0f172a; font-size: 0.92rem; margin-bottom: 2px;">Lê Hoàng Phương Thảo</div>
+                            <div style="color: #64748b; font-size: 0.78rem; margin-bottom: 8px;">MSSV: CS190001</div>
+                            <span style="font-size: 0.72rem; background-color: #fffbeb; color: #d97706; padding: 4px 12px; border-radius: 9999px; font-weight: 600; display: inline-block;">Giám đốc Phát triển Kinh doanh (CBDO)</span>
+                        </div>
+                        <!-- Thành viên 5 -->
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; text-align: center;">
+                            <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #ec4899, #fbcfe8); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; margin: 0 auto 10px;">TN</div>
+                            <div style="font-weight: 700; color: #0f172a; font-size: 0.92rem; margin-bottom: 2px;">Hồ Như Thanh Ngọc</div>
+                            <div style="color: #64748b; font-size: 0.78rem; margin-bottom: 8px;">MSSV: CS191393</div>
+                            <span style="font-size: 0.72rem; background-color: #f1f5f9; color: #475569; padding: 4px 12px; border-radius: 9999px; font-weight: 600; display: inline-block;">Giám đốc Vận hành (COO)</span>
+                        </div>
+                        <!-- Thành viên 6 -->
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; text-align: center;">
+                            <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #a5b4fc); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; margin: 0 auto 10px;">TP</div>
+                            <div style="font-weight: 700; color: #0f172a; font-size: 0.92rem; margin-bottom: 2px;">Lâm Thành Phát</div>
+                            <div style="color: #64748b; font-size: 0.78rem; margin-bottom: 8px;">MSSV: CS191497</div>
+                            <span style="font-size: 0.72rem; background-color: #f5f3ff; color: #5b21b6; padding: 4px 12px; border-radius: 9999px; font-weight: 600; display: inline-block;">Giám đốc Marketing (CMO)</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -1663,44 +1719,30 @@
                     <h2 style="font-size: 2rem; font-weight: 800; color: #0f172a; margin-bottom: 12px;">Ưu điểm vượt trội của J4S</h2>
                     <p style="color: #64748b; max-width: 600px; margin: 0 auto;">Giải pháp hoàn hảo hỗ trợ kết nối dự án ngắn hạn với sinh viên tài năng một cách nhanh chóng, minh bạch và an toàn.</p>
                 </div>
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; margin-bottom: 40px;">
-                    <div>
-                        <h3 style="font-size: 1.2rem; font-weight: 700; color: #1e293b; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-                            <span style="color: #2563eb;">⚡</span> Đăng tin &amp; Báo giá nhanh
-                        </h3>
-                        <p style="color: #475569; font-size: 0.9rem; line-height: 1.6;">Khách đăng việc, sinh viên nộp báo giá trực tiếp. Hệ thống duyệt tự động và hỗ trợ chuẩn hóa nội dung tin tuyển dụng bằng AI.</p>
-                    </div>
-                    <div>
-                        <h3 style="font-size: 1.2rem; font-weight: 700; color: #1e293b; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-                            <span style="color: #2563eb;">🔒</span> Giao dịch minh bạch
-                        </h3>
-                        <p style="color: #475569; font-size: 0.9rem; line-height: 1.6;">J4S hỗ trợ ví điện tử nội bộ giúp lưu vết lịch sử nạp rút và giao dịch rõ ràng. Đảm bảo công bằng và an toàn thông tin thanh toán cho cả hai bên.</p>
-                    </div>
-                    <div>
-                        <h3 style="font-size: 1.2rem; font-weight: 700; color: #1e293b; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-                            <span style="color: #2563eb;">🎯</span> Gợi ý thông minh bằng AI
-                        </h3>
-                        <p style="color: #475569; font-size: 0.9rem; line-height: 1.6;">Tự động phân tích yêu cầu công việc để đề xuất những sinh viên có kỹ năng phù hợp nhất dựa trên chuyên ngành, lịch học và điểm uy tín.</p>
-                    </div>
-                </div>
                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px;">
                     <div>
-                        <h3 style="font-size: 1.2rem; font-weight: 700; color: #1e293b; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-                            <span style="color: #10b981;">🛡️</span> Xác thực danh tính
+                        <h3 style="font-size: 1.25rem; font-weight: 700; color: #1e293b; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+                            <span style="color: #f59e0b; font-size: 1.35rem;">⚡</span> Kết nối &amp; Quản lý thông minh
                         </h3>
-                        <p style="color: #475569; font-size: 0.9rem; line-height: 1.6;">Sinh viên và đối tác doanh nghiệp đều trải qua quy trình xác thực hồ sơ nghiêm ngặt, giảm thiểu rủi ro gian lận và nâng cao uy tín cho cộng đồng.</p>
+                        <p style="color: #475569; font-size: 0.92rem; line-height: 1.6; text-align: justify; margin: 0;">
+                            Doanh nghiệp dễ dàng đăng bài tuyển dụng và chủ động phê duyệt hồ sơ ứng tuyển từ sinh viên. Hệ thống tự động lọc, đề xuất các ứng viên phù hợp nhất theo chuyên ngành và kỹ năng chuyên môn, đồng thời hỗ trợ quản lý deadline rõ ràng để đảm bảo tiến độ công việc.
+                        </p>
                     </div>
                     <div>
-                        <h3 style="font-size: 1.2rem; font-weight: 700; color: #1e293b; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-                            <span style="color: #10b981;">⭐</span> Đánh giá hai chiều
+                        <h3 style="font-size: 1.25rem; font-weight: 700; color: #1e293b; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+                            <span style="color: #6366f1; font-size: 1.35rem;">👤</span> Minh bạch thông tin hồ sơ
                         </h3>
-                        <p style="color: #475569; font-size: 0.9rem; line-height: 1.6;">Hệ thống phản hồi minh bạch sau mỗi hợp đồng giúp các thành viên tích lũy uy tín và dễ dàng chọn được đối tác đáng tin cậy.</p>
+                        <p style="color: #475569; font-size: 0.92rem; line-height: 1.6; text-align: justify; margin: 0;">
+                            Sinh viên và đối tác doanh nghiệp được khuyến khích khai báo hồ sơ và thông tin rõ ràng khi tham gia. Điều này giúp tăng tính minh bạch, hạn chế tài khoản ảo và giảm thiểu tối đa rủi ro thông tin sai lệch khi đôi bên kết nối.
+                        </p>
                     </div>
                     <div>
-                        <h3 style="font-size: 1.2rem; font-weight: 700; color: #1e293b; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-                            <span style="color: #10b981;">📅</span> Quản lý thời hạn chặt chẽ
+                        <h3 style="font-size: 1.25rem; font-weight: 700; color: #1e293b; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+                            <span style="color: #10b981; font-size: 1.35rem;">💵</span> Giao dịch &amp; Đánh giá khách quan
                         </h3>
-                        <p style="color: #475569; font-size: 0.9rem; line-height: 1.6;">Quản lý deadline rõ ràng và thông minh giúp đảm bảo tiến độ công việc, tạo sự chuyên nghiệp cho sinh viên và mang lại sự an tâm cho nhà tuyển dụng.</p>
+                        <p style="color: #475569; font-size: 0.92rem; line-height: 1.6; text-align: justify; margin: 0;">
+                            Tích hợp ví điện tử nội bộ giúp lưu vết lịch sử nạp rút rõ ràng. Hệ thống phản hồi, đánh giá hai chiều sau mỗi hợp đồng giúp các thành viên tích lũy điểm uy tín và dễ dàng chọn được đối tác đáng tin cậy.
+                        </p>
                     </div>
                 </div>
             </div>
@@ -1792,8 +1834,8 @@
 {
     <script>
         document.addEventListener('click', function(e) {
-        // Cho phép click vào Đăng nhập, Đăng ký và Logo
-        if (e.target.closest('a[href="/Auth/Login"], a[href="/Auth/Register"], .j4s-brand')) {
+        // Cho phép click vào Đăng nhập, Đăng ký, Logo, Modal giới thiệu và các nút đóng
+        if (e.target.closest('a[href="/Auth/Login"], a[href="/Auth/Register"], .j4s-brand, [data-bs-target="#aboutJ4sModal"], [data-bs-dismiss="modal"], .modal')) {
         return;
         }
         // Chặn click vào các thành phần tương tác và chuyển hướng

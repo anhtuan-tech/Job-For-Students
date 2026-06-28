@@ -523,7 +523,7 @@
 
     function bindBrandLogoClick() {
         document.querySelectorAll('.j4s-brand').forEach(brand => {
-            brand.addEventListener('click', function(e) {
+            brand.addEventListener('click', function (e) {
                 localStorage.setItem('j4s_active_tab', 'home');
                 const userProfile = document.getElementById('userProfile');
                 const isAuthenticated = userProfile !== null;
