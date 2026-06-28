@@ -4637,30 +4637,35 @@
         }
 
         modal.querySelector('#btnSaveProfile').addEventListener('click', function () {
+            const getValueSafe = (selector) => {
+                const el = modal.querySelector(selector);
+                return el ? el.value.trim() : '';
+            };
+
             let payload = {
-                email: modal.querySelector('#editEmail').value.trim(),
-                phone: modal.querySelector('#editPhone').value.trim()
+                email: getValueSafe('#editEmail'),
+                phone: getValueSafe('#editPhone')
             };
 
             if (isStudent) {
-                const skillsVal = modal.querySelector('#editSkills').value.trim();
+                const skillsVal = getValueSafe('#editSkills');
                 const parsedSkills = skillsVal
                     .split(',')
                     .map(s => s.trim())
                     .filter(s => s.length > 0);
 
-                const gpaInput = modal.querySelector('#editGpa').value;
-                const gradYearInput = modal.querySelector('#editGraduationYear').value;
+                const gpaInput = getValueSafe('#editGpa');
+                const gradYearInput = getValueSafe('#editGraduationYear');
 
-                payload.fullName = modal.querySelector('#editName').value.trim();
-                payload.bio = modal.querySelector('#editBio').value.trim();
-                payload.experience = modal.querySelector('#editExperience').value.trim();
-                payload.university = modal.querySelector('#editUniversity').value.trim();
-                payload.major = modal.querySelector('#editMajor').value.trim();
+                payload.fullName = getValueSafe('#editName');
+                payload.bio = getValueSafe('#editBio');
+                payload.experience = getValueSafe('#editExperience');
+                payload.university = getValueSafe('#editUniversity');
+                payload.major = getValueSafe('#editMajor');
                 payload.gpa = gpaInput ? parseFloat(gpaInput) : null;
                 payload.graduationYear = gradYearInput ? parseInt(gradYearInput) : null;
-                payload.gender = modal.querySelector('#editGender').value;
-                payload.dateOfBirth = modal.querySelector('#editDob').value;
+                payload.gender = getValueSafe('#editGender');
+                payload.dateOfBirth = getValueSafe('#editDob');
                 payload.avatarUrl = uploadedAvatarBase64;
                 payload.coverImageUrl = uploadedCoverBase64;
                 payload.cvName = uploadedCvName;
@@ -4693,15 +4698,15 @@
                     }
                 }
             } else {
-                payload.companyName = modal.querySelector('#editName').value.trim();
-                payload.industry = modal.querySelector('#editIndustry').value.trim();
-                payload.taxCode = modal.querySelector('#editTaxCode').value.trim();
-                payload.websiteUrl = modal.querySelector('#editWebsiteUrl').value.trim();
-                payload.companySize = modal.querySelector('#editCompanySize').value.trim();
-                payload.address = modal.querySelector('#editAddress').value.trim();
+                payload.companyName = getValueSafe('#editName');
+                payload.industry = getValueSafe('#editIndustry');
+                payload.taxCode = getValueSafe('#editTaxCode');
+                payload.websiteUrl = getValueSafe('#editWebsiteUrl');
+                payload.companySize = getValueSafe('#editCompanySize');
+                payload.address = getValueSafe('#editAddress');
                 payload.logoUrl = uploadedAvatarBase64;
                 payload.coverImageUrl = uploadedCoverBase64;
-                payload.businessDescription = modal.querySelector('#editBusinessDescription').value.trim();
+                payload.businessDescription = getValueSafe('#editBusinessDescription');
 
                 if (!payload.companyName) {
                     showToast('Vui lòng nhập tên doanh nghiệp!', 'warning');
@@ -6602,13 +6607,24 @@
         }
         const cssLink = document.createElement('link');
         cssLink.rel = 'stylesheet';
-        cssLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css';
+        cssLink.href = 'https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.css';
+        cssLink.onerror = () => {
+            cssLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css';
+        };
         document.head.appendChild(cssLink);
 
         const jsScript = document.createElement('script');
-        jsScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js';
+        jsScript.src = 'https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.js';
         jsScript.onload = () => {
             callback();
+        };
+        jsScript.onerror = () => {
+            const backupScript = document.createElement('script');
+            backupScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js';
+            backupScript.onload = () => {
+                callback();
+            };
+            document.head.appendChild(backupScript);
         };
         document.head.appendChild(jsScript);
     }
@@ -6625,8 +6641,8 @@
                     <h2 style="margin: 0; font-size: 18px; font-weight: 700; color: var(--text-primary);">✂️ Cắt chỉnh ảnh</h2>
                 </div>
                 <div class="modal-body" style="padding: 10px 0 20px 0; text-align: center;">
-                    <div style="max-height: 400px; background: #f1f5f9; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
-                        <img id="cropImageTarget" src="${imageSrc}" style="max-width: 100%; max-height: 400px;" />
+                    <div style="max-height: 380px; background: #f1f5f9; border-radius: 8px; overflow: hidden; position: relative; display: block; width: 100%;">
+                        <img id="cropImageTarget" src="${imageSrc}" style="display: block; max-width: 100%; max-height: 380px; margin: 0 auto;" />
                     </div>
                 </div>
                 <div class="modal-footer" style="padding: 0; display: flex; gap: 10px; justify-content: flex-end;">
@@ -6643,14 +6659,24 @@
         let cropper;
 
         loadCropper(function () {
-            cropper = new Cropper(image, {
-                aspectRatio: aspectRatio,
-                viewMode: 1,
-                autoCropArea: 0.9,
-                responsive: true,
-                restore: false,
-                checkCrossOrigin: false
-            });
+            setTimeout(() => {
+                const initCropper = () => {
+                    if (cropper) return;
+                    cropper = new Cropper(image, {
+                        aspectRatio: aspectRatio,
+                        viewMode: 1,
+                        autoCropArea: 0.9,
+                        responsive: true,
+                        restore: false,
+                        checkCrossOrigin: false
+                    });
+                };
+                if (image.complete) {
+                    initCropper();
+                } else {
+                    image.onload = initCropper;
+                }
+            }, 180);
         });
 
         const cleanup = () => {

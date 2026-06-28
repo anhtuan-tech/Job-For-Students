@@ -177,7 +177,7 @@
     }
 
     document.addEventListener('contextmenu', blockEvent, true);
-    document.addEventListener('dragstart', blockEvent, true);
+    // document.addEventListener('dragstart', blockEvent, true); // Disabled to allow image cropping & dragging
     document.addEventListener('keydown', function (event) {
         if (isBlockedShortcut(event)) {
             blockEvent(event);
