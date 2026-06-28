@@ -190,10 +190,23 @@ html.browser-guard-active body {
 }
 
 @keyframes devtoolBlockShake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-5px); }
-    50% { transform: translateX(5px); }
-    75% { transform: translateX(-3px); }
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-5px);
+    }
+
+    50% {
+        transform: translateX(5px);
+    }
+
+    75% {
+        transform: translateX(-3px);
+    }
 }
 
 /* ---------- Scrollbar ---------- */
@@ -856,6 +869,7 @@ body.sidebar-collapsed .main-content {
     border: 1px solid #fcd34d;
     background: #fffbeb;
 }
+
 .job-card.job-card-vip:hover {
     border-color: #f59e0b;
     box-shadow: 0 8px 24px rgba(245, 158, 11, 0.1);
@@ -2796,7 +2810,8 @@ body.sidebar-collapsed .main-content {
     padding-top: 12px;
 }
 
-.btn-review-reply, .btn-review-report {
+.btn-review-reply,
+.btn-review-report {
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -2884,7 +2899,10 @@ body.sidebar-collapsed .main-content {
     box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
 }
 
-.btn-reply-cancel, .btn-reply-submit, .btn-report-cancel, .btn-report-submit {
+.btn-reply-cancel,
+.btn-reply-submit,
+.btn-report-cancel,
+.btn-report-submit {
     padding: 6px 14px;
     font-size: 12px;
     font-weight: 600;
@@ -2893,13 +2911,15 @@ body.sidebar-collapsed .main-content {
     transition: var(--transition);
 }
 
-.btn-reply-cancel, .btn-report-cancel {
+.btn-reply-cancel,
+.btn-report-cancel {
     background: none;
     border: 1px solid var(--border-color);
     color: var(--text-secondary);
 }
 
-.btn-reply-cancel:hover, .btn-report-cancel:hover {
+.btn-reply-cancel:hover,
+.btn-report-cancel:hover {
     background: var(--bg-page);
 }
 
@@ -4851,6 +4871,34 @@ body.sidebar-collapsed .main-content {
 
 .input-field-modern:focus+.input-field-icon {
     color: #2563eb;
+}
+
+.input-field-modern.password-input {
+    padding-right: 48px;
+}
+
+.password-toggle-btn {
+    position: absolute;
+    right: 16px;
+    background: none;
+    border: none;
+    padding: 0;
+    color: #94a3b8;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    z-index: 5;
+    transition: color 0.3s ease;
+}
+
+.password-toggle-btn:hover {
+    color: #475569;
+}
+
+/* Hide native browser password reveal button (Edge/IE) */
+.password-input::-ms-reveal,
+.password-input::-ms-clear {
+    display: none;
 }
 
 /* Custom Checkbox */
@@ -7082,7 +7130,7 @@ body.sidebar-collapsed .layout-admin .main-content-wrapper {
 
 /* ---------- Student Home Mobile Polish ---------- */
 @media (max-width: 768px) {
-    .main-content > section {
+    .main-content>section {
         width: 100% !important;
         max-width: 100% !important;
     }
@@ -7138,24 +7186,24 @@ body.sidebar-collapsed .layout-admin .main-content-wrapper {
         text-align: center !important;
     }
 
-    .stat-card > div:first-child {
+    .stat-card>div:first-child {
         width: 40px !important;
         height: 40px !important;
         border-radius: 12px !important;
         flex: 0 0 auto !important;
     }
 
-    .stat-card > div:last-child {
+    .stat-card>div:last-child {
         min-width: 0 !important;
         width: 100% !important;
     }
 
-    .stat-card > div:last-child > div:first-child {
+    .stat-card>div:last-child>div:first-child {
         font-size: 22px !important;
         line-height: 1.05 !important;
     }
 
-    .stat-card > div:last-child > div:last-child {
+    .stat-card>div:last-child>div:last-child {
         font-size: 12px !important;
         line-height: 1.25 !important;
         overflow-wrap: anywhere;
@@ -7195,7 +7243,7 @@ body.sidebar-collapsed .layout-admin .main-content-wrapper {
         overflow-wrap: anywhere;
     }
 
-    #featuredJobs > div[style*="grid-template-columns"],
+    #featuredJobs>div[style*="grid-template-columns"],
     [style*="grid-template-columns: repeat(3, 1fr)"] {
         display: grid !important;
         grid-template-columns: 1fr !important;
@@ -7205,6 +7253,7 @@ body.sidebar-collapsed .layout-admin .main-content-wrapper {
 }
 
 @media (max-width: 390px) {
+
     .main-content-wrapper,
     .layout-admin .main-content-wrapper {
         padding: 8px !important;
@@ -7234,7 +7283,7 @@ body.sidebar-collapsed .layout-admin .main-content-wrapper {
         padding: 10px !important;
     }
 
-    .main-content[style*="max-width: 1200px"] > div[style*="linear-gradient(135deg, #eff6ff"] {
+    .main-content[style*="max-width: 1200px"]>div[style*="linear-gradient(135deg, #eff6ff"] {
         display: block !important;
         width: 100% !important;
         min-width: 0 !important;
@@ -7245,14 +7294,14 @@ body.sidebar-collapsed .layout-admin .main-content-wrapper {
         box-shadow: 0 8px 22px rgba(37, 99, 235, 0.06) !important;
     }
 
-    .main-content[style*="max-width: 1200px"] > div[style*="linear-gradient(135deg, #eff6ff"] > div:first-child {
+    .main-content[style*="max-width: 1200px"]>div[style*="linear-gradient(135deg, #eff6ff"]>div:first-child {
         width: 100% !important;
         max-width: 100% !important;
         min-width: 0 !important;
         display: block !important;
     }
 
-    .main-content[style*="max-width: 1200px"] > div[style*="linear-gradient(135deg, #eff6ff"] > div:first-child > span:first-child {
+    .main-content[style*="max-width: 1200px"]>div[style*="linear-gradient(135deg, #eff6ff"]>div:first-child>span:first-child {
         max-width: 100% !important;
         padding: 6px 10px !important;
         margin-bottom: 14px !important;
@@ -7265,7 +7314,7 @@ body.sidebar-collapsed .layout-admin .main-content-wrapper {
         text-align: left !important;
     }
 
-    .main-content[style*="max-width: 1200px"] > div[style*="linear-gradient(135deg, #eff6ff"] h1 {
+    .main-content[style*="max-width: 1200px"]>div[style*="linear-gradient(135deg, #eff6ff"] h1 {
         width: 100% !important;
         max-width: 100% !important;
         margin: 0 0 14px !important;
@@ -7278,11 +7327,11 @@ body.sidebar-collapsed .layout-admin .main-content-wrapper {
         hyphens: none !important;
     }
 
-    .main-content[style*="max-width: 1200px"] > div[style*="linear-gradient(135deg, #eff6ff"] h1 span {
+    .main-content[style*="max-width: 1200px"]>div[style*="linear-gradient(135deg, #eff6ff"] h1 span {
         display: inline !important;
     }
 
-    .main-content[style*="max-width: 1200px"] > div[style*="linear-gradient(135deg, #eff6ff"] p {
+    .main-content[style*="max-width: 1200px"]>div[style*="linear-gradient(135deg, #eff6ff"] p {
         width: 100% !important;
         max-width: 100% !important;
         margin-bottom: 18px !important;
@@ -7290,14 +7339,14 @@ body.sidebar-collapsed .layout-admin .main-content-wrapper {
         line-height: 1.55 !important;
     }
 
-    .main-content[style*="max-width: 1200px"] > div[style*="linear-gradient(135deg, #eff6ff"] > div:first-child > div[style*="display: flex"] {
+    .main-content[style*="max-width: 1200px"]>div[style*="linear-gradient(135deg, #eff6ff"]>div:first-child>div[style*="display: flex"] {
         display: grid !important;
         grid-template-columns: 1fr !important;
         gap: 10px !important;
         width: 100% !important;
     }
 
-    .main-content[style*="max-width: 1200px"] > div[style*="linear-gradient(135deg, #eff6ff"] a.btn {
+    .main-content[style*="max-width: 1200px"]>div[style*="linear-gradient(135deg, #eff6ff"] a.btn {
         width: 100% !important;
         min-height: 46px !important;
         padding: 0 16px !important;
@@ -7305,11 +7354,11 @@ body.sidebar-collapsed .layout-admin .main-content-wrapper {
         text-align: center !important;
     }
 
-    .main-content[style*="max-width: 1200px"] > div[style*="linear-gradient(135deg, #eff6ff"] > div:last-child {
+    .main-content[style*="max-width: 1200px"]>div[style*="linear-gradient(135deg, #eff6ff"]>div:last-child {
         display: none !important;
     }
 
-    .main-content[style*="max-width: 1200px"] > div[style*="grid-template-columns: repeat(3, 1fr)"],
+    .main-content[style*="max-width: 1200px"]>div[style*="grid-template-columns: repeat(3, 1fr)"],
     .main-content[style*="max-width: 1200px"] div[style*="grid-template-columns: repeat(3, 1fr)"] {
         display: grid !important;
         grid-template-columns: 1fr !important;
@@ -7328,11 +7377,11 @@ body.sidebar-collapsed .layout-admin .main-content-wrapper {
         padding: 8px !important;
     }
 
-    .main-content[style*="max-width: 1200px"] > div[style*="linear-gradient(135deg, #eff6ff"] {
+    .main-content[style*="max-width: 1200px"]>div[style*="linear-gradient(135deg, #eff6ff"] {
         padding: 22px 16px !important;
     }
 
-    .main-content[style*="max-width: 1200px"] > div[style*="linear-gradient(135deg, #eff6ff"] h1 {
+    .main-content[style*="max-width: 1200px"]>div[style*="linear-gradient(135deg, #eff6ff"] h1 {
         font-size: 32px !important;
     }
 }
@@ -7404,6 +7453,7 @@ body.sidebar-collapsed .layout-admin .main-content-wrapper {
 }
 
 @keyframes j4s-dot-bounce {
+
     0%,
     80%,
     100% {

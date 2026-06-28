@@ -97,7 +97,10 @@
                         <span class="input-field-icon">
                             <i data-lucide="lock" style="width: 18px; height: 18px;"></i>
                         </span>
-                        <input asp-for="Password" type="password" class="input-field-modern" placeholder="••••••" required autocomplete="current-password" />
+                        <input asp-for="Password" type="password" class="input-field-modern password-input" id="passwordInput" placeholder="••••••" required autocomplete="current-password" />
+                        <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('passwordInput', this)">
+                            <i data-lucide="eye" style="width: 18px; height: 18px;"></i>
+                        </button>
                     </div>
                     <span asp-validation-for="Password" class="text-danger small mt-1 d-block"></span>
                 </div>
@@ -147,6 +150,25 @@
         <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     }
     <script>
+        function togglePasswordVisibility(inputId, buttonEl) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            const icon = buttonEl.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                if (icon) {
+                    icon.setAttribute('data-lucide', 'eye-off');
+                    if (window.lucide) lucide.createIcons();
+                }
+            } else {
+                input.type = 'password';
+                if (icon) {
+                    icon.setAttribute('data-lucide', 'eye');
+                    if (window.lucide) lucide.createIcons();
+                }
+            }
+        }
+
         // reCAPTCHA callbacks
         function onRecaptchaSuccess(token) {
             document.getElementById('recaptchaTokenInput').value = token;

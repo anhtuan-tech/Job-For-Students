@@ -139,7 +139,10 @@
                         <span class="input-field-icon">
                             <i data-lucide="lock" style="width: 18px; height: 18px;"></i>
                         </span>
-                        <input asp-for="Password" type="password" class="input-field-modern" placeholder="••••••" required autocomplete="new-password" />
+                        <input asp-for="Password" type="password" class="input-field-modern password-input" id="passwordInput" placeholder="••••••" required autocomplete="new-password" />
+                        <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('passwordInput', this)">
+                            <i data-lucide="eye" style="width: 18px; height: 18px;"></i>
+                        </button>
                     </div>
                     <span asp-validation-for="Password" class="text-danger small mt-1 d-block"></span>
                 </div>
@@ -151,7 +154,10 @@
                         <span class="input-field-icon">
                             <i data-lucide="shield-check" style="width: 18px; height: 18px;"></i>
                         </span>
-                        <input asp-for="ConfirmPassword" type="password" class="input-field-modern" placeholder="••••••" required autocomplete="new-password" />
+                        <input asp-for="ConfirmPassword" type="password" class="input-field-modern password-input" id="confirmPasswordInput" placeholder="••••••" required autocomplete="new-password" />
+                        <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('confirmPasswordInput', this)">
+                            <i data-lucide="eye" style="width: 18px; height: 18px;"></i>
+                        </button>
                     </div>
                     <span asp-validation-for="ConfirmPassword" class="text-danger small mt-1 d-block"></span>
                 </div>
@@ -172,6 +178,25 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
+        function togglePasswordVisibility(inputId, buttonEl) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            const icon = buttonEl.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                if (icon) {
+                    icon.setAttribute('data-lucide', 'eye-off');
+                    if (window.lucide) lucide.createIcons();
+                }
+            } else {
+                input.type = 'password';
+                if (icon) {
+                    icon.setAttribute('data-lucide', 'eye');
+                    if (window.lucide) lucide.createIcons();
+                }
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('j4s_active_tab', 'home');
             const roleStudent = document.getElementById('roleStudent');

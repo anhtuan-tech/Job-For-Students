@@ -26,7 +26,7 @@ public class RegisterViewModel
 
     [Required(ErrorMessage = "Số điện thoại là bắt buộc.")]
     [Phone(ErrorMessage = "Số điện thoại không hợp lệ.")]
-    [RegularExpression(@"^[0-9]{10,11}$", ErrorMessage = "Số điện thoại phải từ 10-11 chữ số.")]
+    [RegularExpression(@"^0[0-9]{9,10}$", ErrorMessage = "Số điện thoại phải bắt đầu bằng số 0 và có từ 10-11 chữ số.")]
     public string Phone { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Mật khẩu là bắt buộc.")]
