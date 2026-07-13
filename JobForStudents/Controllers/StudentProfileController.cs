@@ -46,6 +46,7 @@ public class StudentProfileController : Controller
             Major = profile.Major ?? "",
             University = profile.University ?? "",
             Bio = profile.Bio ?? "",
+            Experience = profile.Experience ?? "",
             AvatarUrl = profile.AvatarUrl ?? "",
             ResumeUrl = profile.CvUrl ?? "",
             Skills = profile.StudentSkills.Select(ss => ss.Skill.Name).ToList(),

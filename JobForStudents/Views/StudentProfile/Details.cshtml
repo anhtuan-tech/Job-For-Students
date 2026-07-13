@@ -197,8 +197,15 @@
     <div class="profile-content">
         <div class="content-card">
             <h4><i data-lucide="user" style="width:24px;height:24px;color:#0ea5e9;"></i> Giới thiệu bản thân</h4>
-            <div style="color: #475569; line-height: 1.6;">
+            <div class="profile-bio-container" data-raw="@Model.Bio" style="color: #475569; line-height: 1.6; white-space: pre-line;">
                 @(string.IsNullOrEmpty(Model.Bio) ? "Ứng viên này chưa viết giới thiệu bản thân." : Model.Bio)
+            </div>
+        </div>
+
+        <div class="content-card">
+            <h4><i data-lucide="briefcase" style="width:24px;height:24px;color:#0ea5e9;"></i> Kinh nghiệm làm việc</h4>
+            <div class="profile-experience-container" data-raw="@Model.Experience" style="color: #475569; line-height: 1.6; white-space: pre-line;">
+                @(string.IsNullOrEmpty(Model.Experience) ? "Chưa cập nhật kinh nghiệm làm việc." : Model.Experience)
             </div>
         </div>
 
@@ -224,6 +231,56 @@
 
 @section Scripts {
     <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Format Bio
+            const bioContainer = document.querySelector('.profile-bio-container');
+            if (bioContainer) {
+                const rawBio = bioContainer.getAttribute('data-raw');
+                if (rawBio && rawBio.trim().startsWith('{') && rawBio.trim().endsWith('}')) {
+                    try {
+                        const obj = JSON.parse(rawBio);
+                        let html = '<ul style="padding-left: 20px; margin: 0; display: flex; flex-direction: column; gap: 8px;">';
+                        if (obj.q3) html += `<li><strong>Thông tin bản thân:</strong> ${escapeHtml(obj.q3)}</li>`;
+                        if (obj.q1) html += `<li><strong>Mục tiêu nghề nghiệp:</strong> ${escapeHtml(obj.q1)}</li>`;
+                        if (obj.q2) html += `<li><strong>Điểm mạnh cốt lõi:</strong> ${escapeHtml(obj.q2)}</li>`;
+                        html += '</ul>';
+                        bioContainer.innerHTML = html;
+                    } catch(e) {
+                        // Keep legacy format
+                    }
+                }
+            }
+
+            // Format Experience
+            const expContainer = document.querySelector('.profile-experience-container');
+            if (expContainer) {
+                const rawExp = expContainer.getAttribute('data-raw');
+                if (rawExp && rawExp.trim().startsWith('{') && rawExp.trim().endsWith('}')) {
+                    try {
+                        const obj = JSON.parse(rawExp);
+                        let html = '<ul style="padding-left: 20px; margin: 0; display: flex; flex-direction: column; gap: 8px;">';
+                        if (obj.q1) html += `<li><strong>Dự án & Công việc tiêu biểu:</strong> ${escapeHtml(obj.q1)}</li>`;
+                        if (obj.q2) html += `<li><strong>Nhiệm vụ & Vai trò chính:</strong> ${escapeHtml(obj.q2)}</li>`;
+                        if (obj.q3) html += `<li><strong>Kết quả & Công nghệ sử dụng:</strong> ${escapeHtml(obj.q3)}</li>`;
+                        html += '</ul>';
+                        expContainer.innerHTML = html;
+                    } catch(e) {
+                        // Keep legacy format
+                    }
+                }
+            }
+
+            function escapeHtml(text) {
+                if (!text) return '';
+                return text
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+        });
+
         function toggleReplyForm(reviewId) {
             const form = document.getElementById(`reply-form-${reviewId}`);
             if (form) {

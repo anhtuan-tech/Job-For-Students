@@ -11,6 +11,7 @@ namespace JobForStudents.Models
         public string Major { get; set; } = string.Empty;
         public string University { get; set; } = string.Empty;
         public string Bio { get; set; } = string.Empty;
+        public string Experience { get; set; } = string.Empty;
         public string AvatarUrl { get; set; } = string.Empty;
         public string ResumeUrl { get; set; } = string.Empty;
 

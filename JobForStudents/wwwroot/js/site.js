@@ -3263,7 +3263,7 @@
                                 </div>
                                 <span class="candidate-rating"><i data-lucide="star" style="width:14px;height:14px;"></i> ${Number(candidate.rating || 0).toFixed(1)} (${candidate.reviewsCount || 0})</span>
                             </div>
-                            <p class="candidate-bio">${escapeHtml(candidate.bio || candidate.experience || 'Ứng viên chưa cập nhật mô tả hồ sơ.')}</p>
+                            <p class="candidate-bio">${escapeHtml(getBioPreview(candidate.bio || candidate.experience, 'Ứng viên chưa cập nhật mô tả hồ sơ.'))}</p>
                             <div class="job-tags">${(candidate.skills || []).slice(0, 8).map(skill => `<span class="job-tag">${escapeHtml(skill)}</span>`).join('')}</div>
                         </div>
                         <div class="candidate-side">
@@ -3327,9 +3327,12 @@
                                 <div><strong>${candidate.graduationYear || '--'}</strong><span>Năm tốt nghiệp</span></div>
                             </div>
                             <section>
-                                <h3>Giới thiệu</h3>
-                                <p>${escapeHtml(candidate.bio || 'Ứng viên chưa cập nhật giới thiệu.')}</p>
-                                <p>${escapeHtml(candidate.experience || '')}</p>
+                                <h3>Giới thiệu bản thân</h3>
+                                <div>${formatBioText(candidate.bio, 'Ứng viên chưa cập nhật giới thiệu.')}</div>
+                            </section>
+                            <section>
+                                <h3>Kinh nghiệm làm việc</h3>
+                                <div>${formatExperienceText(candidate.experience, 'Ứng viên chưa cập nhật kinh nghiệm làm việc.')}</div>
                             </section>
                             <section>
                                 <h3>Kỹ năng</h3>
@@ -3746,15 +3749,15 @@
                         <div style="display: flex; flex-direction: column; gap: 24px;">
                             <div class="profile-card-modern animate-in">
                                 <h3><i data-lucide="info" style="width:16px;height:16px;"></i> Giới thiệu</h3>
-                                <p style="font-size:14px; color: var(--text-secondary); margin:0; line-height: 1.6; white-space: pre-line;">
-                                    ${escapeHtml(data.bio || 'Chưa cập nhật giới thiệu bản thân.')}
-                                </p>
+                                <div>
+                                    ${formatBioText(data.bio, 'Chưa cập nhật giới thiệu bản thân.')}
+                                </div>
                             </div>
 
                             <div class="profile-card-modern animate-in">
                                 <h3><i data-lucide="briefcase" style="width:16px;height:16px;"></i> Kinh nghiệm làm việc</h3>
                                 <div class="experience-block">
-                                    <p class="experience-modern-content">${escapeHtml(data.experience || 'Chưa cập nhật kinh nghiệm làm việc.')}</p>
+                                    ${formatExperienceText(data.experience, 'Chưa cập nhật kinh nghiệm làm việc.')}
                                 </div>
                             </div>
 
@@ -4124,6 +4127,32 @@
 
         const isStudent = data.role === 'Student';
 
+        let bioObj = { q1: '', q2: '', q3: '' };
+        if (isStudent && data.bio) {
+            try {
+                if (data.bio.trim().startsWith('{') && data.bio.trim().endsWith('}')) {
+                    bioObj = JSON.parse(data.bio);
+                } else {
+                    bioObj.q3 = data.bio;
+                }
+            } catch (e) {
+                bioObj.q3 = data.bio;
+            }
+        }
+
+        let expObj = { q1: '', q2: '', q3: '' };
+        if (isStudent && data.experience) {
+            try {
+                if (data.experience.trim().startsWith('{') && data.experience.trim().endsWith('}')) {
+                    expObj = JSON.parse(data.experience);
+                } else {
+                    expObj.q1 = data.experience;
+                }
+            } catch (e) {
+                expObj.q1 = data.experience;
+            }
+        }
+
         let modalHTML = `
             <div class="modal-content" style="max-width: 700px; max-height: 85vh; overflow-y: auto;">
                 <button class="modal-close"><i data-lucide="x" style="width:20px;height:20px;"></i></button>
@@ -4243,13 +4272,39 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Giới thiệu ngắn về bản thân</label>
-                        <textarea class="form-textarea" id="editBio" rows="4" placeholder="Viết giới thiệu ngắn về bản thân bạn...">${escapeHtml(data.bio || '')}</textarea>
+                        <label class="form-label" style="font-weight: 700;">Giới thiệu bản thân (Trả lời các câu hỏi sau để hoàn thiện hồ sơ):</label>
+                        <div style="margin-left: 10px; margin-top: 8px; display: flex; flex-direction: column; gap: 8px;">
+                            <div>
+                                <label class="form-label" style="font-size: 0.85rem; font-weight: 600; color: #475569;">1. Mục tiêu nghề nghiệp của bạn là gì?</label>
+                                <textarea class="form-textarea" id="editBioQ1" rows="2" placeholder="Ví dụ: Mong muốn tìm kiếm cơ hội thực tập/làm việc để cống hiến, học hỏi và phát triển...">${escapeHtml(bioObj.q1 || '')}</textarea>
+                            </div>
+                            <div>
+                                <label class="form-label" style="font-size: 0.85rem; font-weight: 600; color: #475569;">2. Điểm mạnh lớn nhất của bạn là gì?</label>
+                                <textarea class="form-textarea" id="editBioQ2" rows="2" placeholder="Ví dụ: Bản thân đã có nền tảng vững chắc về tư duy lập trình...">${escapeHtml(bioObj.q2 || '')}</textarea>
+                            </div>
+                            <div>
+                                <label class="form-label" style="font-size: 0.85rem; font-weight: 600; color: #475569;">3. Bạn là sinh viên năm mấy, chuyên ngành gì?</label>
+                                <textarea class="form-textarea" id="editBioQ3" rows="2" placeholder="Ví dụ: Là sinh viên năm 4 chuyên ngành Kỹ thuật Phần mềm tại Đại học FPT Cần Thơ.">${escapeHtml(bioObj.q3 || '')}</textarea>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Kinh nghiệm làm việc</label>
-                        <textarea class="form-textarea" id="editExperience" rows="4" placeholder="Mô tả các công việc, dự án thực tế bạn đã tham gia...">${escapeHtml(data.experience || '')}</textarea>
+                        <label class="form-label" style="font-weight: 700;">Kinh nghiệm làm việc (Trả lời các câu hỏi sau để hoàn thiện hồ sơ):</label>
+                        <div style="margin-left: 10px; margin-top: 8px; display: flex; flex-direction: column; gap: 8px;">
+                            <div>
+                                <label class="form-label" style="font-size: 0.85rem; font-weight: 600; color: #475569;">1. Bạn đã tham gia dự án/công việc thực tế nào tiêu biểu? (Tên dự án, vai trò, thời gian)</label>
+                                <textarea class="form-textarea" id="editExpQ1" rows="2" placeholder="Ví dụ: - Capital Franchise Coffee - Dự án Fullstack (.NET & React) (01/2026 - 04/2026)">${escapeHtml(expObj.q1 || '')}</textarea>
+                            </div>
+                            <div>
+                                <label class="form-label" style="font-size: 0.85rem; font-weight: 600; color: #475569;">2. Mô tả các nhiệm vụ và công việc cụ thể của bạn trong các dự án đó?</label>
+                                <textarea class="form-textarea" id="editExpQ2" rows="2" placeholder="Ví dụ: Xây dựng hệ thống quản lý/nhượng quyền cà phê hoàn chỉnh...">${escapeHtml(expObj.q2 || '')}</textarea>
+                            </div>
+                            <div>
+                                <label class="form-label" style="font-size: 0.85rem; font-weight: 600; color: #475569;">3. Kết quả đạt được hoặc công nghệ bạn đã sử dụng là gì?</label>
+                                <textarea class="form-textarea" id="editExpQ3" rows="2" placeholder="Ví dụ: Thiết kế giao diện hiện đại, tối ưu hóa trải nghiệm người dùng (UX)...">${escapeHtml(expObj.q3 || '')}</textarea>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -4658,8 +4713,20 @@
                 const gradYearInput = getValueSafe('#editGraduationYear');
 
                 payload.fullName = getValueSafe('#editName');
-                payload.bio = getValueSafe('#editBio');
-                payload.experience = getValueSafe('#editExperience');
+
+                const bioObj = {
+                    q1: getValueSafe('#editBioQ1'),
+                    q2: getValueSafe('#editBioQ2'),
+                    q3: getValueSafe('#editBioQ3')
+                };
+                payload.bio = JSON.stringify(bioObj);
+
+                const expObj = {
+                    q1: getValueSafe('#editExpQ1'),
+                    q2: getValueSafe('#editExpQ2'),
+                    q3: getValueSafe('#editExpQ3')
+                };
+                payload.experience = JSON.stringify(expObj);
                 payload.university = getValueSafe('#editUniversity');
                 payload.major = getValueSafe('#editMajor');
                 payload.gpa = gpaInput ? parseFloat(gpaInput) : null;
@@ -7676,6 +7743,49 @@
         const div = document.createElement('div');
         div.textContent = str;
         return div.innerHTML;
+    }
+
+    function formatBioText(rawText, fallbackText = 'Chưa cập nhật giới thiệu bản thân.') {
+        if (!rawText) return `<p style="font-size:14px; color: var(--text-secondary); margin:0; line-height: 1.6;">${fallbackText}</p>`;
+        if (rawText.trim().startsWith('{') && rawText.trim().endsWith('}')) {
+            try {
+                const obj = JSON.parse(rawText);
+                let html = '<ul style="padding-left: 20px; margin: 0; font-size:14px; color: var(--text-secondary); line-height: 1.6; display: flex; flex-direction: column; gap: 8px;">';
+                if (obj.q3) html += `<li><strong>Thông tin bản thân:</strong> ${escapeHtml(obj.q3)}</li>`;
+                if (obj.q1) html += `<li><strong>Mục tiêu nghề nghiệp:</strong> ${escapeHtml(obj.q1)}</li>`;
+                if (obj.q2) html += `<li><strong>Điểm mạnh cốt lõi:</strong> ${escapeHtml(obj.q2)}</li>`;
+                html += '</ul>';
+                return html;
+            } catch (e) { }
+        }
+        return `<p style="font-size:14px; color: var(--text-secondary); margin:0; line-height: 1.6; white-space: pre-line;">${escapeHtml(rawText)}</p>`;
+    }
+
+    function formatExperienceText(rawText, fallbackText = 'Chưa cập nhật kinh nghiệm làm việc.') {
+        if (!rawText) return `<p class="experience-modern-content">${fallbackText}</p>`;
+        if (rawText.trim().startsWith('{') && rawText.trim().endsWith('}')) {
+            try {
+                const obj = JSON.parse(rawText);
+                let html = '<ul style="padding-left: 20px; margin: 0; font-size:14px; color: var(--text-secondary); line-height: 1.6; display: flex; flex-direction: column; gap: 8px;">';
+                if (obj.q1) html += `<li><strong>Dự án & Công việc tiêu biểu:</strong> ${escapeHtml(obj.q1)}</li>`;
+                if (obj.q2) html += `<li><strong>Nhiệm vụ & Vai trò chính:</strong> ${escapeHtml(obj.q2)}</li>`;
+                if (obj.q3) html += `<li><strong>Kết quả & Công nghệ sử dụng:</strong> ${escapeHtml(obj.q3)}</li>`;
+                html += '</ul>';
+                return html;
+            } catch (e) { }
+        }
+        return `<p class="experience-modern-content" style="white-space: pre-line;">${escapeHtml(rawText)}</p>`;
+    }
+
+    function getBioPreview(rawText, fallbackText = 'Ứng viên chưa cập nhật mô tả hồ sơ.') {
+        if (!rawText) return fallbackText;
+        if (rawText.trim().startsWith('{') && rawText.trim().endsWith('}')) {
+            try {
+                const obj = JSON.parse(rawText);
+                return obj.q1 || obj.q3 || obj.q2 || fallbackText;
+            } catch (e) { }
+        }
+        return rawText;
     }
 
     // --- Kick off ---
