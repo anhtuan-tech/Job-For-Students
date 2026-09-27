@@ -831,9 +831,9 @@
                     <label style="font-size:0.75rem;font-weight:700;color:#64748b;display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em;">Kinh nghiệm</label>
                     <select id="fjExperience" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:9px 12px;font-size:0.85rem;color:#334155;outline:none;background:#fff;cursor:pointer;">
                         <option value="">Tất cả cấp độ</option>
-                        <option value="No_Experience">🌱 Không cần kinh nghiệm</option>
-                        <option value="Mid_Level">⭐ Có kinh nghiệm</option>
-                        <option value="Expert">🏆 Chuyên gia</option>
+                        <option value="No_Experience">Không cần kinh nghiệm</option>
+                        <option value="Mid_Level">Có kinh nghiệm</option>
+                        <option value="Expert">Chuyên gia</option>
                     </select>
                 </div>
 
@@ -941,10 +941,11 @@
                         activeJobsList = [];
                         results.innerHTML = `
                             <div style="text-align:center;padding:70px 20px;">
-                                <div style="font-size:3.5rem;margin-bottom:14px;">🔍</div>
+                                <div style="margin-bottom:14px;color:#94a3b8;"><i data-lucide="search" style="width:48px;height:48px;"></i></div>
                                 <h3 style="color:#1e293b;font-weight:700;margin-bottom:8px;">Không tìm thấy việc làm phù hợp</h3>
                                 <p style="color:#64748b;max-width:360px;margin:0 auto;">Hãy thử thay đổi từ khóa hoặc bỏ bớt bộ lọc.</p>
                             </div>`;
+                        if (window.lucide) lucide.createIcons();
                         if (countEl) countEl.textContent = '0 kết quả';
                         if (paginationEl) paginationEl.innerHTML = '';
                         return;
@@ -990,10 +991,11 @@
             if (!activeJobsList || !activeJobsList.length) {
                 results.innerHTML = `
                     <div style="text-align:center;padding:70px 20px;">
-                        <div style="font-size:3.5rem;margin-bottom:14px;">🔍</div>
+                        <div style="margin-bottom:14px;color:#94a3b8;"><i data-lucide="search" style="width:48px;height:48px;"></i></div>
                         <h3 style="color:#1e293b;font-weight:700;margin-bottom:8px;">Không tìm thấy việc làm phù hợp</h3>
                         <p style="color:#64748b;max-width:360px;margin:0 auto;">Hãy thử thay đổi từ khóa hoặc bỏ bớt bộ lọc.</p>
                     </div>`;
+                if (window.lucide) lucide.createIcons();
                 if (countEl) countEl.textContent = '0 kết quả';
                 if (paginationEl) paginationEl.innerHTML = '';
                 return;
@@ -1184,10 +1186,11 @@
 
             if (!activeJobs.length) {
                 results.innerHTML = `<div style="text-align:center;padding:60px;">
-                    <div style="font-size:3rem;margin-bottom:12px;">🔖</div>
+                    <div style="margin-bottom:12px;color:#94a3b8;"><i data-lucide="bookmark" style="width:44px;height:44px;"></i></div>
                     <h3 style="color:#1e293b;font-weight:700;margin-bottom:8px;">Chưa có việc làm nào được lưu</h3>
                     <p style="color:#64748b;">Bấm vào icon bookmark trên các tin để lưu lại.</p>
                 </div>`;
+                if (window.lucide) lucide.createIcons();
                 if (paginationEl) paginationEl.innerHTML = '';
                 return;
             }
@@ -1254,10 +1257,11 @@
 
             if (!activeJobs.length) {
                 results.innerHTML = `<div style="text-align:center;padding:60px;">
-                    <div style="font-size:3rem;margin-bottom:12px;">📋</div>
+                    <div style="margin-bottom:12px;color:#94a3b8;"><i data-lucide="clipboard-list" style="width:44px;height:44px;"></i></div>
                     <h3 style="color:#1e293b;font-weight:700;margin-bottom:8px;">Bạn chưa ứng tuyển công việc nào</h3>
                     <p style="color:#64748b;">Hãy bắt đầu tìm việc và nộp hồ sơ ngay!</p>
                 </div>`;
+                if (window.lucide) lucide.createIcons();
                 if (paginationEl) paginationEl.innerHTML = '';
                 return;
             }
@@ -1733,7 +1737,7 @@
         if (!activePkg) {
             mainContent.innerHTML = `
                 <div class="welcome-box-business" style="padding: 24px; margin-bottom: 24px; border-radius: 16px; background: linear-gradient(135deg, #2563eb, #0ea5e9); color: #fff;">
-                    <h1 class="welcome-title" style="margin: 0 0 8px; font-size: 1.75rem; font-weight: 800; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,0.15);">Xin chào, ${escapeHtml(userName)} 👋</h1>
+                    <h1 class="welcome-title" style="margin: 0 0 8px; font-size: 1.75rem; font-weight: 800; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,0.15);">Xin chào, ${escapeHtml(userName)}</h1>
                     <p class="welcome-desc" style="margin: 0; color: rgba(255,255,255,0.90); font-size: 1rem; font-weight: 500;">Chào mừng bạn đến với hệ thống quản lý tuyển dụng J4S.</p>
                 </div>
                 <div class="card border-0 shadow-sm text-center animate-in" style="border-radius: 16px; background: #ffffff; padding: 48px; border: 1px solid #e2e8f0; text-align: center;">
@@ -1767,7 +1771,7 @@
             <section class="business-welcome-card animate-in">
                 <div class="business-welcome-copy">
                     <span>CHÀO MỪNG TRỞ LẠI,</span>
-                    <h1>${escapeHtml(userName)} <span aria-hidden="true">👋</span></h1>
+                    <h1>${escapeHtml(userName)}</h1>
                     <p>Quản lý tuyển dụng hiệu quả – Tìm đúng người, đúng vị trí</p>
                     <div class="business-welcome-actions">
                         <button class="btn-business-primary" id="btnBusinessPostJob">
@@ -2213,7 +2217,7 @@
                         <div class="d-grid gap-3" style="color:#475569;">
                             <div class="d-flex align-items-center gap-2">
                                 <i data-lucide="mail" style="width:18px;height:18px;color:#2563eb;flex-shrink:0;"></i>
-                                <div><strong>Email:</strong> <a href="mailto:j4s.job4stu@gmail.com" style="color:inherit;text-decoration:none;">j4s.job4stu@gmail.com</a></div>
+                                <div><strong>Email:</strong> <a href="https://mail.google.com/mail/?view=cm&fs=1&to=j4s.job4stu@gmail.com" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none;">j4s.job4stu@gmail.com</a></div>
                             </div>
                             <div class="d-flex align-items-center gap-2">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
@@ -3834,7 +3838,7 @@
                                 ${data.cvName ? `
                                     <div class="cv-modern-card">
                                         <div class="cv-modern-info">
-                                            <div class="cv-modern-icon">📄</div>
+                                            <div class="cv-modern-icon"><i data-lucide="file-text" style="width:22px;height:22px;color:#0284c7;"></i></div>
                                             <div class="cv-modern-details">
                                                 <span class="filename">${escapeHtml(data.cvName)}</span>
                                                 <span class="status">Đã tải lên hệ thống</span>
@@ -4157,7 +4161,7 @@
             <div class="modal-content" style="max-width: 700px; max-height: 85vh; overflow-y: auto;">
                 <button class="modal-close"><i data-lucide="x" style="width:20px;height:20px;"></i></button>
                 <div class="modal-header">
-                    <h2>✏️ Chỉnh sửa hồ sơ ${isStudent ? 'Sinh viên' : 'Doanh nghiệp'}</h2>
+                    <h2><i data-lucide="edit-3" style="width:20px;height:20px;color:#2563eb;vertical-align:middle;margin-right:6px;"></i> Chỉnh sửa hồ sơ ${isStudent ? 'Sinh viên' : 'Doanh nghiệp'}</h2>
                 </div>
                 <div class="modal-body">
                     <div class="form-grid-2">
@@ -4166,7 +4170,7 @@
                             <div class="file-upload-wrapper">
                                 <input type="file" id="editAvatarFile" accept="image/*" />
                                 <div class="file-upload-placeholder">
-                                    <span class="file-upload-icon">📷</span>
+                                    <span class="file-upload-icon"><i data-lucide="camera" style="width:24px;height:24px;color:#64748b;"></i></span>
                                     <span id="avatarFileLabel">Chọn ảnh đại diện mới</span>
                                 </div>
                                 <div style="position: relative; display: inline-block; width: 100%; margin-top: 10px;" id="avatarPreviewContainer" class="${uploadedAvatarBase64 ? '' : 'd-none'}">
@@ -4182,7 +4186,7 @@
                             <div class="file-upload-wrapper">
                                 <input type="file" id="editCoverFile" accept="image/*" />
                                 <div class="file-upload-placeholder">
-                                    <span class="file-upload-icon">🖼️</span>
+                                    <span class="file-upload-icon"><i data-lucide="image" style="width:24px;height:24px;color:#64748b;"></i></span>
                                     <span id="coverFileLabel">Chọn ảnh bìa mới</span>
                                 </div>
                                 <div style="position: relative; display: inline-block; width: 100%; margin-top: 10px;" id="coverPreviewContainer" class="${uploadedCoverBase64 ? '' : 'd-none'}">
@@ -4197,7 +4201,7 @@
                             <div class="file-upload-wrapper">
                                 <input type="file" id="editCoverFile" accept="image/*" />
                                 <div class="file-upload-placeholder">
-                                    <span class="file-upload-icon">🖼️</span>
+                                    <span class="file-upload-icon"><i data-lucide="image" style="width:24px;height:24px;color:#64748b;"></i></span>
                                     <span id="coverFileLabel">Chọn ảnh bìa mới</span>
                                 </div>
                                 <div style="position: relative; display: inline-block; width: 100%; margin-top: 10px;" id="coverPreviewContainer" class="${uploadedCoverBase64 ? '' : 'd-none'}">
@@ -4376,7 +4380,7 @@
                         <div class="file-upload-wrapper">
                             <input type="file" id="editCvFile" accept=".pdf,.doc,.docx,image/*" />
                             <div class="file-upload-placeholder">
-                                <span class="file-upload-icon">📄</span>
+                                <span class="file-upload-icon"><i data-lucide="file-text" style="width:24px;height:24px;color:#64748b;"></i></span>
                                 <span id="cvFileLabel">${uploadedCvName ? `CV hiện tại: ${escapeHtml(uploadedCvName)} (Bấm để đổi)` : 'Bấm hoặc kéo thả để tải CV mới'}</span>
                             </div>
                         </div>
@@ -4892,7 +4896,8 @@
             if (!list) return;
 
             if (!activeJobs.length) {
-                list.innerHTML = `<div class="empty-state"><div class="empty-icon">📄</div><h3>Chưa có tin đăng</h3><p>Hãy tạo tin tuyển dụng đầu tiên để nhận ứng viên.</p></div>`;
+                list.innerHTML = `<div class="empty-state"><div class="empty-icon"><i data-lucide="file-text" style="width:40px;height:40px;color:#94a3b8;"></i></div><h3>Chưa có tin đăng</h3><p>Hãy tạo tin tuyển dụng đầu tiên để nhận ứng viên.</p></div>`;
+                if (window.lucide) lucide.createIcons();
                 if (paginationEl) paginationEl.innerHTML = '';
                 return;
             }
@@ -5333,7 +5338,8 @@
             if (!list) return;
 
             if (!applicantsList.length) {
-                list.innerHTML = `<div class="empty-state"><div class="empty-icon">👥</div><h3>Chưa có ứng viên</h3><p>Khi sinh viên ứng tuyển, hồ sơ sẽ xuất hiện tại đây.</p></div>`;
+                list.innerHTML = `<div class="empty-state"><div class="empty-icon"><i data-lucide="users" style="width:40px;height:40px;color:#94a3b8;"></i></div><h3>Chưa có ứng viên</h3><p>Khi sinh viên ứng tuyển, hồ sơ sẽ xuất hiện tại đây.</p></div>`;
+                if (window.lucide) lucide.createIcons();
                 if (paginationEl) paginationEl.innerHTML = '';
                 return;
             }
@@ -5553,7 +5559,7 @@
                         <div class="d-grid gap-2 text-slate-700">
                             <div class="d-flex align-items-center gap-2 mb-1">
                                 <i data-lucide="mail" style="width:18px;height:18px;color:var(--primary);flex-shrink:0;"></i>
-                                <div><strong>Email:</strong> <a href="mailto:j4s.job4stu@gmail.com" style="color:inherit;text-decoration:none;">j4s.job4stu@gmail.com</a></div>
+                                <div><strong>Email:</strong> <a href="https://mail.google.com/mail/?view=cm&fs=1&to=j4s.job4stu@gmail.com" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none;">j4s.job4stu@gmail.com</a></div>
                             </div>
                             <div class="d-flex align-items-center gap-2">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
@@ -6038,7 +6044,7 @@
                     if (filteredReviews.length === 0) {
                         listContainer.innerHTML = `
                             <div class="empty-state">
-                                <div class="empty-icon">⭐</div>
+                                <div class="empty-icon"><i data-lucide="star" style="width:40px;height:40px;color:#94a3b8;"></i></div>
                                 <h3>Không tìm thấy đánh giá nào</h3>
                                 <p>Không có đánh giá nào phù hợp với bộ lọc đã chọn.</p>
                             </div>`;
@@ -6443,168 +6449,134 @@
             .then(r => r.json())
             .then(data => {
                 if (data.success) {
-                    const job = allJobs.find(j => j.id === jobId);
-                    if (job) job.isSaved = data.isSaved;
-
-                    if (data.isSaved) {
-                        btnEl.classList.add('saved');
-                        btnEl.innerHTML = '<i data-lucide="bookmark" style="width:18px;height:18px;"></i>';
-                        showToast('🔖 Đã lưu việc làm!', 'success');
-                    } else {
-                        btnEl.classList.remove('saved');
-                        btnEl.innerHTML = '<i data-lucide="bookmark" style="width:18px;height:18px;"></i>';
-                        showToast('Đã bỏ lưu việc làm.', 'info');
-                    }
-                    if (window.lucide) lucide.createIcons();
-
-                    if (currentSidebarMode === 'saved') {
-                        const card = btnEl.closest('.job-card[data-job-id]');
-                        if (card) {
-                            card.style.opacity = '0';
-                            card.style.transform = 'scale(0.9)';
-                            card.style.transition = 'all 0.3s ease';
-                            setTimeout(() => {
-                                card.remove();
-                                const results = document.getElementById('savedJobResults');
-                                if (results && !results.querySelector('.job-card')) {
-                                    results.innerHTML = `<div style="text-align:center;padding:60px;">
-                                        <div style="font-size:3rem;margin-bottom:12px;">🔖</div>
-                                        <h3 style="color:#1e293b;font-weight:700;margin-bottom:8px;">Chưa có việc làm nào được lưu</h3>
-                                        <p style="color:#64748b;">Bấm vào icon bookmark trên các tin để lưu lại.</p>
-                                    </div>`;
-                                }
-                            }, 300);
-                        }
-                    }
-                } else {
-                    showToast(data.message || 'Lỗi khi thực hiện thao tác.', 'warning');
-                }
-            })
-            .catch(err => {
-                console.error('Save error:', err);
-                showToast('Lỗi khi lưu việc làm.', 'error');
-            });
-    }
-
-    // ============================================
-    // JOB APPLICATION MODAL
-    // ============================================
-    function openJobModal(jobId) {
-        const job = currentRenderedJobs.find(j => String(j.id) === String(jobId)) || allJobs.find(j => String(j.id) === String(jobId));
-        if (!job) return;
-
-        const budgetFormatted = formatVND(job.budget);
-        const modal = document.createElement('div');
-        modal.className = 'modal-overlay';
-        modal.innerHTML = `
-            <div class="modal-content">
-                <button class="modal-close"><i data-lucide="x" style="width:20px;height:20px;"></i></button>
-                <div class="modal-header">
-                    <h2>${escapeHtml(job.title)}</h2>
-                    <div class="modal-tags">${job.tags.map(t => `<span class="job-tag">${escapeHtml(t)}</span>`).join('')}</div>
-                </div>
-                <div class="modal-body">
-                    <p class="modal-description">${escapeHtml(job.description)}</p>
-                    <div class="modal-details" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:20px;">
-                        <div class="detail-item" style="flex:1; min-width:140px; margin:0;">
-                            <div class="detail-icon"><i data-lucide="banknote" style="width:18px;height:18px;"></i></div>
-                            <div><div class="detail-label">Ngân sách</div><div class="detail-value">${budgetFormatted}</div></div>
-                        </div>
-                        <div class="detail-item" style="flex:1; min-width:140px; margin:0;">
-                            <div class="detail-icon"><i data-lucide="clock" style="width:18px;height:18px;"></i></div>
-                            <div><div class="detail-label">Thời hạn</div><div class="detail-value">${escapeHtml(job.deadline)}</div></div>
-                        </div>
-                        <div class="detail-item" style="flex:1; min-width:140px; margin:0;">
-                            <div class="detail-icon"><i data-lucide="award" style="width:18px;height:18px;"></i></div>
-                            <div><div class="detail-label">Kinh nghiệm</div><div class="detail-value">${escapeHtml(job.experienceLevel === 'No_Experience' ? 'Không yêu cầu' : job.experienceLevel === 'Expert' ? 'Chuyên gia' : job.experienceLevel === 'Mid_Level' ? 'Có kinh nghiệm' : job.experienceLevel || 'Không yêu cầu')}</div></div>
-                        </div>
-                        <div class="detail-item" style="flex:1; min-width:140px; margin:0;">
-                            <div class="detail-icon"><i data-lucide="users" style="width:18px;height:18px;"></i></div>
-                            <div><div class="detail-label">Tuyển dụng</div><div class="detail-value" id="modalApplicants">Đã nhận: ${job.hiredCount || 0}/${job.quantity || 1} (Có ${job.applicantsCount || 0} đề xuất)</div></div>
-                        </div>
-                    </div>
-                    ${job.requirements ? `<h3 style="font-size:1rem;font-weight:700;color:#1e293b;margin-bottom:8px;margin-top:20px;">Yêu cầu ứng viên</h3>
-                    <p class="modal-description">${escapeHtml(job.requirements)}</p>` : ''}
-                </div>
-                <div class="modal-footer">
-                    ${job.isApplied
-                ? '<button class="btn-applied" disabled><i data-lucide="check-circle" style="width:16px;height:16px;"></i> Đã ứng tuyển</button>'
-                : `<button class="btn-apply-job" id="btnApplyJob" data-job-id="${job.id}"><i data-lucide="send" style="width:16px;height:16px;"></i> Ứng tuyển ngay</button>`}
-                </div>
-            </div>`;
-
-        document.body.appendChild(modal);
-        if (window.lucide) lucide.createIcons();
-        requestAnimationFrame(() => modal.classList.add('active'));
-
-        modal.querySelector('.modal-close').addEventListener('click', () => closeModal(modal));
-        modal.addEventListener('click', e => { if (e.target === modal) closeModal(modal); });
-
-        const applyBtn = modal.querySelector('#btnApplyJob');
-        if (applyBtn) {
-            applyBtn.addEventListener('click', function () { applyJob(job.id, this, modal); });
-        }
-    }
-
-    const tipData = {
-        'tip-proposal': {
-            title: 'Viết Proposal chinh phục khách hàng',
-            category: 'Kỹ năng',
-            categoryColor: '#2563eb',
-            icon: '✍️',
-            content: `
+                    const tipData = {
+                        'tip-proposal': {
+                            title: 'Viết Proposal chinh phục khách hàng',
+                            category: 'Kỹ năng',
+                            categoryColor: '#2563eb',
+                            icon: 'pen-tool',
+                            content: `
                 <p style="margin-bottom:14px; color:#475569; line-height:1.7;">Một bản Proposal (Đề xuất công việc) ấn tượng là chìa khóa mở ra cơ hội làm việc với các nhà tuyển dụng chất lượng. Đối với sinh viên, khi kinh nghiệm chưa nhiều, Proposal chính là nơi tốt nhất để bạn thể hiện sự nhiệt huyết và năng lực giải quyết vấn đề.</p>
                 <div style="background:#eff6ff; border-left:4px solid #2563eb; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
-                    <p style="font-weight:700; color:#1e40af; margin:0 0 6px 0;">📌 1. Đi thẳng vào vấn đề của khách hàng</p>
+                    <p style="font-weight:700; color:#1e40af; margin:0 0 6px 0;">1. Đi thẳng vào vấn đề của khách hàng</p>
                     <p style="color:#475569; margin:0; line-height:1.6;">Thay vì giới thiệu bản thân dài dòng, hãy tóm tắt yêu cầu của khách hàng và chỉ ra bạn đang hiểu họ cần gì. Ví dụ: <em>"Tôi thấy bạn đang cần thiết kế bộ slide với phong cách tối giản và hiện đại..."</em></p>
                 </div>
                 <div style="background:#f0fdf4; border-left:4px solid #16a34a; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
-                    <p style="font-weight:700; color:#15803d; margin:0 0 6px 0;">🎯 2. Đưa ra giải pháp cụ thể</p>
+                    <p style="font-weight:700; color:#15803d; margin:0 0 6px 0;">2. Đưa ra giải pháp cụ thể</p>
                     <p style="color:#475569; margin:0; line-height:1.6;">Hãy nêu rõ bạn sẽ giải quyết công việc đó như thế nào, dùng công cụ gì và quy trình làm việc ra sao. Điều này chứng minh bạn là người làm việc có kế hoạch.</p>
                 </div>
                 <div style="background:#fdf4ff; border-left:4px solid #9333ea; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
-                    <p style="font-weight:700; color:#7e22ce; margin:0 0 6px 0;">🖼️ 3. Đính kèm Portfolio tương tự</p>
+                    <p style="font-weight:700; color:#7e22ce; margin:0 0 6px 0;">3. Đính kèm Portfolio tương tự</p>
                     <p style="color:#475569; margin:0; line-height:1.6;">Trăm nghe không bằng một thấy. Hãy gửi link hoặc đính kèm 2-3 dự án tốt nhất liên quan trực tiếp đến lĩnh vực mà họ đang tuyển dụng.</p>
                 </div>
                 <div style="background:#fff7ed; border-left:4px solid #ea580c; border-radius:8px; padding:14px 16px; margin-bottom:0;">
-                    <p style="font-weight:700; color:#c2410c; margin:0 0 6px 0;">💰 4. Đề xuất giá và thời hạn rõ ràng</p>
+                    <p style="font-weight:700; color:#c2410c; margin:0 0 6px 0;">4. Đề xuất giá và thời hạn rõ ràng</p>
                     <p style="color:#475569; margin:0; line-height:1.6;">Đừng ngại đề xuất mức giá và thời gian hoàn thành cụ thể. Khách hàng luôn thích sự minh bạch ngay từ đầu để dễ đưa ra quyết định.</p>
                 </div>`
-        },
-        'tip-time': {
-            title: 'Quản lý thời gian: Học & Làm Freelance',
-            category: 'Năng suất',
-            categoryColor: '#10b981',
-            icon: '⏰',
-            content: `
+                        },
+                        'tip-time': {
+                            title: 'Quản lý thời gian: Học & Làm Freelance',
+                            category: 'Năng suất',
+                            categoryColor: '#10b981',
+                            icon: 'clock',
+                            content: `
                 <p style="margin-bottom:14px; color:#475569; line-height:1.7;">Làm freelance khi còn đi học giúp sinh viên tích lũy kinh nghiệm và thu nhập, nhưng nếu không quản lý thời gian tốt, rất dễ bị quá tải và ảnh hưởng đến học tập.</p>
                 <div style="background:#ecfdf5; border-left:4px solid #10b981; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
-                    <p style="font-weight:700; color:#065f46; margin:0 0 8px 0;">🧩 1. Ma trận Eisenhower — Phân loại công việc</p>
+                    <p style="font-weight:700; color:#065f46; margin:0 0 8px 0;">1. Ma trận Eisenhower — Phân loại công việc</p>
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
                         <div style="background:#fff; border:1px solid #d1fae5; border-radius:8px; padding:10px;">
-                            <p style="color:#065f46; font-weight:700; font-size:12px; margin:0 0 4px;">🔴 Khẩn & Quan trọng</p>
+                            <p style="color:#065f46; font-weight:700; font-size:12px; margin:0 0 4px;">Khẩn & Quan trọng</p>
                             <p style="color:#475569; font-size:12px; margin:0;">Làm ngay (bài kiểm tra, deadline gấp)</p>
                         </div>
                         <div style="background:#fff; border:1px solid #d1fae5; border-radius:8px; padding:10px;">
-                            <p style="color:#065f46; font-weight:700; font-size:12px; margin:0 0 4px;">🟡 Quan trọng, không khẩn</p>
+                            <p style="color:#065f46; font-weight:700; font-size:12px; margin:0 0 4px;">Quan trọng, không khẩn</p>
                             <p style="color:#475569; font-size:12px; margin:0;">Lên lịch (học kỹ năng, làm portfolio)</p>
                         </div>
                         <div style="background:#fff; border:1px solid #d1fae5; border-radius:8px; padding:10px;">
-                            <p style="color:#065f46; font-weight:700; font-size:12px; margin:0 0 4px;">🟠 Khẩn nhưng ít quan trọng</p>
+                            <p style="color:#065f46; font-weight:700; font-size:12px; margin:0 0 4px;">Khẩn nhưng ít quan trọng</p>
                             <p style="color:#475569; font-size:12px; margin:0;">Ủy thác hoặc tối ưu (email cơ bản)</p>
                         </div>
                         <div style="background:#fff; border:1px solid #d1fae5; border-radius:8px; padding:10px;">
-                            <p style="color:#065f46; font-weight:700; font-size:12px; margin:0 0 4px;">⚪ Không khẩn & không quan trọng</p>
+                            <p style="color:#065f46; font-weight:700; font-size:12px; margin:0 0 4px;">Không khẩn & không quan trọng</p>
                             <p style="color:#475569; font-size:12px; margin:0;">Loại bỏ (lướt mạng vô ích)</p>
                         </div>
                     </div>
                 </div>
                 <div style="background:#f0fdf4; border-left:4px solid #16a34a; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
-                    <p style="font-weight:700; color:#15803d; margin:0 0 6px 0;">🍅 2. Kỹ thuật Pomodoro</p>
+                    <p style="font-weight:700; color:#15803d; margin:0 0 6px 0;">2. Kỹ thuật Pomodoro</p>
                     <p style="color:#475569; margin:0; line-height:1.6;">Làm việc <strong>25 phút</strong> tập trung → nghỉ <strong>5 phút</strong>. Lặp lại 4 lần rồi nghỉ dài 15-30 phút. Bộ não không bị quá tải và luôn duy trì năng suất cao.</p>
                 </div>
                 <div style="background:#eff6ff; border-left:4px solid #2563eb; border-radius:8px; padding:14px 16px;">
-                    <p style="font-weight:700; color:#1e40af; margin:0 0 6px 0;">🛠️ 3. Công cụ hỗ trợ quản lý</p>
+                    <p style="font-weight:700; color:#1e40af; margin:0 0 6px 0;">3. Công cụ hỗ trợ quản lý</p>
+                    <p style="color:#475569; margin:0; line-height:1.6;">Tận dụng <strong>Trello</strong>, <strong>Notion</strong> hoặc <strong>Google Calendar</strong> để sắp xếp lịch học và deadline công việc. Nhìn thấy toàn bộ kế hoạch trực quan giúp bạn không bỏ sót gì.</p>
+                </div>`
+                        },
+                        'tip-portfolio': {
+                            title: 'Xây dựng Portfolio từ con số 0',
+                            category: 'Portfolio',
+                            categoryColor: '#db2777',
+                            icon: 'briefcase',
+                            content: `
+                <p style="margin-bottom:14px; color:#475569; line-height:1.7;">Với sinh viên, rào cản lớn nhất khi bắt đầu freelance là thiếu dự án thực tế. Nhưng đừng lo — nhà tuyển dụng quan tâm đến <strong>năng lực</strong> của bạn nhiều hơn là việc dự án đó có thực sự tồn tại hay không.</p>
+                <div style="background:#fdf2f8; border-left:4px solid #db2777; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
+                    <p style="font-weight:700; color:#9d174d; margin:0 0 6px 0;">1. Tạo dự án cá nhân (Concept Projects)</p>
+                    <p style="color:#475569; margin:0; line-height:1.6;">Chọn một thương hiệu nổi tiếng và tự thiết kế lại poster, slide, hoặc giao diện theo ý bạn. Nói rõ đây là "Personal Concept" — điều đó chứng minh bạn chủ động học hỏi.</p>
+                </div>
+                <div style="background:#fffbeb; border-left:4px solid #f59e0b; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
+                    <p style="font-weight:700; color:#92400e; margin:0 0 6px 0;">2. Tận dụng hoạt động ngoại khóa & CLB</p>
+                    <p style="color:#475569; margin:0; line-height:1.6;">Nhận thiết kế tờ rơi, banner, viết bài hay quản lý fanpage cho các câu lạc bộ trường đại học. Đây là nguồn dự án thực tế vô cùng giá trị và được đánh giá cao.</p>
+                </div>
+                <div style="background:#eff6ff; border-left:4px solid #2563eb; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
+                    <p style="font-weight:700; color:#1e40af; margin:0 0 6px 0;">3. Trình bày theo dạng Case Study</p>
+                    <p style="color:#475569; margin:0; line-height:1.6;">Đừng chỉ đưa ra sản phẩm cuối cùng. Hãy kể câu chuyện: <em>Bài toán là gì? → Bạn đã làm gì? → Kết quả ra sao?</em> Đây là phong cách trình bày được các nhà tuyển dụng chuyên nghiệp ưa thích nhất.</p>
+                </div>
+                <div style="background:#f0fdf4; border-left:4px solid #16a34a; border-radius:8px; padding:14px 16px;">
+                    <p style="font-weight:700; color:#15803d; margin:0 0 6px 0;">4. Chia sẻ portfolio lên mạng xã hội</p>
+                    <p style="color:#475569; margin:0; line-height:1.6;">Đăng các dự án lên <strong>Behance</strong>, <strong>LinkedIn</strong> hoặc <strong>Instagram</strong> với đầy đủ thông tin. Portfolio online giúp khách hàng tìm đến bạn ngay cả khi bạn không chủ động tìm việc.</p>
+                </div>`
+                        }
+                    };o tương tự</p >
+                        <p style="color:#475569; margin:0; line-height:1.6;">Trăm nghe không bằng một thấy. Hãy gửi link hoặc đính kèm 2-3 dự án tốt nhất liên quan trực tiếp đến lĩnh vực mà họ đang tuyển dụng.</p>
+                </div >
+                        <div style="background:#fff7ed; border-left:4px solid #ea580c; border-radius:8px; padding:14px 16px; margin-bottom:0;">
+                            <p style="font-weight:700; color:#c2410c; margin:0 0 6px 0;">💰 4. Đề xuất giá và thời hạn rõ ràng</p>
+                            <p style="color:#475569; margin:0; line-height:1.6;">Đừng ngại đề xuất mức giá và thời gian hoàn thành cụ thể. Khách hàng luôn thích sự minh bạch ngay từ đầu để dễ đưa ra quyết định.</p>
+                        </div>`
+        },
+        'tip-time': {
+            title: 'Quản lý thời gian: Học & Làm Freelance',
+            category: 'Năng suất',
+            categoryColor: '#10b981',
+            icon: 'clock',
+            content: `
+                            < p style = "margin-bottom:14px; color:#475569; line-height:1.7;" > Làm freelance khi còn đi học giúp sinh viên tích lũy kinh nghiệm và thu nhập, nhưng nếu không quản lý thời gian tốt, rất dễ bị quá tải và ảnh hưởng đến học tập.</p >
+                <div style="background:#ecfdf5; border-left:4px solid #10b981; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
+                    <p style="font-weight:700; color:#065f46; margin:0 0 8px 0;">1. Ma trận Eisenhower — Phân loại công việc</p>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                        <div style="background:#fff; border:1px solid #d1fae5; border-radius:8px; padding:10px;">
+                            <p style="color:#065f46; font-weight:700; font-size:12px; margin:0 0 4px;">Khẩn &amp; Quan trọng</p>
+                            <p style="color:#475569; font-size:12px; margin:0;">Làm ngay (bài kiểm tra, deadline gấp)</p>
+                        </div>
+                        <div style="background:#fff; border:1px solid #d1fae5; border-radius:8px; padding:10px;">
+                            <p style="color:#065f46; font-weight:700; font-size:12px; margin:0 0 4px;">Quan trọng, không khẩn</p>
+                            <p style="color:#475569; font-size:12px; margin:0;">Lên lịch (học kỹ năng, làm portfolio)</p>
+                        </div>
+                        <div style="background:#fff; border:1px solid #d1fae5; border-radius:8px; padding:10px;">
+                            <p style="color:#065f46; font-weight:700; font-size:12px; margin:0 0 4px;">Khẩn nhưng ít quan trọng</p>
+                            <p style="color:#475569; font-size:12px; margin:0;">Ủy thác hoặc tối ưu (email cơ bản)</p>
+                        </div>
+                        <div style="background:#fff; border:1px solid #d1fae5; border-radius:8px; padding:10px;">
+                            <p style="color:#065f46; font-weight:700; font-size:12px; margin:0 0 4px;">Không khẩn &amp; Không quan trọng</p>
+                            <p style="color:#475569; font-size:12px; margin:0;">Loại bỏ (lướt mạng vô ích)</p>
+                        </div>
+                    </div>
+                </div>
+                <div style="background:#f0fdf4; border-left:4px solid #16a34a; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
+                    <p style="font-weight:700; color:#15803d; margin:0 0 6px 0;">2. Kỹ thuật Pomodoro</p>
+                    <p style="color:#475569; margin:0; line-height:1.6;">Làm việc <strong>25 phút</strong> tập trung → nghỉ <strong>5 phút</strong>. Lặp lại 4 lần rồi nghỉ dài 15-30 phút. Bộ não không bị quá tải và luôn duy trì năng suất cao.</p>
+                </div>
+                <div style="background:#eff6ff; border-left:4px solid #2563eb; border-radius:8px; padding:14px 16px;">
+                    <p style="font-weight:700; color:#1e40af; margin:0 0 6px 0;">3. Công cụ hỗ trợ quản lý</p>
                     <p style="color:#475569; margin:0; line-height:1.6;">Tận dụng <strong>Trello</strong>, <strong>Notion</strong> hoặc <strong>Google Calendar</strong> để sắp xếp lịch học và deadline công việc. Nhìn thấy toàn bộ kế hoạch trực quan giúp bạn không bỏ sót gì.</p>
                 </div>`
         },
@@ -6612,23 +6584,23 @@
             title: 'Xây dựng Portfolio từ con số 0',
             category: 'Portfolio',
             categoryColor: '#db2777',
-            icon: '💼',
+            icon: 'briefcase',
             content: `
-                <p style="margin-bottom:14px; color:#475569; line-height:1.7;">Với sinh viên, rào cản lớn nhất khi bắt đầu freelance là thiếu dự án thực tế. Nhưng đừng lo — nhà tuyển dụng quan tâm đến <strong>năng lực</strong> của bạn nhiều hơn là việc dự án đó có thực sự tồn tại hay không.</p>
+                        < p style = "margin-bottom:14px; color:#475569; line-height:1.7;" > Với sinh viên, rào cản lớn nhất khi bắt đầu freelance là thiếu dự án thực tế.Nhưng đừng lo — nhà tuyển dụng quan tâm đến < strong > năng lực</strong > của bạn nhiều hơn là việc dự án đó có thực sự tồn tại hay không.</p >
                 <div style="background:#fdf2f8; border-left:4px solid #db2777; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
-                    <p style="font-weight:700; color:#9d174d; margin:0 0 6px 0;">💡 1. Tạo dự án cá nhân (Concept Projects)</p>
+                    <p style="font-weight:700; color:#9d174d; margin:0 0 6px 0;">1. Tạo dự án cá nhân (Concept Projects)</p>
                     <p style="color:#475569; margin:0; line-height:1.6;">Chọn một thương hiệu nổi tiếng và tự thiết kế lại poster, slide, hoặc giao diện theo ý bạn. Nói rõ đây là "Personal Concept" — điều đó chứng minh bạn chủ động học hỏi.</p>
                 </div>
                 <div style="background:#fffbeb; border-left:4px solid #f59e0b; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
-                    <p style="font-weight:700; color:#92400e; margin:0 0 6px 0;">🎓 2. Tận dụng hoạt động ngoại khóa & CLB</p>
+                    <p style="font-weight:700; color:#92400e; margin:0 0 6px 0;">2. Tận dụng hoạt động ngoại khóa &amp; CLB</p>
                     <p style="color:#475569; margin:0; line-height:1.6;">Nhận thiết kế tờ rơi, banner, viết bài hay quản lý fanpage cho các câu lạc bộ trường đại học. Đây là nguồn dự án thực tế vô cùng giá trị và được đánh giá cao.</p>
                 </div>
                 <div style="background:#eff6ff; border-left:4px solid #2563eb; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
-                    <p style="font-weight:700; color:#1e40af; margin:0 0 6px 0;">📝 3. Trình bày theo dạng Case Study</p>
+                    <p style="font-weight:700; color:#1e40af; margin:0 0 6px 0;">3. Trình bày theo dạng Case Study</p>
                     <p style="color:#475569; margin:0; line-height:1.6;">Đừng chỉ đưa ra sản phẩm cuối cùng. Hãy kể câu chuyện: <em>Bài toán là gì? → Bạn đã làm gì? → Kết quả ra sao?</em> Đây là phong cách trình bày được các nhà tuyển dụng chuyên nghiệp ưa thích nhất.</p>
                 </div>
                 <div style="background:#f0fdf4; border-left:4px solid #16a34a; border-radius:8px; padding:14px 16px;">
-                    <p style="font-weight:700; color:#15803d; margin:0 0 6px 0;">🌐 4. Chia sẻ portfolio lên mạng xã hội</p>
+                    <p style="font-weight:700; color:#15803d; margin:0 0 6px 0;">4. Chia sẻ portfolio lên mạng xã hội</p>
                     <p style="color:#475569; margin:0; line-height:1.6;">Đăng các dự án lên <strong>Behance</strong>, <strong>LinkedIn</strong> hoặc <strong>Instagram</strong> với đầy đủ thông tin. Portfolio online giúp khách hàng tìm đến bạn ngay cả khi bạn không chủ động tìm việc.</p>
                 </div>`
         }
@@ -6641,11 +6613,13 @@
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
         modal.innerHTML = `
-            <div class="modal-content animate-in" style="max-width:620px; max-height:88vh; overflow-y:auto; border-radius:20px; padding:0; position:relative;">
+                        < div class="modal-content animate-in" style = "max-width:620px; max-height:88vh; overflow-y:auto; border-radius:20px; padding:0; position:relative;" >
                 <div style="background:linear-gradient(135deg, ${tip.categoryColor}18, ${tip.categoryColor}08); padding:28px 28px 20px; border-bottom:1px solid #f1f5f9; border-radius:20px 20px 0 0;">
-                    <button class="modal-close" style="position:absolute; top:16px; right:16px; background:rgba(0,0,0,0.06); border:none; cursor:pointer; border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; color:#64748b; font-size:18px;">×</button>
+                    <button class="modal-close" style="position:absolute; top:16px; right:16px; background:rgba(0,0,0,0.06); border:none; cursor:pointer; border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; color:#64748b; font-size:18px;"><i data-lucide="x" style="width:16px;height:16px;"></i></button>
                     <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-                        <span style="font-size:28px;">${tip.icon}</span>
+                        <span style="background:${tip.categoryColor}20; color:${tip.categoryColor}; width:36px; height:36px; border-radius:10px; display:inline-flex; align-items:center; justify-content:center;">
+                            <i data-lucide="${tip.icon}" style="width:20px;height:20px;"></i>
+                        </span>
                         <span style="background:${tip.categoryColor}20; color:${tip.categoryColor}; padding:3px 12px; border-radius:20px; font-size:12px; font-weight:700; letter-spacing:0.04em;">${tip.category}</span>
                     </div>
                     <h2 style="font-size:1.25rem; font-weight:800; color:#0f172a; margin:0; line-height:1.4; font-family:'Inter', sans-serif;">${tip.title}</h2>
@@ -6653,8 +6627,7 @@
                 <div style="padding:24px 28px 8px; font-family:'Inter', sans-serif;">
                     ${tip.content}
                 </div>
-                </div>
-            </div>`;
+            </div > `;
         document.body.appendChild(modal);
         if (window.lucide) lucide.createIcons();
         requestAnimationFrame(() => modal.classList.add('active'));
@@ -6702,7 +6675,7 @@
         cropModal.style.zIndex = '3000';
 
         cropModal.innerHTML = `
-            <div class="modal-content" style="max-width: 600px; padding: 20px;">
+                        < div class="modal-content" style = "max-width: 600px; padding: 20px;" >
                 <button class="modal-close" id="btnCloseCropModal"><i data-lucide="x" style="width:20px;height:20px;"></i></button>
                 <div class="modal-header" style="padding: 0 0 15px 0;">
                     <h2 style="margin: 0; font-size: 18px; font-weight: 700; color: var(--text-primary);">✂️ Cắt chỉnh ảnh</h2>
@@ -6716,7 +6689,7 @@
                     <button class="btn-modal-cancel" id="btnCancelCrop">Hủy</button>
                     <button class="btn-apply-job" id="btnConfirmCrop"><i data-lucide="crop" style="width:16px;height:16px;"></i> Cắt & Lưu</button>
                 </div>
-            </div>`;
+            </div > `;
 
         document.body.appendChild(cropModal);
         if (window.lucide) lucide.createIcons();
@@ -6794,12 +6767,12 @@
                     if (window.lucide) lucide.createIcons();
 
                     const applicantsEl = modal.querySelector('#modalApplicants');
-                    if (applicantsEl) applicantsEl.textContent = `${data.applicantsCount} người`;
+                    if (applicantsEl) applicantsEl.textContent = `${ data.applicantsCount } người`;
 
-                    const feedCard = document.querySelector(`.job-card[data-job-id="${jobId}"]`);
+                    const feedCard = document.querySelector(`.job - card[data - job - id="${jobId}"]`);
                     if (feedCard) {
                         const p = feedCard.querySelector('.job-proposals');
-                        if (p) p.innerHTML = `${data.applicantsCount} đề xuất <span class="applied-badge">Đã ứng tuyển</span>`;
+                        if (p) p.innerHTML = `${ data.applicantsCount } đề xuất < span class="applied-badge" > Đã ứng tuyển</span > `;
                     }
 
                     // Update saved original HTML
@@ -6829,7 +6802,7 @@
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
         modal.innerHTML = `
-            <div class="modal-content">
+                        < div class="modal-content" >
                 <button class="modal-close"><i data-lucide="x" style="width:20px;height:20px;"></i></button>
                 <div class="modal-body" style="padding-top:28px;">
                     <div style="text-align:center;margin-bottom:20px;">
@@ -6853,7 +6826,7 @@
                         <i data-lucide="message-circle" style="width:16px;height:16px;"></i> Nhắn tin
                     </button>
                 </div>
-            </div>`;
+            </div > `;
 
         document.body.appendChild(modal);
         if (window.lucide) lucide.createIcons();
@@ -6888,7 +6861,7 @@
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
         modal.innerHTML = `
-            <div class="modal-content modal-sm">
+                        < div class="modal-content modal-sm" >
                 <button class="modal-close"><i data-lucide="x" style="width:20px;height:20px;"></i></button>
                 <div class="modal-header"><h2>Nạp tiền doanh nghiệp</h2></div>
                 <div class="modal-body">
@@ -6902,7 +6875,7 @@
                 <div class="modal-footer">
                     <button class="btn-apply-job" id="btnGenerateDepositQr"><i data-lucide="qr-code" style="width:16px;height:16px;"></i> Tạo mã QR</button>
                 </div>
-            </div>`;
+            </div > `;
 
         document.body.appendChild(modal);
         if (window.lucide) lucide.createIcons();
@@ -6949,141 +6922,141 @@
                     if (window.lucide) lucide.createIcons();
                     showToast('Đã tạo mã QR nạp tiền dùng một lần.', 'success');
                 })
-                .catch(err => {
-                    console.error(err);
-                    showToast('Không thể kết nối đến máy chủ.', 'error');
-                })
-                .finally(() => {
-                    btn.disabled = false;
-                    btn.classList.remove('j4s-btn-loading');
-                    btn.innerHTML = original;
-                });
-        });
-    }
+            .catch(err => {
+                console.error(err);
+                showToast('Không thể kết nối đến máy chủ.', 'error');
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.classList.remove('j4s-btn-loading');
+                btn.innerHTML = original;
+            });
+    });
+}
 
     function openFinancialModal(config) {
-        const modal = document.createElement('div');
-        modal.className = 'modal-overlay';
-        let bodyContent = config.isHistory
-            ? `<div class="transaction-list">${config.transactions.map(t => `
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    let bodyContent = config.isHistory
+        ? `<div class="transaction-list">${config.transactions.map(t => `
                 <div class="transaction-item">
                     <div class="transaction-info"><span class="transaction-date">${t.date}</span><span class="transaction-desc">${t.desc}</span></div>
                     <span class="transaction-amount ${t.type}">${t.amount}</span>
                 </div>`).join('')}</div>`
-            : `<div class="financial-result">
+        : `<div class="financial-result">
                 <div class="result-icon">${config.icon}</div>
                 <p class="result-message">${config.message}</p>
                 ${config.detail ? `<p class="result-detail">${config.detail}</p>` : ''}
                </div>`;
 
-        modal.innerHTML = `
+    modal.innerHTML = `
             <div class="modal-content modal-sm">
                 <button class="modal-close"><i data-lucide="x" style="width:20px;height:20px;"></i></button>
                 <div class="modal-header"><h2>${config.icon} ${config.title}</h2></div>
                 <div class="modal-body">${bodyContent}</div>
             </div>`;
 
-        document.body.appendChild(modal);
-        if (window.lucide) lucide.createIcons();
-        requestAnimationFrame(() => modal.classList.add('active'));
-        modal.querySelector('.modal-close').addEventListener('click', () => closeModal(modal));
-        modal.addEventListener('click', e => { if (e.target === modal) closeModal(modal); });
-    }
+    document.body.appendChild(modal);
+    if (window.lucide) lucide.createIcons();
+    requestAnimationFrame(() => modal.classList.add('active'));
+    modal.querySelector('.modal-close').addEventListener('click', () => closeModal(modal));
+    modal.addEventListener('click', e => { if (e.target === modal) closeModal(modal); });
+}
 
-    // ============================================
-    // NOTIFICATION DROPDOWN & BADGE
-    // ============================================
-    function updateNotificationBadge() {
-        const btn = document.getElementById('notificationBtn');
-        if (!btn) return;
-        fetch('/Home/GetNotifications')
-            .then(r => r.json())
-            .then(notifications => {
-                if (Array.isArray(notifications)) {
-                    const unreadCount = notifications.filter(n => n.unread).length;
-                    const badge = btn.querySelector('.notification-badge');
-                    if (badge) {
-                        if (unreadCount > 0) {
-                            badge.textContent = unreadCount;
-                            badge.style.display = 'flex';
-                        } else {
-                            badge.style.display = 'none';
-                        }
+// ============================================
+// NOTIFICATION DROPDOWN & BADGE
+// ============================================
+function updateNotificationBadge() {
+    const btn = document.getElementById('notificationBtn');
+    if (!btn) return;
+    fetch('/Home/GetNotifications')
+        .then(r => r.json())
+        .then(notifications => {
+            if (Array.isArray(notifications)) {
+                const unreadCount = notifications.filter(n => n.unread).length;
+                const badge = btn.querySelector('.notification-badge');
+                if (badge) {
+                    if (unreadCount > 0) {
+                        badge.textContent = unreadCount;
+                        badge.style.display = 'flex';
+                    } else {
+                        badge.style.display = 'none';
                     }
                 }
-            })
-            .catch(err => console.error('Error fetching notifications:', err));
-    }
+            }
+        })
+        .catch(err => console.error('Error fetching notifications:', err));
+}
 
-    function updateUnreadMessagesBadge() {
-        const navMsg = document.getElementById('navMessages');
-        if (!navMsg) return;
+function updateUnreadMessagesBadge() {
+    const navMsg = document.getElementById('navMessages');
+    if (!navMsg) return;
 
-        fetch('/Home/GetUnreadMessagesCount')
+    fetch('/Home/GetUnreadMessagesCount')
+        .then(res => res.json())
+        .then(data => {
+            if (data && data.success) {
+                let badge = navMsg.querySelector('.sidebar-badge');
+                if (data.count > 0) {
+                    if (!badge) {
+                        badge = document.createElement('span');
+                        badge.className = 'sidebar-badge';
+                        navMsg.appendChild(badge);
+                    }
+                    badge.textContent = data.count;
+                    badge.style.display = 'inline-flex';
+                } else {
+                    if (badge) {
+                        badge.remove();
+                    }
+                }
+            }
+        })
+        .catch(err => console.error('Error fetching unread message count:', err));
+}
+
+function pollActiveChat() {
+    const chatPanel = document.getElementById('chatPanel');
+    if (!chatPanel) return;
+
+    const currentActiveId = (chatPanel && chatPanel.dataset.activeUserId) ? Number(chatPanel.dataset.activeUserId) : activeChatUserId;
+    if (currentActiveId) {
+        const userId = currentActiveId;
+        fetch(`/Home/GetConversationMessages?userId=${userId}`)
             .then(res => res.json())
             .then(data => {
                 if (data && data.success) {
-                    let badge = navMsg.querySelector('.sidebar-badge');
-                    if (data.count > 0) {
-                        if (!badge) {
-                            badge = document.createElement('span');
-                            badge.className = 'sidebar-badge';
-                            navMsg.appendChild(badge);
-                        }
-                        badge.textContent = data.count;
-                        badge.style.display = 'inline-flex';
-                    } else {
-                        if (badge) {
-                            badge.remove();
-                        }
+                    const msgCount = (data.messages || []).length;
+                    if (!window.activeChatMsgCounts) window.activeChatMsgCounts = {};
+                    const prevCount = window.activeChatMsgCounts[userId];
+                    if (prevCount !== msgCount) {
+                        renderBusinessChat(data.user, data.messages || []);
+                        window.activeChatMsgCounts[userId] = msgCount;
+                        updateUnreadMessagesBadge();
+                        loadBusinessConversations();
                     }
                 }
             })
-            .catch(err => console.error('Error fetching unread message count:', err));
+            .catch(err => console.warn('Chat poll error:', err));
+    } else {
+        loadBusinessConversations();
     }
+}
 
-    function pollActiveChat() {
-        const chatPanel = document.getElementById('chatPanel');
-        if (!chatPanel) return;
+function bindNotificationBtn() {
+    const btn = document.getElementById('notificationBtn');
+    if (!btn) return;
+    if (btn.closest('.dropdown')?.querySelector('.dropdown-menu')) return;
+    btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        // Close any existing dropdown
+        document.querySelector('.dropdown-panel')?.remove();
 
-        const currentActiveId = (chatPanel && chatPanel.dataset.activeUserId) ? Number(chatPanel.dataset.activeUserId) : activeChatUserId;
-        if (currentActiveId) {
-            const userId = currentActiveId;
-            fetch(`/Home/GetConversationMessages?userId=${userId}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data && data.success) {
-                        const msgCount = (data.messages || []).length;
-                        if (!window.activeChatMsgCounts) window.activeChatMsgCounts = {};
-                        const prevCount = window.activeChatMsgCounts[userId];
-                        if (prevCount !== msgCount) {
-                            renderBusinessChat(data.user, data.messages || []);
-                            window.activeChatMsgCounts[userId] = msgCount;
-                            updateUnreadMessagesBadge();
-                            loadBusinessConversations();
-                        }
-                    }
-                })
-                .catch(err => console.warn('Chat poll error:', err));
-        } else {
-            loadBusinessConversations();
-        }
-    }
-
-    function bindNotificationBtn() {
-        const btn = document.getElementById('notificationBtn');
-        if (!btn) return;
-        if (btn.closest('.dropdown')?.querySelector('.dropdown-menu')) return;
-        btn.addEventListener('click', function (e) {
-            e.stopPropagation();
-            // Close any existing dropdown
-            document.querySelector('.dropdown-panel')?.remove();
-
-            fetch('/Home/GetNotifications')
-                .then(r => r.json())
-                .then(notifications => {
-                    const listHTML = (notifications && notifications.length > 0)
-                        ? notifications.map(n => `
+        fetch('/Home/GetNotifications')
+            .then(r => r.json())
+            .then(notifications => {
+                const listHTML = (notifications && notifications.length > 0)
+                    ? notifications.map(n => `
                             <div class="dropdown-item ${n.unread ? 'unread' : ''}" data-id="${n.id}">
                                 <div class="dropdown-item-icon">${n.icon}</div>
                                 <div class="dropdown-item-content">
@@ -7094,11 +7067,11 @@
                                 ${n.unread ? '<div class="dropdown-dot"></div>' : ''}
                             </div>
                         `).join('')
-                        : `<div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px;">Không có thông báo nào</div>`;
+                    : `<div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px;">Không có thông báo nào</div>`;
 
-                    const dropdown = document.createElement('div');
-                    dropdown.className = 'dropdown-panel notification-dropdown';
-                    dropdown.innerHTML = `
+                const dropdown = document.createElement('div');
+                dropdown.className = 'dropdown-panel notification-dropdown';
+                dropdown.innerHTML = `
                         <div class="dropdown-header">
                             <h4>Thông báo</h4>
                             <button class="dropdown-mark-read">Đánh dấu đã đọc</button>
@@ -7107,84 +7080,84 @@
                             ${listHTML}
                         </div>`;
 
-                    document.body.appendChild(dropdown);
-                    // Position near the bell
-                    const rect = btn.getBoundingClientRect();
-                    dropdown.style.top = (rect.bottom + 8) + 'px';
-                    dropdown.style.right = (window.innerWidth - rect.right) + 'px';
+                document.body.appendChild(dropdown);
+                // Position near the bell
+                const rect = btn.getBoundingClientRect();
+                dropdown.style.top = (rect.bottom + 8) + 'px';
+                dropdown.style.right = (window.innerWidth - rect.right) + 'px';
 
-                    requestAnimationFrame(() => dropdown.classList.add('show'));
+                requestAnimationFrame(() => dropdown.classList.add('show'));
 
-                    dropdown.querySelector('.dropdown-mark-read').addEventListener('click', () => {
-                        fetch('/Home/MarkNotificationsAsRead', { method: 'POST' })
-                            .then(r => r.json())
-                            .then(res => {
-                                if (res.success) {
-                                    dropdown.querySelectorAll('.unread').forEach(item => item.classList.remove('unread'));
-                                    dropdown.querySelectorAll('.dropdown-dot').forEach(dot => dot.remove());
-                                    const badge = btn.querySelector('.notification-badge');
-                                    if (badge) badge.style.display = 'none';
-                                    showToast('✅ Đã đánh dấu tất cả đã đọc', 'success');
-                                }
-                            })
-                            .catch(err => console.error('Error marking notifications as read:', err));
-                    });
-
-                    // Close on outside click
-                    setTimeout(() => {
-                        document.addEventListener('click', function closeDropdown(ev) {
-                            if (!dropdown.contains(ev.target)) {
-                                dropdown.classList.remove('show');
-                                setTimeout(() => dropdown.remove(), 200);
-                                document.removeEventListener('click', closeDropdown);
+                dropdown.querySelector('.dropdown-mark-read').addEventListener('click', () => {
+                    fetch('/Home/MarkNotificationsAsRead', { method: 'POST' })
+                        .then(r => r.json())
+                        .then(res => {
+                            if (res.success) {
+                                dropdown.querySelectorAll('.unread').forEach(item => item.classList.remove('unread'));
+                                dropdown.querySelectorAll('.dropdown-dot').forEach(dot => dot.remove());
+                                const badge = btn.querySelector('.notification-badge');
+                                if (badge) badge.style.display = 'none';
+                                showToast('✅ Đã đánh dấu tất cả đã đọc', 'success');
                             }
-                        });
-                    }, 10);
-                })
-                .catch(err => {
-                    console.error('Error loading notifications:', err);
-                    showToast('Không thể tải thông báo.', 'error');
+                        })
+                        .catch(err => console.error('Error marking notifications as read:', err));
                 });
-        });
-    }
 
-    // ============================================
-    // USER PROFILE DROPDOWN
-    // ============================================
-    function bindUserProfileDropdown() {
-        const btn = document.getElementById('userProfile');
-        if (!btn) return;
-        if (btn.closest('.dropdown')?.querySelector('.dropdown-menu')) return;
-        btn.addEventListener('click', function (e) {
-            e.stopPropagation();
-            document.querySelector('.dropdown-panel')?.remove();
+                // Close on outside click
+                setTimeout(() => {
+                    document.addEventListener('click', function closeDropdown(ev) {
+                        if (!dropdown.contains(ev.target)) {
+                            dropdown.classList.remove('show');
+                            setTimeout(() => dropdown.remove(), 200);
+                            document.removeEventListener('click', closeDropdown);
+                        }
+                    });
+                }, 10);
+            })
+            .catch(err => {
+                console.error('Error loading notifications:', err);
+                showToast('Không thể tải thông báo.', 'error');
+            });
+    });
+}
 
-            // Read dynamic info from the DOM elements
-            const nameEl = btn.querySelector('.user-name');
-            const roleEl = btn.querySelector('.user-role');
-            const initialsEl = btn.querySelector('.user-avatar span');
-            const avatarImg = btn.querySelector('.user-avatar img');
+// ============================================
+// USER PROFILE DROPDOWN
+// ============================================
+function bindUserProfileDropdown() {
+    const btn = document.getElementById('userProfile');
+    if (!btn) return;
+    if (btn.closest('.dropdown')?.querySelector('.dropdown-menu')) return;
+    btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        document.querySelector('.dropdown-panel')?.remove();
 
-            const name = nameEl ? nameEl.textContent.trim() : 'Người dùng';
-            const role = roleEl ? roleEl.textContent.trim() : 'Thành viên';
-            const initials = initialsEl ? initialsEl.textContent.trim() : 'US';
-            const avatarSrc = avatarImg ? avatarImg.src : null;
-            const email = btn.getAttribute('data-email') || (role === 'Nhà tuyển dụng' ? 'doanhnghiep@j4s.vn' : role === 'Freelancer' ? 'sinhvien@j4s.vn' : 'admin@j4s.vn');
-            const userId = btn.getAttribute('data-user-id');
-            const userRole = btn.getAttribute('data-user-role') || '';
-            const isBusiness = userRole === 'Business';
-            const isStudent = userRole === 'Student';
-            const businessJobsUrl = isBusiness && userId ? `/business/${userId}/jobs` : '#';
+        // Read dynamic info from the DOM elements
+        const nameEl = btn.querySelector('.user-name');
+        const roleEl = btn.querySelector('.user-role');
+        const initialsEl = btn.querySelector('.user-avatar span');
+        const avatarImg = btn.querySelector('.user-avatar img');
 
-            const dropdown = document.createElement('div');
-            dropdown.className = 'dropdown-panel user-dropdown';
-            dropdown.innerHTML = `
+        const name = nameEl ? nameEl.textContent.trim() : 'Người dùng';
+        const role = roleEl ? roleEl.textContent.trim() : 'Thành viên';
+        const initials = initialsEl ? initialsEl.textContent.trim() : 'US';
+        const avatarSrc = avatarImg ? avatarImg.src : null;
+        const email = btn.getAttribute('data-email') || (role === 'Nhà tuyển dụng' ? 'doanhnghiep@j4s.vn' : role === 'Freelancer' ? 'sinhvien@j4s.vn' : 'admin@j4s.vn');
+        const userId = btn.getAttribute('data-user-id');
+        const userRole = btn.getAttribute('data-user-role') || '';
+        const isBusiness = userRole === 'Business';
+        const isStudent = userRole === 'Student';
+        const businessJobsUrl = isBusiness && userId ? `/business/${userId}/jobs` : '#';
+
+        const dropdown = document.createElement('div');
+        dropdown.className = 'dropdown-panel user-dropdown';
+        dropdown.innerHTML = `
                 <div class="dropdown-user-header">
                     <div class="user-avatar" style="background: ${avatarSrc ? 'none' : 'linear-gradient(135deg, #2563eb, #3b82f6)'}; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; color: white; font-weight: 700; overflow: hidden; flex-shrink: 0;">
                         ${avatarSrc
-                    ? `<img src="${avatarSrc}" style="width: 100%; height: 100%; object-fit: cover;" />`
-                    : `<span>${escapeHtml(initials)}</span>`
-                }
+                ? `<img src="${avatarSrc}" style="width: 100%; height: 100%; object-fit: cover;" />`
+                : `<span>${escapeHtml(initials)}</span>`
+            }
                     </div>
                     <div>
                         <div class="dropdown-user-name">${escapeHtml(name)}</div>
@@ -7207,78 +7180,78 @@
                     <div class="dropdown-menu-item danger" data-action="logout"><i data-lucide="log-out" style="width:16px;height:16px;"></i> Đăng xuất</div>
                 </div>`;
 
-            document.body.appendChild(dropdown);
-            const rect = btn.getBoundingClientRect();
-            dropdown.style.top = (rect.bottom + 8) + 'px';
-            dropdown.style.right = (window.innerWidth - rect.right) + 'px';
-            if (window.lucide) lucide.createIcons();
+        document.body.appendChild(dropdown);
+        const rect = btn.getBoundingClientRect();
+        dropdown.style.top = (rect.bottom + 8) + 'px';
+        dropdown.style.right = (window.innerWidth - rect.right) + 'px';
+        if (window.lucide) lucide.createIcons();
 
-            requestAnimationFrame(() => dropdown.classList.add('show'));
+        requestAnimationFrame(() => dropdown.classList.add('show'));
 
-            dropdown.querySelectorAll('.dropdown-menu-item').forEach(item => {
-                item.addEventListener('click', () => {
-                    const action = item.dataset.action;
+        dropdown.querySelectorAll('.dropdown-menu-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const action = item.dataset.action;
+                dropdown.classList.remove('show');
+                setTimeout(() => dropdown.remove(), 200);
+                switch (action) {
+                    case 'deposit':
+                        if (isBusiness) {
+                            setActiveSidebar('wallet-business');
+                            currentSidebarMode = 'wallet-business';
+                            if (typeof window.renderBusinessWalletDeposit === 'function') {
+                                window.renderBusinessWalletDeposit();
+                            }
+                        } else {
+                            openDepositQrModal();
+                        }
+                        break;
+                    case 'profile': setActiveSidebar('profile'); currentSidebarMode = 'profile'; renderProfileView(); break;
+                    case 'edit-profile': openEditProfileFromMenu(); break;
+                    case 'account': openEditProfileFromMenu(); break;
+                    case 'privacy': setActiveSidebar(''); currentSidebarMode = 'privacy'; renderPoliciesView(); break;
+                    case 'policies': setActiveSidebar(''); currentSidebarMode = 'policies'; renderPoliciesView(); break;
+                    case 'logout':
+                        const logoutForm = document.getElementById('logoutForm');
+                        if (logoutForm) {
+                            logoutForm.submit();
+                        } else {
+                            window.location.href = '/Auth/Logout';
+                        }
+                        break;
+                }
+            });
+        });
+
+        setTimeout(() => {
+            document.addEventListener('click', function closeDd(ev) {
+                if (!dropdown.contains(ev.target)) {
                     dropdown.classList.remove('show');
                     setTimeout(() => dropdown.remove(), 200);
-                    switch (action) {
-                        case 'deposit':
-                            if (isBusiness) {
-                                setActiveSidebar('wallet-business');
-                                currentSidebarMode = 'wallet-business';
-                                if (typeof window.renderBusinessWalletDeposit === 'function') {
-                                    window.renderBusinessWalletDeposit();
-                                }
-                            } else {
-                                openDepositQrModal();
-                            }
-                            break;
-                        case 'profile': setActiveSidebar('profile'); currentSidebarMode = 'profile'; renderProfileView(); break;
-                        case 'edit-profile': openEditProfileFromMenu(); break;
-                        case 'account': openEditProfileFromMenu(); break;
-                        case 'privacy': setActiveSidebar(''); currentSidebarMode = 'privacy'; renderPoliciesView(); break;
-                        case 'policies': setActiveSidebar(''); currentSidebarMode = 'policies'; renderPoliciesView(); break;
-                        case 'logout':
-                            const logoutForm = document.getElementById('logoutForm');
-                            if (logoutForm) {
-                                logoutForm.submit();
-                            } else {
-                                window.location.href = '/Auth/Logout';
-                            }
-                            break;
-                    }
-                });
-            });
-
-            setTimeout(() => {
-                document.addEventListener('click', function closeDd(ev) {
-                    if (!dropdown.contains(ev.target)) {
-                        dropdown.classList.remove('show');
-                        setTimeout(() => dropdown.remove(), 200);
-                        document.removeEventListener('click', closeDd);
-                    }
-                });
-            }, 10);
-        });
-    }
-
-    function openEditProfileFromMenu() {
-        fetch('/Home/GetProfile')
-            .then(res => res.json())
-            .then(data => {
-                if (!data.success) {
-                    showToast(data.message || 'Không thể tải hồ sơ.', 'error');
-                    return;
+                    document.removeEventListener('click', closeDd);
                 }
-                openEditProfileModal(data);
-            })
-            .catch(err => {
-                console.error(err);
-                showToast('Không thể kết nối đến máy chủ.', 'error');
             });
-    }
+        }, 10);
+    });
+}
 
-    function renderPoliciesView() {
-        mainContent.innerHTML = `
+function openEditProfileFromMenu() {
+    fetch('/Home/GetProfile')
+        .then(res => res.json())
+        .then(data => {
+            if (!data.success) {
+                showToast(data.message || 'Không thể tải hồ sơ.', 'error');
+                return;
+            }
+            openEditProfileModal(data);
+        })
+        .catch(err => {
+            console.error(err);
+            showToast('Không thể kết nối đến máy chủ.', 'error');
+        });
+}
+
+function renderPoliciesView() {
+    mainContent.innerHTML = `
             <div class="page-header animate-in">
                 <h1 class="page-title"><i data-lucide="shield-check" style="width:24px;height:24px;"></i> Điều khoản & Chính sách</h1>
                 <p class="page-subtitle">Các quy định sử dụng và chính sách bảo mật thông tin trên J4S</p>
@@ -7332,122 +7305,122 @@
                 </div>
             </div>`;
 
-        if (window.lucide) lucide.createIcons();
-    }
+    if (window.lucide) lucide.createIcons();
+}
 
-    // ============================================
-    // BANNER BUTTONS
-    // ============================================
-    function bindBannerButtons() {
-        document.getElementById('btnFindJobNow')?.addEventListener('click', () => {
-            setActiveSidebar('find');
-            currentSidebarMode = 'find';
-            if (!isBusinessAccount()) {
-                const rs = document.getElementById('rightSidebar');
-                if (rs) rs.style.display = '';
-            }
-            renderFindJobView();
-        });
-        document.getElementById('btnPostJobBanner')?.addEventListener('click', () => openPostJobModal());
-    }
-
-    // ============================================
-    // VIEW MORE BUTTON
-    // ============================================
-    function bindViewMoreBtn() {
-        const btn = document.getElementById('btnViewMore');
-        if (!btn) return;
-        btn.addEventListener('click', () => {
-            showToast('📋 Đã hiển thị tất cả việc làm hiện có!', 'info');
-            btn.textContent = 'Đã hiển thị tất cả';
-            btn.disabled = true;
-            btn.style.opacity = '0.5';
-        });
-    }
-
-    // ============================================
-    // VIEW PROFILE BUTTONS (Right sidebar)
-    // ============================================
-    function bindViewProfileButtons() {
-        document.querySelectorAll('.btn-view-profile').forEach(btn => {
-            const newBtn = btn.cloneNode(true);
-            btn.parentNode.replaceChild(newBtn, btn);
-            newBtn.addEventListener('click', function () {
-                const item = this.closest('.freelancer-item');
-                if (!item) return;
-                const name = item.querySelector('.freelancer-name')?.textContent || '';
-                const skill = item.querySelector('.freelancer-role')?.textContent || '';
-                const avatarEl = item.querySelector('.freelancer-avatar img');
-                const avatar = avatarEl ? avatarEl.src : '';
-                const ratingText = item.querySelector('.freelancer-rating')?.textContent || '';
-                const ratingMatch = ratingText.match(/([\d.]+)\s*\((\d+)\)/);
-                const rating = ratingMatch ? parseFloat(ratingMatch[1]) : 5.0;
-                const reviews = ratingMatch ? parseInt(ratingMatch[2]) : 0;
-                const matchText = item.querySelector('.match-badge')?.textContent || '';
-
-                openFreelancerProfileModal({ name, skill, avatar, rating, reviews, matchPercentage: matchText, color: '#6366F1' });
-            });
-        });
-    }
-
-    // ============================================
-    // POST JOB MODAL
-    // ============================================
-    function bindPostJobButtons() {
-        document.getElementById('btnPostJobBanner')?.addEventListener('click', () => {
-            openPostJobModal();
-        });
-        // Also bind the sidebar button (in case not yet bound by setupBusinessDashboardShell)
-        const sidebarPostBtn = document.getElementById('btnPostJob');
-        if (sidebarPostBtn && !sidebarPostBtn.dataset.bound) {
-            sidebarPostBtn.dataset.bound = '1';
-            sidebarPostBtn.style.background = 'linear-gradient(135deg,#2563eb,#0ea5e9)';
-            sidebarPostBtn.style.color = '#fff';
-            sidebarPostBtn.style.border = 'none';
-            sidebarPostBtn.addEventListener('click', () => openPostJobModal());
+// ============================================
+// BANNER BUTTONS
+// ============================================
+function bindBannerButtons() {
+    document.getElementById('btnFindJobNow')?.addEventListener('click', () => {
+        setActiveSidebar('find');
+        currentSidebarMode = 'find';
+        if (!isBusinessAccount()) {
+            const rs = document.getElementById('rightSidebar');
+            if (rs) rs.style.display = '';
         }
+        renderFindJobView();
+    });
+    document.getElementById('btnPostJobBanner')?.addEventListener('click', () => openPostJobModal());
+}
+
+// ============================================
+// VIEW MORE BUTTON
+// ============================================
+function bindViewMoreBtn() {
+    const btn = document.getElementById('btnViewMore');
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+        showToast('📋 Đã hiển thị tất cả việc làm hiện có!', 'info');
+        btn.textContent = 'Đã hiển thị tất cả';
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+    });
+}
+
+// ============================================
+// VIEW PROFILE BUTTONS (Right sidebar)
+// ============================================
+function bindViewProfileButtons() {
+    document.querySelectorAll('.btn-view-profile').forEach(btn => {
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+        newBtn.addEventListener('click', function () {
+            const item = this.closest('.freelancer-item');
+            if (!item) return;
+            const name = item.querySelector('.freelancer-name')?.textContent || '';
+            const skill = item.querySelector('.freelancer-role')?.textContent || '';
+            const avatarEl = item.querySelector('.freelancer-avatar img');
+            const avatar = avatarEl ? avatarEl.src : '';
+            const ratingText = item.querySelector('.freelancer-rating')?.textContent || '';
+            const ratingMatch = ratingText.match(/([\d.]+)\s*\((\d+)\)/);
+            const rating = ratingMatch ? parseFloat(ratingMatch[1]) : 5.0;
+            const reviews = ratingMatch ? parseInt(ratingMatch[2]) : 0;
+            const matchText = item.querySelector('.match-badge')?.textContent || '';
+
+            openFreelancerProfileModal({ name, skill, avatar, rating, reviews, matchPercentage: matchText, color: '#6366F1' });
+        });
+    });
+}
+
+// ============================================
+// POST JOB MODAL
+// ============================================
+function bindPostJobButtons() {
+    document.getElementById('btnPostJobBanner')?.addEventListener('click', () => {
+        openPostJobModal();
+    });
+    // Also bind the sidebar button (in case not yet bound by setupBusinessDashboardShell)
+    const sidebarPostBtn = document.getElementById('btnPostJob');
+    if (sidebarPostBtn && !sidebarPostBtn.dataset.bound) {
+        sidebarPostBtn.dataset.bound = '1';
+        sidebarPostBtn.style.background = 'linear-gradient(135deg,#2563eb,#0ea5e9)';
+        sidebarPostBtn.style.color = '#fff';
+        sidebarPostBtn.style.border = 'none';
+        sidebarPostBtn.addEventListener('click', () => openPostJobModal());
+    }
+}
+
+async function openPostJobModal(job = null) {
+    const isEditOpen = job && job.status === 'Open';
+
+    let isVipPackage = false;
+    let remainingPosts = 0;
+    let hasPlan = false;
+    try {
+        const res = await fetch('/Home/GetBusinessServicePackage');
+        const data = await res.json();
+        hasPlan = data.success && !!data.currentPackage;
+        if (hasPlan) {
+            remainingPosts = data.currentPackage.remainingJobPosts ?? 0;
+            if (data.currentPackage.planName === 'Business VIP' || data.currentPackage.hasVipActive) {
+                isVipPackage = true;
+            }
+        }
+    } catch (e) {
+        console.error('Error checking subscription package:', e);
     }
 
-    async function openPostJobModal(job = null) {
-        const isEditOpen = job && job.status === 'Open';
-
-        let isVipPackage = false;
-        let remainingPosts = 0;
-        let hasPlan = false;
-        try {
-            const res = await fetch('/Home/GetBusinessServicePackage');
-            const data = await res.json();
-            hasPlan = data.success && !!data.currentPackage;
-            if (hasPlan) {
-                remainingPosts = data.currentPackage.remainingJobPosts ?? 0;
-                if (data.currentPackage.planName === 'Business VIP' || data.currentPackage.hasVipActive) {
-                    isVipPackage = true;
-                }
-            }
-        } catch (e) {
-            console.error('Error checking subscription package:', e);
+    if (!isEditOpen && (!hasPlan || remainingPosts <= 0)) {
+        showToast('Gói dịch vụ hiện tại đã hết số lượng tin đăng hoặc bạn chưa đăng ký gói. Vui lòng nâng cấp hoặc gia hạn.', 'warning');
+        const navBtn = document.getElementById('navServicePackages');
+        if (navBtn) {
+            navBtn.click();
+        } else {
+            currentSidebarMode = 'servicePackages';
+            renderServicePackagesView();
         }
+        return;
+    }
 
-        if (!isEditOpen && (!hasPlan || remainingPosts <= 0)) {
-            showToast('Gói dịch vụ hiện tại đã hết số lượng tin đăng hoặc bạn chưa đăng ký gói. Vui lòng nâng cấp hoặc gia hạn.', 'warning');
-            const navBtn = document.getElementById('navServicePackages');
-            if (navBtn) {
-                navBtn.click();
-            } else {
-                currentSidebarMode = 'servicePackages';
-                renderServicePackagesView();
-            }
-            return;
-        }
+    const isEdit = !!job;
+    const standardCategories = ['IT & Lập trình', 'Thiết kế & Đồ họa', 'Viết lách & Dịch thuật', 'Sales & Marketing', 'Video & Photography'];
+    const isCustomCategory = job?.category && !standardCategories.includes(job.category);
+    const selectedCategory = isCustomCategory ? 'Khác' : (job?.category || 'IT & Lập trình');
 
-        const isEdit = !!job;
-        const standardCategories = ['IT & Lập trình', 'Thiết kế & Đồ họa', 'Viết lách & Dịch thuật', 'Sales & Marketing', 'Video & Photography'];
-        const isCustomCategory = job?.category && !standardCategories.includes(job.category);
-        const selectedCategory = isCustomCategory ? 'Khác' : (job?.category || 'IT & Lập trình');
-
-        const modal = document.createElement('div');
-        modal.className = 'modal-overlay';
-        modal.innerHTML = `
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
             <div class="modal-content" style="max-width:760px;max-height:85vh;overflow-y:auto;">
                 <button class="modal-close"><i data-lucide="x" style="width:20px;height:20px;"></i></button>
                 <div class="modal-header"><h2>${isEdit ? 'Chỉnh sửa tin tuyển dụng' : 'Đăng việc mới'}</h2></div>
@@ -7535,63 +7508,324 @@
                 </div>
             </div>`;
 
-        document.body.appendChild(modal);
-        setupCurrencyInput(modal.querySelector('#postJobBudget'));
-        if (window.lucide) lucide.createIcons();
-        requestAnimationFrame(() => modal.classList.add('active'));
+    document.body.appendChild(modal);
+    setupCurrencyInput(modal.querySelector('#postJobBudget'));
+    if (window.lucide) lucide.createIcons();
+    requestAnimationFrame(() => modal.classList.add('active'));
 
-        const vipCheck = modal.querySelector('#postJobIsVip');
-        const deadlineInput = modal.querySelector('#postJobDeadline');
-        if (vipCheck && deadlineInput) {
-            const updateDeadlineState = () => {
-                if (vipCheck.checked) {
-                    const nextWeek = new Date();
-                    nextWeek.setDate(nextWeek.getDate() + 7);
-                    deadlineInput.value = nextWeek.toISOString().split('T')[0];
-                    deadlineInput.disabled = true;
-                } else {
-                    deadlineInput.disabled = false;
-                }
-            };
-            vipCheck.addEventListener('change', updateDeadlineState);
-            updateDeadlineState();
+    const vipCheck = modal.querySelector('#postJobIsVip');
+    const deadlineInput = modal.querySelector('#postJobDeadline');
+    if (vipCheck && deadlineInput) {
+        const updateDeadlineState = () => {
+            if (vipCheck.checked) {
+                const nextWeek = new Date();
+                nextWeek.setDate(nextWeek.getDate() + 7);
+                deadlineInput.value = nextWeek.toISOString().split('T')[0];
+                deadlineInput.disabled = true;
+            } else {
+                deadlineInput.disabled = false;
+            }
+        };
+        vipCheck.addEventListener('change', updateDeadlineState);
+        updateDeadlineState();
+    }
+
+    modal.querySelector('.modal-close').addEventListener('click', () => closeModal(modal));
+    modal.addEventListener('click', e => { if (e.target === modal) closeModal(modal); });
+
+    const dynCategory = modal.querySelector('#postJobCategory');
+    const dynWrapper = modal.querySelector('#dynamicCustomCategoryWrapper');
+    const dynInput = modal.querySelector('#postJobCustomCategory');
+    if (dynCategory) {
+        dynCategory.addEventListener('change', () => {
+            if (dynCategory.value === 'Khác') {
+                if (dynWrapper) dynWrapper.style.display = 'block';
+                if (dynInput) dynInput.focus();
+            } else {
+                if (dynWrapper) dynWrapper.style.display = 'none';
+                if (dynInput) dynInput.value = '';
+            }
+        });
+    }
+
+    const submitBusinessJob = (saveAsDraft) => {
+        const title = modal.querySelector('#postJobTitle').value.trim();
+        const description = modal.querySelector('#postJobDesc').value.trim();
+        const deadline = modal.querySelector('#postJobDeadline').value;
+        const budgetVal = modal.querySelector('#postJobBudget').value;
+        const budget = Number(budgetVal.replace(/\D/g, ''));
+        const quantity = Number(modal.querySelector('#postJobQuantity').value) || 1;
+
+        if (!title || title.length < 10 || title.length > 150) {
+            showToast('Tiêu đề công việc phải có độ dài từ 10 đến 150 ký tự.', 'warning');
+            return;
+        }
+        if (quantity < 1) {
+            showToast('Số lượng tuyển dụng phải lớn hơn hoặc bằng 1.', 'warning');
+            return;
+        }
+        if (!saveAsDraft) {
+            if (!description) { showToast('Vui lòng nhập mô tả công việc.', 'warning'); return; }
+            if (!deadline) { showToast('Vui lòng chọn deadline tuyển dụng.', 'warning'); return; }
+
+            const deadlineDate = new Date(deadline);
+            deadlineDate.setHours(0, 0, 0, 0);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+
+            const maxFutureDate = new Date(today);
+            maxFutureDate.setDate(maxFutureDate.getDate() + 90);
+
+            if (deadlineDate < tomorrow) {
+                showToast('Hạn chót ứng tuyển phải từ ngày mai trở đi.', 'warning');
+                return;
+            }
+            if (deadlineDate > maxFutureDate) {
+                showToast('Hạn chót ứng tuyển không được vượt quá 90 ngày kể từ ngày đăng.', 'warning');
+                return;
+            }
+
+            if (!Number.isFinite(budget) || budget < 10000 || budget > 10000000000) {
+                showToast('Mức lương hợp lệ phải từ 10,000đ đến 10 tỷ đồng.', 'warning');
+                return;
+            }
         }
 
-        modal.querySelector('.modal-close').addEventListener('click', () => closeModal(modal));
-        modal.addEventListener('click', e => { if (e.target === modal) closeModal(modal); });
+        let finalCategory = modal.querySelector('#postJobCategory').value;
+        if (finalCategory === 'Khác') {
+            finalCategory = modal.querySelector('#postJobCustomCategory')?.value.trim() || 'Khác';
+        }
 
-        const dynCategory = modal.querySelector('#postJobCategory');
-        const dynWrapper = modal.querySelector('#dynamicCustomCategoryWrapper');
-        const dynInput = modal.querySelector('#postJobCustomCategory');
-        if (dynCategory) {
-            dynCategory.addEventListener('change', () => {
-                if (dynCategory.value === 'Khác') {
-                    if (dynWrapper) dynWrapper.style.display = 'block';
-                    if (dynInput) dynInput.focus();
+        const payload = {
+            id: job?.id || null,
+            title,
+            description,
+            requirements: modal.querySelector('#postJobRequirements').value.trim(),
+            benefits: modal.querySelector('#postJobBenefits').value.trim(),
+            category: finalCategory,
+            skills: modal.querySelector('#postJobSkills').value.split(',').map(s => s.trim()).filter(Boolean),
+            budget: Number.isFinite(budget) ? budget : 0,
+            budgetType: modal.querySelector('#postJobBudgetType').value,
+            experienceLevel: modal.querySelector('#postJobExperience').value,
+            location: modal.querySelector('#postJobLocation').value.trim() || 'Online',
+            quantity: Number(modal.querySelector('#postJobQuantity').value) || 1,
+            deadline,
+            isVip: modal.querySelector('#postJobIsVip')?.checked || false,
+            saveAsDraft
+        };
+
+        const btn = modal.querySelector(saveAsDraft ? '#btnSaveDraftJob' : '#btnSubmitJob');
+        const original = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" style="margin-right:8px;"></span> Đang lưu...';
+
+        postJson('/Home/SaveBusinessJobPost', payload)
+            .then(data => {
+                if (data.success) {
+                    closeModal(modal);
+                    showToast(data.message || 'Đã lưu tin tuyển dụng.', 'success');
+
+                    if (typeof loadBusinessHomeData === 'function') {
+                        loadBusinessHomeData();
+                    }
+                    if (typeof loadServicePackages === 'function' && document.getElementById('servicePackagesPanel')) {
+                        loadServicePackages();
+                    }
+                    if (typeof window.getWalletData === 'function') {
+                        window.getWalletData();
+                    }
+                    if (typeof window.renderBusinessWalletDeposit === 'function') {
+                        window.renderBusinessWalletDeposit();
+                    }
+
+                    if (currentSidebarMode === 'businessJobs') loadBusinessJobs();
                 } else {
-                    if (dynWrapper) dynWrapper.style.display = 'none';
-                    if (dynInput) dynInput.value = '';
+                    showToast(data.message || 'Không thể lưu tin tuyển dụng.', 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = original;
                 }
+            })
+            .catch(err => {
+                console.error(err);
+                showToast('Không thể kết nối đến máy chủ.', 'error');
+                btn.disabled = false;
+                btn.innerHTML = original;
             });
-        }
+    };
 
-        const submitBusinessJob = (saveAsDraft) => {
-            const title = modal.querySelector('#postJobTitle').value.trim();
-            const description = modal.querySelector('#postJobDesc').value.trim();
-            const deadline = modal.querySelector('#postJobDeadline').value;
-            const budgetVal = modal.querySelector('#postJobBudget').value;
-            const budget = Number(budgetVal.replace(/\D/g, ''));
-            const quantity = Number(modal.querySelector('#postJobQuantity').value) || 1;
+    modal.querySelector('#btnSubmitJob').addEventListener('click', () => submitBusinessJob(false));
+    modal.querySelector('#btnSaveDraftJob').addEventListener('click', () => submitBusinessJob(true));
+}
+
+// ============================================
+// FIND FREELANCER BUTTON
+// ============================================
+function bindFindFreelancerBtn() {
+    document.getElementById('btnFindFreelancer')?.addEventListener('click', () => {
+        setActiveSidebar('topFreelancer');
+        currentSidebarMode = 'topFreelancer';
+        renderFeaturedFreelancersView();
+    });
+}
+
+// ============================================
+// TOAST NOTIFICATIONS
+// ============================================
+function showToast(message, type = 'info') {
+    document.querySelectorAll('.toast-notification').forEach(t => t.remove());
+    const toast = document.createElement('div');
+    toast.className = `toast-notification toast-${type}`;
+    const icons = { success: 'check-circle', error: 'alert-circle', info: 'info', warning: 'alert-triangle' };
+    toast.innerHTML = `<i data-lucide="${icons[type] || 'info'}" style="width:18px;height:18px;"></i><span>${message}</span>`;
+    document.body.appendChild(toast);
+    if (window.lucide) lucide.createIcons();
+    requestAnimationFrame(() => toast.classList.add('show'));
+    setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3500);
+}
+window.showToast = showToast;
+
+// ============================================
+// UTILITY FUNCTIONS
+// ============================================
+function formatVND(amount) {
+    return new Intl.NumberFormat('vi-VN').format(amount) + ' đ';
+}
+
+function formatCurrencyInput(value) {
+    let clean = value.toString().replace(/\D/g, '');
+    if (!clean) return '';
+    return new Intl.NumberFormat('vi-VN').format(clean) + ' đ';
+}
+
+function setupCurrencyInput(inputElement) {
+    if (!inputElement) return;
+    inputElement.type = 'text';
+    if (inputElement.value) {
+        inputElement.value = formatCurrencyInput(inputElement.value);
+    }
+    inputElement.addEventListener('input', function () {
+        this.value = formatCurrencyInput(this.value);
+    });
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+function formatBioText(rawText, fallbackText = 'Chưa cập nhật giới thiệu bản thân.') {
+    if (!rawText) return `<p style="font-size:14px; color: var(--text-secondary); margin:0; line-height: 1.6;">${fallbackText}</p>`;
+    if (rawText.trim().startsWith('{') && rawText.trim().endsWith('}')) {
+        try {
+            const obj = JSON.parse(rawText);
+            let html = '<ul style="padding-left: 20px; margin: 0; font-size:14px; color: var(--text-secondary); line-height: 1.6; display: flex; flex-direction: column; gap: 8px;">';
+            if (obj.q3) html += `<li><strong>Thông tin bản thân:</strong> ${escapeHtml(obj.q3)}</li>`;
+            if (obj.q1) html += `<li><strong>Mục tiêu nghề nghiệp:</strong> ${escapeHtml(obj.q1)}</li>`;
+            if (obj.q2) html += `<li><strong>Điểm mạnh cốt lõi:</strong> ${escapeHtml(obj.q2)}</li>`;
+            html += '</ul>';
+            return html;
+        } catch (e) { }
+    }
+    return `<p style="font-size:14px; color: var(--text-secondary); margin:0; line-height: 1.6; white-space: pre-line;">${escapeHtml(rawText)}</p>`;
+}
+
+function formatExperienceText(rawText, fallbackText = 'Chưa cập nhật kinh nghiệm làm việc.') {
+    if (!rawText) return `<p class="experience-modern-content">${fallbackText}</p>`;
+    if (rawText.trim().startsWith('{') && rawText.trim().endsWith('}')) {
+        try {
+            const obj = JSON.parse(rawText);
+            let html = '<ul style="padding-left: 20px; margin: 0; font-size:14px; color: var(--text-secondary); line-height: 1.6; display: flex; flex-direction: column; gap: 8px;">';
+            if (obj.q1) html += `<li><strong>Dự án & Công việc tiêu biểu:</strong> ${escapeHtml(obj.q1)}</li>`;
+            if (obj.q2) html += `<li><strong>Nhiệm vụ & Vai trò chính:</strong> ${escapeHtml(obj.q2)}</li>`;
+            if (obj.q3) html += `<li><strong>Kết quả & Công nghệ sử dụng:</strong> ${escapeHtml(obj.q3)}</li>`;
+            html += '</ul>';
+            return html;
+        } catch (e) { }
+    }
+    return `<p class="experience-modern-content" style="white-space: pre-line;">${escapeHtml(rawText)}</p>`;
+}
+
+function getBioPreview(rawText, fallbackText = 'Ứng viên chưa cập nhật mô tả hồ sơ.') {
+    if (!rawText) return fallbackText;
+    if (rawText.trim().startsWith('{') && rawText.trim().endsWith('}')) {
+        try {
+            const obj = JSON.parse(rawText);
+            return obj.q1 || obj.q3 || obj.q2 || fallbackText;
+        } catch (e) { }
+    }
+    return rawText;
+}
+
+// --- Kick off ---
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
+
+
+
+
+window.setSelectCategory = function (selectId, wrapperId, inputId, categoryValue) {
+    const select = document.getElementById(selectId);
+    const wrapper = document.getElementById(wrapperId);
+    const input = document.getElementById(inputId);
+    if (!select) return;
+
+    const standardCategories = ['IT & Lập trình', 'Thiết kế & Đồ họa', 'Viết lách & Dịch thuật', 'Sales & Marketing', 'Video & Photography'];
+    if (!categoryValue) {
+        select.value = '';
+        if (wrapper) wrapper.style.display = 'none';
+        if (input) input.value = '';
+    } else if (standardCategories.includes(categoryValue)) {
+        select.value = categoryValue;
+        if (wrapper) wrapper.style.display = 'none';
+        if (input) input.value = '';
+    } else {
+        select.value = 'Khác';
+        if (wrapper) wrapper.style.display = 'block';
+        if (input) input.value = categoryValue;
+    }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    const staticCategory = document.getElementById('jobCategory');
+    const staticWrapper = document.getElementById('staticCustomCategoryWrapper');
+    const staticInput = document.getElementById('jobCustomCategory');
+    if (staticCategory) {
+        staticCategory.addEventListener('change', () => {
+            if (staticCategory.value === 'Khác') {
+                if (staticWrapper) staticWrapper.style.display = 'block';
+                if (staticInput) staticInput.focus();
+            } else {
+                if (staticWrapper) staticWrapper.style.display = 'none';
+                if (staticInput) staticInput.value = '';
+            }
+        });
+    }
+
+    const btnSubmitJob = document.getElementById('btnSubmitJob');
+    if (btnSubmitJob) {
+        btnSubmitJob.addEventListener('click', async () => {
+            const form = document.getElementById('postJobForm');
+            const title = document.getElementById('jobTitle')?.value.trim() || '';
+            const description = document.getElementById('jobDescription')?.value.trim() || '';
+            const budget = Number(document.getElementById('jobBudget')?.value) || 0;
+            const deadline = document.getElementById('jobDeadline')?.value || '';
+            const saveMode = document.getElementById('jobFormSaveMode')?.value || 'publish';
+            const isDraft = saveMode.trim().toLowerCase() === 'draft';
 
             if (!title || title.length < 10 || title.length > 150) {
                 showToast('Tiêu đề công việc phải có độ dài từ 10 đến 150 ký tự.', 'warning');
                 return;
             }
-            if (quantity < 1) {
-                showToast('Số lượng tuyển dụng phải lớn hơn hoặc bằng 1.', 'warning');
-                return;
-            }
-            if (!saveAsDraft) {
+
+            if (!isDraft) {
                 if (!description) { showToast('Vui lòng nhập mô tả công việc.', 'warning'); return; }
                 if (!deadline) { showToast('Vui lòng chọn deadline tuyển dụng.', 'warning'); return; }
 
@@ -7615,330 +7849,69 @@
                     return;
                 }
 
-                if (!Number.isFinite(budget) || budget < 10000 || budget > 10000000000) {
+                if (budget < 10000 || budget > 10000000000) {
                     showToast('Mức lương hợp lệ phải từ 10,000đ đến 10 tỷ đồng.', 'warning');
                     return;
                 }
             }
 
-            let finalCategory = modal.querySelector('#postJobCategory').value;
-            if (finalCategory === 'Khác') {
-                finalCategory = modal.querySelector('#postJobCustomCategory')?.value.trim() || 'Khác';
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
             }
-
-            const payload = {
-                id: job?.id || null,
-                title,
-                description,
-                requirements: modal.querySelector('#postJobRequirements').value.trim(),
-                benefits: modal.querySelector('#postJobBenefits').value.trim(),
-                category: finalCategory,
-                skills: modal.querySelector('#postJobSkills').value.split(',').map(s => s.trim()).filter(Boolean),
-                budget: Number.isFinite(budget) ? budget : 0,
-                budgetType: modal.querySelector('#postJobBudgetType').value,
-                experienceLevel: modal.querySelector('#postJobExperience').value,
-                location: modal.querySelector('#postJobLocation').value.trim() || 'Online',
-                quantity: Number(modal.querySelector('#postJobQuantity').value) || 1,
-                deadline,
-                isVip: modal.querySelector('#postJobIsVip')?.checked || false,
-                saveAsDraft
-            };
-
-            const btn = modal.querySelector(saveAsDraft ? '#btnSaveDraftJob' : '#btnSubmitJob');
-            const original = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm" style="margin-right:8px;"></span> Đang lưu...';
-
-            postJson('/Home/SaveBusinessJobPost', payload)
-                .then(data => {
-                    if (data.success) {
-                        closeModal(modal);
-                        showToast(data.message || 'Đã lưu tin tuyển dụng.', 'success');
-
-                        if (typeof loadBusinessHomeData === 'function') {
-                            loadBusinessHomeData();
-                        }
-                        if (typeof loadServicePackages === 'function' && document.getElementById('servicePackagesPanel')) {
-                            loadServicePackages();
-                        }
-                        if (typeof window.getWalletData === 'function') {
-                            window.getWalletData();
-                        }
-                        if (typeof window.renderBusinessWalletDeposit === 'function') {
-                            window.renderBusinessWalletDeposit();
-                        }
-
-                        if (currentSidebarMode === 'businessJobs') loadBusinessJobs();
-                    } else {
-                        showToast(data.message || 'Không thể lưu tin tuyển dụng.', 'error');
-                        btn.disabled = false;
-                        btn.innerHTML = original;
+            const formData = new FormData(form);
+            if (formData.get('category') === 'Khác') {
+                const customVal = document.getElementById('jobCustomCategory')?.value.trim() || 'Khác';
+                formData.set('category', customVal);
+            }
+            const mode = (formData.get('jobMode') || 'new').toString().toLowerCase();
+            const url = mode === 'edit' ? '/Home/UpdateJobPost' : '/Home/PostJob';
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
                     }
-                })
-                .catch(err => {
-                    console.error(err);
-                    showToast('Không thể kết nối đến máy chủ.', 'error');
-                    btn.disabled = false;
-                    btn.innerHTML = original;
                 });
-        };
 
-        modal.querySelector('#btnSubmitJob').addEventListener('click', () => submitBusinessJob(false));
-        modal.querySelector('#btnSaveDraftJob').addEventListener('click', () => submitBusinessJob(true));
-    }
+                if (!response.ok) {
+                    const text = await response.text();
+                    console.error("Server returned error:", response.status, text);
+                    showToast('Lỗi từ máy chủ: ' + response.status + '. Vui lòng xem F12 Console.', 'error');
+                    return;
+                }
 
-    // ============================================
-    // FIND FREELANCER BUTTON
-    // ============================================
-    function bindFindFreelancerBtn() {
-        document.getElementById('btnFindFreelancer')?.addEventListener('click', () => {
-            setActiveSidebar('topFreelancer');
-            currentSidebarMode = 'topFreelancer';
-            renderFeaturedFreelancersView();
-        });
-    }
-
-    // ============================================
-    // TOAST NOTIFICATIONS
-    // ============================================
-    function showToast(message, type = 'info') {
-        document.querySelectorAll('.toast-notification').forEach(t => t.remove());
-        const toast = document.createElement('div');
-        toast.className = `toast-notification toast-${type}`;
-        const icons = { success: 'check-circle', error: 'alert-circle', info: 'info', warning: 'alert-triangle' };
-        toast.innerHTML = `<i data-lucide="${icons[type] || 'info'}" style="width:18px;height:18px;"></i><span>${message}</span>`;
-        document.body.appendChild(toast);
-        if (window.lucide) lucide.createIcons();
-        requestAnimationFrame(() => toast.classList.add('show'));
-        setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3500);
-    }
-    window.showToast = showToast;
-
-    // ============================================
-    // UTILITY FUNCTIONS
-    // ============================================
-    function formatVND(amount) {
-        return new Intl.NumberFormat('vi-VN').format(amount) + ' đ';
-    }
-
-    function formatCurrencyInput(value) {
-        let clean = value.toString().replace(/\D/g, '');
-        if (!clean) return '';
-        return new Intl.NumberFormat('vi-VN').format(clean) + ' đ';
-    }
-
-    function setupCurrencyInput(inputElement) {
-        if (!inputElement) return;
-        inputElement.type = 'text';
-        if (inputElement.value) {
-            inputElement.value = formatCurrencyInput(inputElement.value);
-        }
-        inputElement.addEventListener('input', function () {
-            this.value = formatCurrencyInput(this.value);
-        });
-    }
-
-    function escapeHtml(str) {
-        if (!str) return '';
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
-    }
-
-    function formatBioText(rawText, fallbackText = 'Chưa cập nhật giới thiệu bản thân.') {
-        if (!rawText) return `<p style="font-size:14px; color: var(--text-secondary); margin:0; line-height: 1.6;">${fallbackText}</p>`;
-        if (rawText.trim().startsWith('{') && rawText.trim().endsWith('}')) {
-            try {
-                const obj = JSON.parse(rawText);
-                let html = '<ul style="padding-left: 20px; margin: 0; font-size:14px; color: var(--text-secondary); line-height: 1.6; display: flex; flex-direction: column; gap: 8px;">';
-                if (obj.q3) html += `<li><strong>Thông tin bản thân:</strong> ${escapeHtml(obj.q3)}</li>`;
-                if (obj.q1) html += `<li><strong>Mục tiêu nghề nghiệp:</strong> ${escapeHtml(obj.q1)}</li>`;
-                if (obj.q2) html += `<li><strong>Điểm mạnh cốt lõi:</strong> ${escapeHtml(obj.q2)}</li>`;
-                html += '</ul>';
-                return html;
-            } catch (e) { }
-        }
-        return `<p style="font-size:14px; color: var(--text-secondary); margin:0; line-height: 1.6; white-space: pre-line;">${escapeHtml(rawText)}</p>`;
-    }
-
-    function formatExperienceText(rawText, fallbackText = 'Chưa cập nhật kinh nghiệm làm việc.') {
-        if (!rawText) return `<p class="experience-modern-content">${fallbackText}</p>`;
-        if (rawText.trim().startsWith('{') && rawText.trim().endsWith('}')) {
-            try {
-                const obj = JSON.parse(rawText);
-                let html = '<ul style="padding-left: 20px; margin: 0; font-size:14px; color: var(--text-secondary); line-height: 1.6; display: flex; flex-direction: column; gap: 8px;">';
-                if (obj.q1) html += `<li><strong>Dự án & Công việc tiêu biểu:</strong> ${escapeHtml(obj.q1)}</li>`;
-                if (obj.q2) html += `<li><strong>Nhiệm vụ & Vai trò chính:</strong> ${escapeHtml(obj.q2)}</li>`;
-                if (obj.q3) html += `<li><strong>Kết quả & Công nghệ sử dụng:</strong> ${escapeHtml(obj.q3)}</li>`;
-                html += '</ul>';
-                return html;
-            } catch (e) { }
-        }
-        return `<p class="experience-modern-content" style="white-space: pre-line;">${escapeHtml(rawText)}</p>`;
-    }
-
-    function getBioPreview(rawText, fallbackText = 'Ứng viên chưa cập nhật mô tả hồ sơ.') {
-        if (!rawText) return fallbackText;
-        if (rawText.trim().startsWith('{') && rawText.trim().endsWith('}')) {
-            try {
-                const obj = JSON.parse(rawText);
-                return obj.q1 || obj.q3 || obj.q2 || fallbackText;
-            } catch (e) { }
-        }
-        return rawText;
-    }
-
-    // --- Kick off ---
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
-    }
-
-
-
-
-    window.setSelectCategory = function (selectId, wrapperId, inputId, categoryValue) {
-        const select = document.getElementById(selectId);
-        const wrapper = document.getElementById(wrapperId);
-        const input = document.getElementById(inputId);
-        if (!select) return;
-
-        const standardCategories = ['IT & Lập trình', 'Thiết kế & Đồ họa', 'Viết lách & Dịch thuật', 'Sales & Marketing', 'Video & Photography'];
-        if (!categoryValue) {
-            select.value = '';
-            if (wrapper) wrapper.style.display = 'none';
-            if (input) input.value = '';
-        } else if (standardCategories.includes(categoryValue)) {
-            select.value = categoryValue;
-            if (wrapper) wrapper.style.display = 'none';
-            if (input) input.value = '';
-        } else {
-            select.value = 'Khác';
-            if (wrapper) wrapper.style.display = 'block';
-            if (input) input.value = categoryValue;
-        }
-    };
-
-    document.addEventListener('DOMContentLoaded', () => {
-        const staticCategory = document.getElementById('jobCategory');
-        const staticWrapper = document.getElementById('staticCustomCategoryWrapper');
-        const staticInput = document.getElementById('jobCustomCategory');
-        if (staticCategory) {
-            staticCategory.addEventListener('change', () => {
-                if (staticCategory.value === 'Khác') {
-                    if (staticWrapper) staticWrapper.style.display = 'block';
-                    if (staticInput) staticInput.focus();
+                const data = await response.json();
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    const modalEl = document.getElementById('postJobModal');
+                    if (modalEl) {
+                        const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                        modal.hide();
+                        form.reset();
+                    }
+                    window.preparePostJobForm?.();
+                    setTimeout(() => window.location.reload(), 1500);
                 } else {
-                    if (staticWrapper) staticWrapper.style.display = 'none';
-                    if (staticInput) staticInput.value = '';
+                    showToast(data.message || 'Lỗi khi đăng bài', 'error');
                 }
-            });
-        }
-
-        const btnSubmitJob = document.getElementById('btnSubmitJob');
-        if (btnSubmitJob) {
-            btnSubmitJob.addEventListener('click', async () => {
-                const form = document.getElementById('postJobForm');
-                const title = document.getElementById('jobTitle')?.value.trim() || '';
-                const description = document.getElementById('jobDescription')?.value.trim() || '';
-                const budget = Number(document.getElementById('jobBudget')?.value) || 0;
-                const deadline = document.getElementById('jobDeadline')?.value || '';
-                const saveMode = document.getElementById('jobFormSaveMode')?.value || 'publish';
-                const isDraft = saveMode.trim().toLowerCase() === 'draft';
-
-                if (!title || title.length < 10 || title.length > 150) {
-                    showToast('Tiêu đề công việc phải có độ dài từ 10 đến 150 ký tự.', 'warning');
-                    return;
-                }
-
-                if (!isDraft) {
-                    if (!description) { showToast('Vui lòng nhập mô tả công việc.', 'warning'); return; }
-                    if (!deadline) { showToast('Vui lòng chọn deadline tuyển dụng.', 'warning'); return; }
-
-                    const deadlineDate = new Date(deadline);
-                    deadlineDate.setHours(0, 0, 0, 0);
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-
-                    const tomorrow = new Date(today);
-                    tomorrow.setDate(tomorrow.getDate() + 1);
-
-                    const maxFutureDate = new Date(today);
-                    maxFutureDate.setDate(maxFutureDate.getDate() + 90);
-
-                    if (deadlineDate < tomorrow) {
-                        showToast('Hạn chót ứng tuyển phải từ ngày mai trở đi.', 'warning');
-                        return;
-                    }
-                    if (deadlineDate > maxFutureDate) {
-                        showToast('Hạn chót ứng tuyển không được vượt quá 90 ngày kể từ ngày đăng.', 'warning');
-                        return;
-                    }
-
-                    if (budget < 10000 || budget > 10000000000) {
-                        showToast('Mức lương hợp lệ phải từ 10,000đ đến 10 tỷ đồng.', 'warning');
-                        return;
-                    }
-                }
-
-                if (!form.checkValidity()) {
-                    form.reportValidity();
-                    return;
-                }
-                const formData = new FormData(form);
-                if (formData.get('category') === 'Khác') {
-                    const customVal = document.getElementById('jobCustomCategory')?.value.trim() || 'Khác';
-                    formData.set('category', customVal);
-                }
-                const mode = (formData.get('jobMode') || 'new').toString().toLowerCase();
-                const url = mode === 'edit' ? '/Home/UpdateJobPost' : '/Home/PostJob';
-                try {
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
-                        }
-                    });
-
-                    if (!response.ok) {
-                        const text = await response.text();
-                        console.error("Server returned error:", response.status, text);
-                        showToast('Lỗi từ máy chủ: ' + response.status + '. Vui lòng xem F12 Console.', 'error');
-                        return;
-                    }
-
-                    const data = await response.json();
-                    if (data.success) {
-                        showToast(data.message, 'success');
-                        const modalEl = document.getElementById('postJobModal');
-                        if (modalEl) {
-                            const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-                            modal.hide();
-                            form.reset();
-                        }
-                        window.preparePostJobForm?.();
-                        setTimeout(() => window.location.reload(), 1500);
-                    } else {
-                        showToast(data.message || 'Lỗi khi đăng bài', 'error');
-                    }
-                } catch (err) {
-                    console.error("Lỗi fetch:", err);
-                    showToast('Lỗi kết nối hoặc lỗi xử lý dữ liệu', 'error');
-                }
-            });
-        }
-
-    });
-
-    function renderBusinessReviewsView() {
-        renderGenericReviewsShell('Business');
+            } catch (err) {
+                console.error("Lỗi fetch:", err);
+                showToast('Lỗi kết nối hoặc lỗi xử lý dữ liệu', 'error');
+            }
+        });
     }
 
-    function renderBusinessReviewsViewObsolete() {
-        businessReviewsPage = 1;
-        mainContent.innerHTML = `
+});
+
+function renderBusinessReviewsView() {
+    renderGenericReviewsShell('Business');
+}
+
+function renderBusinessReviewsViewObsolete() {
+    businessReviewsPage = 1;
+    mainContent.innerHTML = `
             <div class="page-header animate-in">
                 <h1 class="page-title"><i data-lucide="star" style="width:24px;height:24px;"></i> Đánh giá sinh viên</h1>
                 <p class="page-subtitle">Đánh giá sinh viên sau khi dự án đã hoàn thành. Cho phép chỉnh sửa trong vòng 24 giờ sau khi đánh giá.</p>
@@ -7950,65 +7923,65 @@
                 <div id="businessReviewsPagination" style="display:flex;align-items:center;justify-content:space-between;margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;flex-wrap:wrap;gap:12px;"></div>
             </div>`;
 
-        if (window.lucide) lucide.createIcons();
-        loadBusinessCompletedReviews();
+    if (window.lucide) lucide.createIcons();
+    loadBusinessCompletedReviews();
+}
+
+function loadBusinessCompletedReviews() {
+    fetch('/Review/GetBusinessCompletedContracts')
+        .then(res => res.json())
+        .then(data => {
+            const panel = document.getElementById('businessReviewsPanel');
+            if (!panel) return;
+            if (!data.success) {
+                panel.innerHTML = `<div class="business-empty-row">${escapeHtml(data.message || 'Lỗi khi tải dữ liệu.')}</div>`;
+                return;
+            }
+            businessReviewsList = data.contracts || [];
+            renderBusinessCompletedReviewsPage();
+        })
+        .catch(err => {
+            console.error(err);
+            const panel = document.getElementById('businessReviewsPanel');
+            if (panel) panel.innerHTML = '<div class="business-empty-row">Có lỗi khi tải danh sách.</div>';
+        });
+}
+
+function renderBusinessCompletedReviewsPage() {
+    const panel = document.getElementById('businessReviewsPanel');
+    const paginationEl = document.getElementById('businessReviewsPagination');
+    if (!panel) return;
+
+    if (!businessReviewsList.length) {
+        panel.innerHTML = '<div class="business-empty-row">Chưa có dự án nào hoàn thành để đánh giá.</div>';
+        if (paginationEl) paginationEl.innerHTML = '';
+        return;
     }
 
-    function loadBusinessCompletedReviews() {
-        fetch('/Review/GetBusinessCompletedContracts')
-            .then(res => res.json())
-            .then(data => {
-                const panel = document.getElementById('businessReviewsPanel');
-                if (!panel) return;
-                if (!data.success) {
-                    panel.innerHTML = `<div class="business-empty-row">${escapeHtml(data.message || 'Lỗi khi tải dữ liệu.')}</div>`;
-                    return;
-                }
-                businessReviewsList = data.contracts || [];
-                renderBusinessCompletedReviewsPage();
-            })
-            .catch(err => {
-                console.error(err);
-                const panel = document.getElementById('businessReviewsPanel');
-                if (panel) panel.innerHTML = '<div class="business-empty-row">Có lỗi khi tải danh sách.</div>';
-            });
-    }
+    const pageSize = Number(localStorage.getItem('j4s_pagesize_businessReviews')) || 10;
+    const total = businessReviewsList.length;
+    const totalPages = Math.ceil(total / pageSize);
+    if (businessReviewsPage > totalPages) businessReviewsPage = Math.max(1, totalPages);
 
-    function renderBusinessCompletedReviewsPage() {
-        const panel = document.getElementById('businessReviewsPanel');
-        const paginationEl = document.getElementById('businessReviewsPagination');
-        if (!panel) return;
+    const startIndex = (businessReviewsPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    const pageContracts = businessReviewsList.slice(startIndex, endIndex);
 
-        if (!businessReviewsList.length) {
-            panel.innerHTML = '<div class="business-empty-row">Chưa có dự án nào hoàn thành để đánh giá.</div>';
-            if (paginationEl) paginationEl.innerHTML = '';
-            return;
-        }
-
-        const pageSize = Number(localStorage.getItem('j4s_pagesize_businessReviews')) || 10;
-        const total = businessReviewsList.length;
-        const totalPages = Math.ceil(total / pageSize);
-        if (businessReviewsPage > totalPages) businessReviewsPage = Math.max(1, totalPages);
-
-        const startIndex = (businessReviewsPage - 1) * pageSize;
-        const endIndex = startIndex + pageSize;
-        const pageContracts = businessReviewsList.slice(startIndex, endIndex);
-
-        panel.innerHTML = `
+    panel.innerHTML = `
             <div style="display:flex; flex-direction:column; gap:16px;">
                 ${pageContracts.map(c => {
-            let actionHTML = '';
-            if (c.hasReview) {
-                if (c.review.canEdit) {
-                    actionHTML = `<button class="btn btn-sm btn-outline-primary rounded-pill px-3 btn-edit-review" data-contract-id="${c.contractId}"><i data-lucide="edit-3" style="width:14px;height:14px;margin-right:4px;"></i> Chỉnh sửa</button>`;
-                } else {
-                    actionHTML = `<span class="text-muted small d-inline-flex align-items-center gap-1"><i data-lucide="lock" style="width:14px;height:14px;"></i> Đã khóa (Quá 24h)</span>`;
-                }
+        let actionHTML = '';
+        if (c.hasReview) {
+            if (c.review.canEdit) {
+                actionHTML = `<button class="btn btn-sm btn-outline-primary rounded-pill px-3 btn-edit-review" data-contract-id="${c.contractId}"><i data-lucide="edit-3" style="width:14px;height:14px;margin-right:4px;"></i> Chỉnh sửa</button>`;
             } else {
-                actionHTML = `<button class="btn btn-sm btn-primary rounded-pill px-3 btn-write-review" style="background:#0ea5e9; border:none;" data-contract-id="${c.contractId}"><i data-lucide="star" style="width:14px;height:14px;margin-right:4px;"></i> Viết đánh giá</button>`;
+                actionHTML = `<span class="text-muted small d-inline-flex align-items-center gap-1"><i data-lucide="lock" style="width:14px;height:14px;"></i> Đã khóa (Quá 24h)</span>`;
             }
+        } else {
+            actionHTML = `<button class="btn btn-sm btn-primary rounded-pill px-3 btn-write-review" style="background:#0ea5e9; border:none;" data-contract-id="${c.contractId}"><i data-lucide="star" style="width:14px;height:14px;margin-right:4px;"></i> Viết đánh giá</button>`;
+        }
 
-            return `
+        return `
                                 <div class="review-modern-item" style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; background:#fff; display:flex; justify-content:space-between; align-items:flex-start; gap:16px;">
                                     <div style="display:flex; gap:16px; align-items:flex-start;">
                                         <div class="user-avatar" style="width:48px; height:48px; border-radius:50%; overflow:hidden; background:#e2e8f0; flex-shrink:0;">
@@ -8035,42 +8008,42 @@
                                     </div>
                                 </div>
                             `;
-        }).join('')}
+    }).join('')}
             </div>`;
 
-        // Programmatically bind events to write/edit buttons
-        panel.querySelectorAll('.btn-write-review, .btn-edit-review').forEach(btn => {
-            btn.addEventListener('click', function () {
-                const contractId = parseInt(this.dataset.contractId);
-                const c = businessReviewsList.find(item => item.contractId === contractId);
-                if (c) {
-                    openReviewModal(
-                        c.contractId,
-                        c.studentName,
-                        c.review ? c.review.rating : 5,
-                        c.review ? c.review.comment : ''
-                    );
-                }
-            });
+    // Programmatically bind events to write/edit buttons
+    panel.querySelectorAll('.btn-write-review, .btn-edit-review').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const contractId = parseInt(this.dataset.contractId);
+            const c = businessReviewsList.find(item => item.contractId === contractId);
+            if (c) {
+                openReviewModal(
+                    c.contractId,
+                    c.studentName,
+                    c.review ? c.review.rating : 5,
+                    c.review ? c.review.comment : ''
+                );
+            }
         });
+    });
 
-        if (window.lucide) lucide.createIcons();
+    if (window.lucide) lucide.createIcons();
 
-        if (paginationEl) {
-            renderGenericPaginationControls(paginationEl, total, totalPages, businessReviewsPage, pageSize, (newSize) => {
-                businessReviewsPage = 1;
-                renderBusinessCompletedReviewsPage();
-            }, (newPage) => {
-                businessReviewsPage = newPage;
-                renderBusinessCompletedReviewsPage();
-                document.getElementById('mainContent')?.scrollIntoView({ behavior: 'smooth' });
-            }, 'j4s_pagesize_businessReviews');
-        }
+    if (paginationEl) {
+        renderGenericPaginationControls(paginationEl, total, totalPages, businessReviewsPage, pageSize, (newSize) => {
+            businessReviewsPage = 1;
+            renderBusinessCompletedReviewsPage();
+        }, (newPage) => {
+            businessReviewsPage = newPage;
+            renderBusinessCompletedReviewsPage();
+            document.getElementById('mainContent')?.scrollIntoView({ behavior: 'smooth' });
+        }, 'j4s_pagesize_businessReviews');
     }
+}
 
-    function openReviewModal(contractId, studentName, currentRating = 5, currentComment = '') {
-        document.getElementById('j4sReviewModal')?.remove();
-        const modalHTML = `
+function openReviewModal(contractId, studentName, currentRating = 5, currentComment = '') {
+    document.getElementById('j4sReviewModal')?.remove();
+    const modalHTML = `
             <div class="modal fade" id="j4sReviewModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
                 <div class="modal-dialog modal-dialog-centered" style="max-width: 450px;">
                     <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
@@ -8103,89 +8076,89 @@
                 </div>
             </div>
         `;
-        document.body.insertAdjacentHTML('beforeend', modalHTML);
-        const modalEl = document.getElementById('j4sReviewModal');
-        const modal = new bootstrap.Modal(modalEl);
-        modal.show();
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    const modalEl = document.getElementById('j4sReviewModal');
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
 
-        const stars = modalEl.querySelectorAll('.review-stars-input span');
-        const ratingInput = document.getElementById('reviewRatingInput');
+    const stars = modalEl.querySelectorAll('.review-stars-input span');
+    const ratingInput = document.getElementById('reviewRatingInput');
 
-        function highlightStars(val) {
-            stars.forEach(star => {
-                const sVal = parseInt(star.dataset.star);
-                if (sVal <= val) {
-                    star.style.color = '#fbbf24';
-                } else {
-                    star.style.color = '#cbd5e1';
-                }
-            });
-        }
-
-        highlightStars(parseInt(ratingInput.value));
-
+    function highlightStars(val) {
         stars.forEach(star => {
-            star.addEventListener('click', () => {
-                const val = parseInt(star.dataset.star);
-                ratingInput.value = val;
-                highlightStars(val);
-            });
-            star.addEventListener('mouseover', () => {
-                highlightStars(parseInt(star.dataset.star));
-            });
-            star.addEventListener('mouseout', () => {
-                highlightStars(parseInt(ratingInput.value));
-            });
-        });
-
-        document.getElementById('btnSubmitReview').addEventListener('click', () => {
-            const rating = parseInt(ratingInput.value);
-            const comment = document.getElementById('reviewCommentInput').value.trim();
-
-            if (isNaN(rating) || rating < 1 || rating > 5) {
-                showToast('Vui lòng chọn số sao từ 1 đến 5.', 'warning');
-                return;
+            const sVal = parseInt(star.dataset.star);
+            if (sVal <= val) {
+                star.style.color = '#fbbf24';
+            } else {
+                star.style.color = '#cbd5e1';
             }
-
-            if (!comment || comment.length < 10) {
-                showToast('Nội dung nhận xét phải tối thiểu 10 ký tự.', 'warning');
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('contractId', contractId);
-            formData.append('rating', rating);
-            formData.append('comment', comment);
-
-            fetch('/Review/SaveBusinessReview', {
-                method: 'POST',
-                body: formData
-            })
-                .then(r => r.json())
-                .then(data => {
-                    showToast(data.message || 'Đã gửi đánh giá thành công.', data.success ? 'success' : 'error');
-                    if (data.success) {
-                        modal.hide();
-                        modalEl.addEventListener('hidden.bs.modal', () => {
-                            modalEl.remove();
-                            loadBusinessCompletedReviews();
-                        }, { once: true });
-                    }
-                })
-                .catch(err => {
-                    console.error(err);
-                    showToast('Có lỗi xảy ra khi lưu đánh giá.', 'error');
-                });
         });
     }
 
-    function renderGenericReviewsShell(role) {
-        const title = 'Đánh giá';
-        const subtitle = role === 'Student'
-            ? 'Quản lý các đánh giá của bạn dành cho doanh nghiệp và các phản hồi qua lại'
-            : 'Quản lý các nhận xét của doanh nghiệp dành cho bạn và các phản hồi qua lại';
+    highlightStars(parseInt(ratingInput.value));
 
-        mainContent.innerHTML = `
+    stars.forEach(star => {
+        star.addEventListener('click', () => {
+            const val = parseInt(star.dataset.star);
+            ratingInput.value = val;
+            highlightStars(val);
+        });
+        star.addEventListener('mouseover', () => {
+            highlightStars(parseInt(star.dataset.star));
+        });
+        star.addEventListener('mouseout', () => {
+            highlightStars(parseInt(ratingInput.value));
+        });
+    });
+
+    document.getElementById('btnSubmitReview').addEventListener('click', () => {
+        const rating = parseInt(ratingInput.value);
+        const comment = document.getElementById('reviewCommentInput').value.trim();
+
+        if (isNaN(rating) || rating < 1 || rating > 5) {
+            showToast('Vui lòng chọn số sao từ 1 đến 5.', 'warning');
+            return;
+        }
+
+        if (!comment || comment.length < 10) {
+            showToast('Nội dung nhận xét phải tối thiểu 10 ký tự.', 'warning');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('contractId', contractId);
+        formData.append('rating', rating);
+        formData.append('comment', comment);
+
+        fetch('/Review/SaveBusinessReview', {
+            method: 'POST',
+            body: formData
+        })
+            .then(r => r.json())
+            .then(data => {
+                showToast(data.message || 'Đã gửi đánh giá thành công.', data.success ? 'success' : 'error');
+                if (data.success) {
+                    modal.hide();
+                    modalEl.addEventListener('hidden.bs.modal', () => {
+                        modalEl.remove();
+                        loadBusinessCompletedReviews();
+                    }, { once: true });
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showToast('Có lỗi xảy ra khi lưu đánh giá.', 'error');
+            });
+    });
+}
+
+function renderGenericReviewsShell(role) {
+    const title = 'Đánh giá';
+    const subtitle = role === 'Student'
+        ? 'Quản lý các đánh giá của bạn dành cho doanh nghiệp và các phản hồi qua lại'
+        : 'Quản lý các nhận xét của doanh nghiệp dành cho bạn và các phản hồi qua lại';
+
+    mainContent.innerHTML = `
             <div class="page-header animate-in">
                 <h1 class="page-title"><i data-lucide="star" style="width:24px;height:24px;color:#F59E0B;"></i> ${title}</h1>
                 <p class="page-subtitle">${subtitle}</p>
@@ -8210,38 +8183,38 @@
             </div>
         `;
 
-        if (window.lucide) lucide.createIcons();
+    if (window.lucide) lucide.createIcons();
 
-        const chartContainer = document.getElementById('reviewsRatingChartContainer');
-        if (chartContainer) {
-            fetch('/Review/GetMyReviews')
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        const reviews = data.reviews || [];
-                        const totalCount = reviews.length;
-                        let sum = 0;
-                        const counts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-                        reviews.forEach(r => {
-                            const val = r.rating || 0;
-                            if (val >= 1 && val <= 5) {
-                                counts[val]++;
-                                sum += val;
-                            }
-                        });
-                        const avgRating = totalCount > 0 ? (sum / totalCount) : 0;
-                        const avgRatingStr = avgRating > 0 ? avgRating.toFixed(1).replace('.', ',') : '0,0';
+    const chartContainer = document.getElementById('reviewsRatingChartContainer');
+    if (chartContainer) {
+        fetch('/Review/GetMyReviews')
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const reviews = data.reviews || [];
+                    const totalCount = reviews.length;
+                    let sum = 0;
+                    const counts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+                    reviews.forEach(r => {
+                        const val = r.rating || 0;
+                        if (val >= 1 && val <= 5) {
+                            counts[val]++;
+                            sum += val;
+                        }
+                    });
+                    const avgRating = totalCount > 0 ? (sum / totalCount) : 0;
+                    const avgRatingStr = avgRating > 0 ? avgRating.toFixed(1).replace('.', ',') : '0,0';
 
-                        const pct5 = totalCount > 0 ? Math.round((counts[5] / totalCount) * 100) : 0;
-                        const pct4 = totalCount > 0 ? Math.round((counts[4] / totalCount) * 100) : 0;
-                        const pct3 = totalCount > 0 ? Math.round((counts[3] / totalCount) * 100) : 0;
-                        const pct2 = totalCount > 0 ? Math.round((counts[2] / totalCount) * 100) : 0;
-                        const pct1 = totalCount > 0 ? Math.round((counts[1] / totalCount) * 100) : 0;
+                    const pct5 = totalCount > 0 ? Math.round((counts[5] / totalCount) * 100) : 0;
+                    const pct4 = totalCount > 0 ? Math.round((counts[4] / totalCount) * 100) : 0;
+                    const pct3 = totalCount > 0 ? Math.round((counts[3] / totalCount) * 100) : 0;
+                    const pct2 = totalCount > 0 ? Math.round((counts[2] / totalCount) * 100) : 0;
+                    const pct1 = totalCount > 0 ? Math.round((counts[1] / totalCount) * 100) : 0;
 
-                        const roundedRating = Math.round(avgRating);
-                        const starHTML = '★'.repeat(roundedRating) + '☆'.repeat(5 - roundedRating);
+                    const roundedRating = Math.round(avgRating);
+                    const starHTML = '★'.repeat(roundedRating) + '☆'.repeat(5 - roundedRating);
 
-                        chartContainer.innerHTML = `
+                    chartContainer.innerHTML = `
                             <style>
                             @media (max-width: 576px) {
                                 .rating-chart-right {
@@ -8303,121 +8276,121 @@
                                 </div>
                             </div>
                         `;
-                    } else {
-                        chartContainer.remove();
-                    }
-                })
-                .catch(err => {
-                    console.error('Error loading rating breakdown:', err);
+                } else {
                     chartContainer.remove();
-                });
-        }
-
-        const btnTabWrite = document.getElementById('btnTabWrite');
-        const btnTabReceived = document.getElementById('btnTabReceived');
-
-        let activeSubTab = 'write';
-
-        function updateTabStyles() {
-            if (activeSubTab === 'write') {
-                btnTabWrite.style.color = '#2563eb';
-                btnTabWrite.style.borderBottomColor = '#2563eb';
-                btnTabReceived.style.color = '#64748b';
-                btnTabReceived.style.borderBottomColor = 'transparent';
-            } else {
-                btnTabReceived.style.color = '#2563eb';
-                btnTabReceived.style.borderBottomColor = '#2563eb';
-                btnTabWrite.style.color = '#64748b';
-                btnTabWrite.style.borderBottomColor = 'transparent';
-            }
-        }
-
-        btnTabWrite.addEventListener('click', () => {
-            if (activeSubTab === 'write') return;
-            activeSubTab = 'write';
-            updateTabStyles();
-            loadWriteReviewsTab(role);
-        });
-
-        btnTabReceived.addEventListener('click', () => {
-            if (activeSubTab === 'received') return;
-            activeSubTab = 'received';
-            updateTabStyles();
-            loadReceivedReviewsTab(role);
-        });
-
-        loadWriteReviewsTab(role);
+                }
+            })
+            .catch(err => {
+                console.error('Error loading rating breakdown:', err);
+                chartContainer.remove();
+            });
     }
 
-    function loadWriteReviewsTab(role) {
-        const panel = document.getElementById('reviewsContentPanel');
-        if (!panel) return;
+    const btnTabWrite = document.getElementById('btnTabWrite');
+    const btnTabReceived = document.getElementById('btnTabReceived');
 
-        panel.innerHTML = `
+    let activeSubTab = 'write';
+
+    function updateTabStyles() {
+        if (activeSubTab === 'write') {
+            btnTabWrite.style.color = '#2563eb';
+            btnTabWrite.style.borderBottomColor = '#2563eb';
+            btnTabReceived.style.color = '#64748b';
+            btnTabReceived.style.borderBottomColor = 'transparent';
+        } else {
+            btnTabReceived.style.color = '#2563eb';
+            btnTabReceived.style.borderBottomColor = '#2563eb';
+            btnTabWrite.style.color = '#64748b';
+            btnTabWrite.style.borderBottomColor = 'transparent';
+        }
+    }
+
+    btnTabWrite.addEventListener('click', () => {
+        if (activeSubTab === 'write') return;
+        activeSubTab = 'write';
+        updateTabStyles();
+        loadWriteReviewsTab(role);
+    });
+
+    btnTabReceived.addEventListener('click', () => {
+        if (activeSubTab === 'received') return;
+        activeSubTab = 'received';
+        updateTabStyles();
+        loadReceivedReviewsTab(role);
+    });
+
+    loadWriteReviewsTab(role);
+}
+
+function loadWriteReviewsTab(role) {
+    const panel = document.getElementById('reviewsContentPanel');
+    if (!panel) return;
+
+    panel.innerHTML = `
             <div style="display: flex; align-items: center; justify-content: center; min-height: 200px; flex-direction: column; gap: 12px;">
                 <div class="spinner-border text-primary" role="status" style="width: 1.5rem; height: 1.5rem;"></div>
                 <span style="color:#64748b; font-size:0.9rem;">Đang tải danh sách hợp đồng...</span>
             </div>
         `;
 
-        const storageKey = 'j4s_pagesize_write_reviews';
-        let pageSize = Number(localStorage.getItem(storageKey)) || 10;
-        let currentPage = 1;
+    const storageKey = 'j4s_pagesize_write_reviews';
+    let pageSize = Number(localStorage.getItem(storageKey)) || 10;
+    let currentPage = 1;
 
-        const url = role === 'Student'
-            ? '/Review/GetStudentCompletedContracts'
-            : '/Review/GetBusinessCompletedContracts';
+    const url = role === 'Student'
+        ? '/Review/GetStudentCompletedContracts'
+        : '/Review/GetBusinessCompletedContracts';
 
-        fetch(url)
-            .then(res => res.json())
-            .then(data => {
-                if (!data.success) {
-                    panel.innerHTML = `<div class="alert alert-danger">${escapeHtml(data.message || 'Lỗi khi tải dữ liệu.')}</div>`;
-                    return;
-                }
+    fetch(url)
+        .then(res => res.json())
+        .then(data => {
+            if (!data.success) {
+                panel.innerHTML = `<div class="alert alert-danger">${escapeHtml(data.message || 'Lỗi khi tải dữ liệu.')}</div>`;
+                return;
+            }
 
-                const contracts = data.contracts || [];
-                if (contracts.length === 0) {
-                    panel.innerHTML = `
+            const contracts = data.contracts || [];
+            if (contracts.length === 0) {
+                panel.innerHTML = `
                         <div style="text-align:center; padding:40px; background:#fff; border-radius:12px; border:1px solid #e2e8f0;">
                             <div style="font-size:2.5rem; margin-bottom:12px;">💼</div>
                             <h3 style="font-size:1.1rem; font-weight:700; color:#1e293b; margin:0 0 6px 0;">Chưa có hợp đồng nào hoàn thành</h3>
                             <p style="font-size:0.9rem; color:#64748b; margin:0;">Sau khi dự án hoàn thành, bạn có thể đánh giá đối tác tại đây.</p>
                         </div>
                     `;
-                    return;
-                }
+                return;
+            }
 
-                panel.innerHTML = `
+            panel.innerHTML = `
                     <div id="writeReviewsListContainer" style="display:flex; flex-direction:column; gap:16px;"></div>
                     <div id="writeReviewsPagination" style="display:flex; align-items:center; justify-content:space-between; margin-top:20px; padding-top:16px; border-top:1px solid #e2e8f0; flex-wrap:wrap; gap:12px;"></div>
                 `;
 
-                function renderPage(page) {
-                    currentPage = page;
-                    const totalPages = Math.ceil(contracts.length / pageSize);
-                    if (currentPage > totalPages) {
-                        currentPage = Math.max(1, totalPages);
+            function renderPage(page) {
+                currentPage = page;
+                const totalPages = Math.ceil(contracts.length / pageSize);
+                if (currentPage > totalPages) {
+                    currentPage = Math.max(1, totalPages);
+                }
+
+                const startIndex = (currentPage - 1) * pageSize;
+                const pageContracts = contracts.slice(startIndex, startIndex + pageSize);
+
+                const reviewsHTML = pageContracts.map(c => {
+                    let actionHTML = '';
+                    if (c.hasReview) {
+                        if (c.review.canEdit) {
+                            actionHTML = `<button class="btn btn-sm btn-outline-primary rounded-pill px-3 btn-edit-generic-review" data-contract-id="${c.contractId}"><i data-lucide="edit-3" style="width:14px;height:14px;margin-right:4px;"></i> Chỉnh sửa</button>`;
+                        } else {
+                            actionHTML = `<span class="text-muted small d-inline-flex align-items-center gap-1"><i data-lucide="lock" style="width:14px;height:14px;"></i> Đã khóa (Quá 24h)</span>`;
+                        }
+                    } else {
+                        actionHTML = `<button class="btn btn-sm btn-primary rounded-pill px-3 btn-write-generic-review" style="background:#0ea5e9; border:none;" data-contract-id="${c.contractId}"><i data-lucide="star" style="width:14px;height:14px;margin-right:4px;"></i> Viết đánh giá</button>`;
                     }
 
-                    const startIndex = (currentPage - 1) * pageSize;
-                    const pageContracts = contracts.slice(startIndex, startIndex + pageSize);
+                    const avatarChar = (c.partnerName || "K").substring(0, 2).toUpperCase();
 
-                    const reviewsHTML = pageContracts.map(c => {
-                        let actionHTML = '';
-                        if (c.hasReview) {
-                            if (c.review.canEdit) {
-                                actionHTML = `<button class="btn btn-sm btn-outline-primary rounded-pill px-3 btn-edit-generic-review" data-contract-id="${c.contractId}"><i data-lucide="edit-3" style="width:14px;height:14px;margin-right:4px;"></i> Chỉnh sửa</button>`;
-                            } else {
-                                actionHTML = `<span class="text-muted small d-inline-flex align-items-center gap-1"><i data-lucide="lock" style="width:14px;height:14px;"></i> Đã khóa (Quá 24h)</span>`;
-                            }
-                        } else {
-                            actionHTML = `<button class="btn btn-sm btn-primary rounded-pill px-3 btn-write-generic-review" style="background:#0ea5e9; border:none;" data-contract-id="${c.contractId}"><i data-lucide="star" style="width:14px;height:14px;margin-right:4px;"></i> Viết đánh giá</button>`;
-                        }
-
-                        const avatarChar = (c.partnerName || "K").substring(0, 2).toUpperCase();
-
-                        return `
+                    return `
                             <div class="review-modern-item animate-in" style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; background:#fff; display:flex; justify-content:space-between; align-items:flex-start; gap:16px;">
                                 <div style="display:flex; gap:16px; align-items:flex-start; width: 100%;">
                                     <div class="user-avatar" style="width:48px; height:48px; border-radius:50%; overflow:hidden; background:#e2e8f0; flex-shrink:0;">
@@ -8444,65 +8417,65 @@
                                 </div>
                             </div>
                         `;
-                    }).join('');
+                }).join('');
 
-                    const listContainer = document.getElementById('writeReviewsListContainer');
-                    if (listContainer) {
-                        listContainer.innerHTML = reviewsHTML;
-                    }
-
-                    const paginationEl = document.getElementById('writeReviewsPagination');
-                    renderGenericPaginationControls(
-                        paginationEl,
-                        contracts.length,
-                        totalPages,
-                        currentPage,
-                        pageSize,
-                        (newSize) => {
-                            pageSize = newSize;
-                            currentPage = 1;
-                            renderPage(1);
-                        },
-                        (newPage) => {
-                            renderPage(newPage);
-                        },
-                        storageKey
-                    );
-
-                    if (window.lucide) lucide.createIcons();
-                    bindEvents();
+                const listContainer = document.getElementById('writeReviewsListContainer');
+                if (listContainer) {
+                    listContainer.innerHTML = reviewsHTML;
                 }
 
-                function bindEvents() {
-                    panel.querySelectorAll('.btn-write-generic-review, .btn-edit-generic-review').forEach(btn => {
-                        btn.addEventListener('click', function () {
-                            const contractId = parseInt(this.dataset.contractId);
-                            const c = contracts.find(item => item.contractId === contractId);
-                            if (c) {
-                                openGenericReviewModal(
-                                    role,
-                                    c.contractId,
-                                    c.partnerName,
-                                    c.review ? c.review.rating : 5,
-                                    c.review ? c.review.comment : ''
-                                );
-                            }
-                        });
+                const paginationEl = document.getElementById('writeReviewsPagination');
+                renderGenericPaginationControls(
+                    paginationEl,
+                    contracts.length,
+                    totalPages,
+                    currentPage,
+                    pageSize,
+                    (newSize) => {
+                        pageSize = newSize;
+                        currentPage = 1;
+                        renderPage(1);
+                    },
+                    (newPage) => {
+                        renderPage(newPage);
+                    },
+                    storageKey
+                );
+
+                if (window.lucide) lucide.createIcons();
+                bindEvents();
+            }
+
+            function bindEvents() {
+                panel.querySelectorAll('.btn-write-generic-review, .btn-edit-generic-review').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        const contractId = parseInt(this.dataset.contractId);
+                        const c = contracts.find(item => item.contractId === contractId);
+                        if (c) {
+                            openGenericReviewModal(
+                                role,
+                                c.contractId,
+                                c.partnerName,
+                                c.review ? c.review.rating : 5,
+                                c.review ? c.review.comment : ''
+                            );
+                        }
                     });
-                }
+                });
+            }
 
-                renderPage(1);
-            })
-            .catch(err => {
-                console.error(err);
-                panel.innerHTML = `<div class="alert alert-danger">Không thể kết nối đến máy chủ.</div>`;
-            });
-    }
+            renderPage(1);
+        })
+        .catch(err => {
+            console.error(err);
+            panel.innerHTML = `<div class="alert alert-danger">Không thể kết nối đến máy chủ.</div>`;
+        });
+}
 
-    function openGenericReviewModal(role, contractId, partnerName, currentRating = 5, currentComment = '') {
-        document.getElementById('j4sReviewModal')?.remove();
-        const partnerLabel = role === 'Student' ? 'doanh nghiệp' : 'sinh viên';
-        const modalHTML = `
+function openGenericReviewModal(role, contractId, partnerName, currentRating = 5, currentComment = '') {
+    document.getElementById('j4sReviewModal')?.remove();
+    const partnerLabel = role === 'Student' ? 'doanh nghiệp' : 'sinh viên';
+    const modalHTML = `
             <div class="modal fade" id="j4sReviewModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
                 <div class="modal-dialog modal-dialog-centered" style="max-width: 450px;">
                     <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
@@ -8535,143 +8508,143 @@
                 </div>
             </div>
         `;
-        document.body.insertAdjacentHTML('beforeend', modalHTML);
-        const modalEl = document.getElementById('j4sReviewModal');
-        const modal = new bootstrap.Modal(modalEl);
-        modal.show();
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    const modalEl = document.getElementById('j4sReviewModal');
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
 
-        const stars = modalEl.querySelectorAll('.review-stars-input span');
-        const ratingInput = document.getElementById('reviewRatingInput');
+    const stars = modalEl.querySelectorAll('.review-stars-input span');
+    const ratingInput = document.getElementById('reviewRatingInput');
 
-        function highlightStars(val) {
-            stars.forEach(star => {
-                const sVal = parseInt(star.dataset.star);
-                if (sVal <= val) {
-                    star.style.color = '#fbbf24';
-                } else {
-                    star.style.color = '#cbd5e1';
-                }
-            });
-        }
-
-        highlightStars(parseInt(ratingInput.value));
-
+    function highlightStars(val) {
         stars.forEach(star => {
-            star.addEventListener('click', () => {
-                const val = parseInt(star.dataset.star);
-                ratingInput.value = val;
-                highlightStars(val);
-            });
-            star.addEventListener('mouseover', () => {
-                highlightStars(parseInt(star.dataset.star));
-            });
-            star.addEventListener('mouseout', () => {
-                highlightStars(parseInt(ratingInput.value));
-            });
-        });
-
-        document.getElementById('btnSubmitReview').addEventListener('click', () => {
-            const rating = parseInt(ratingInput.value);
-            const comment = document.getElementById('reviewCommentInput').value.trim();
-
-            if (isNaN(rating) || rating < 1 || rating > 5) {
-                showToast('Vui lòng chọn số sao từ 1 đến 5.', 'warning');
-                return;
+            const sVal = parseInt(star.dataset.star);
+            if (sVal <= val) {
+                star.style.color = '#fbbf24';
+            } else {
+                star.style.color = '#cbd5e1';
             }
-
-            if (!comment || comment.length < 10) {
-                showToast('Nội dung nhận xét phải tối thiểu 10 ký tự.', 'warning');
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('contractId', contractId);
-            formData.append('rating', rating);
-            formData.append('comment', comment);
-
-            fetch('/Review/SaveReview', {
-                method: 'POST',
-                body: formData
-            })
-                .then(r => r.json())
-                .then(data => {
-                    showToast(data.message || 'Đã gửi đánh giá thành công.', data.success ? 'success' : 'error');
-                    if (data.success) {
-                        modal.hide();
-                        modalEl.addEventListener('hidden.bs.modal', () => {
-                            modalEl.remove();
-                            loadWriteReviewsTab(role);
-                        }, { once: true });
-                    }
-                })
-                .catch(err => {
-                    console.error(err);
-                    showToast('Có lỗi xảy ra khi lưu đánh giá.', 'error');
-                });
         });
     }
 
-    function loadReceivedReviewsTab(role) {
-        const panel = document.getElementById('reviewsContentPanel');
-        if (!panel) return;
+    highlightStars(parseInt(ratingInput.value));
 
-        panel.innerHTML = `
+    stars.forEach(star => {
+        star.addEventListener('click', () => {
+            const val = parseInt(star.dataset.star);
+            ratingInput.value = val;
+            highlightStars(val);
+        });
+        star.addEventListener('mouseover', () => {
+            highlightStars(parseInt(star.dataset.star));
+        });
+        star.addEventListener('mouseout', () => {
+            highlightStars(parseInt(ratingInput.value));
+        });
+    });
+
+    document.getElementById('btnSubmitReview').addEventListener('click', () => {
+        const rating = parseInt(ratingInput.value);
+        const comment = document.getElementById('reviewCommentInput').value.trim();
+
+        if (isNaN(rating) || rating < 1 || rating > 5) {
+            showToast('Vui lòng chọn số sao từ 1 đến 5.', 'warning');
+            return;
+        }
+
+        if (!comment || comment.length < 10) {
+            showToast('Nội dung nhận xét phải tối thiểu 10 ký tự.', 'warning');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('contractId', contractId);
+        formData.append('rating', rating);
+        formData.append('comment', comment);
+
+        fetch('/Review/SaveReview', {
+            method: 'POST',
+            body: formData
+        })
+            .then(r => r.json())
+            .then(data => {
+                showToast(data.message || 'Đã gửi đánh giá thành công.', data.success ? 'success' : 'error');
+                if (data.success) {
+                    modal.hide();
+                    modalEl.addEventListener('hidden.bs.modal', () => {
+                        modalEl.remove();
+                        loadWriteReviewsTab(role);
+                    }, { once: true });
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showToast('Có lỗi xảy ra khi lưu đánh giá.', 'error');
+            });
+    });
+}
+
+function loadReceivedReviewsTab(role) {
+    const panel = document.getElementById('reviewsContentPanel');
+    if (!panel) return;
+
+    panel.innerHTML = `
             <div style="display: flex; align-items: center; justify-content: center; min-height: 200px; flex-direction: column; gap: 12px;">
                 <div class="spinner-border text-primary" role="status" style="width: 1.5rem; height: 1.5rem;"></div>
                 <span style="color:#64748b; font-size:0.9rem;">Đang tải nhận xét...</span>
             </div>
         `;
 
-        const storageKey = 'j4s_pagesize_received_reviews';
-        let pageSize = Number(localStorage.getItem(storageKey)) || 10;
-        let currentPage = 1;
+    const storageKey = 'j4s_pagesize_received_reviews';
+    let pageSize = Number(localStorage.getItem(storageKey)) || 10;
+    let currentPage = 1;
 
-        fetch('/Review/GetMyReviews')
-            .then(res => res.json())
-            .then(data => {
-                if (!data.success) {
-                    panel.innerHTML = `<div class="alert alert-danger">${escapeHtml(data.message || 'Lỗi khi tải dữ liệu.')}</div>`;
-                    return;
-                }
+    fetch('/Review/GetMyReviews')
+        .then(res => res.json())
+        .then(data => {
+            if (!data.success) {
+                panel.innerHTML = `<div class="alert alert-danger">${escapeHtml(data.message || 'Lỗi khi tải dữ liệu.')}</div>`;
+                return;
+            }
 
-                const dbReviews = data.reviews || [];
-                if (dbReviews.length === 0) {
-                    panel.innerHTML = `
+            const dbReviews = data.reviews || [];
+            if (dbReviews.length === 0) {
+                panel.innerHTML = `
                         <div style="text-align:center; padding:40px; background:#fff; border-radius:12px; border:1px solid #e2e8f0;">
                             <div style="font-size:2.5rem; margin-bottom:12px;">💬</div>
                             <h3 style="font-size:1.1rem; font-weight:700; color:#1e293b; margin:0 0 6px 0;">Chưa nhận được đánh giá nào</h3>
                             <p style="font-size:0.9rem; color:#64748b; margin:0;">Khi đối tác gửi nhận xét cho bạn, thông tin sẽ hiển thị tại đây.</p>
                         </div>
                     `;
-                    return;
-                }
+                return;
+            }
 
-                panel.innerHTML = `
+            panel.innerHTML = `
                     <div id="receivedReviewsListContainer" style="display:flex; flex-direction:column; gap:20px;"></div>
                     <div id="receivedReviewsPagination" style="display:flex; align-items:center; justify-content:space-between; margin-top:20px; padding-top:16px; border-top:1px solid #e2e8f0; flex-wrap:wrap; gap:12px;"></div>
                 `;
 
-                const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
+            const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
 
-                function renderPage(page) {
-                    currentPage = page;
-                    const totalPages = Math.ceil(dbReviews.length / pageSize);
-                    if (currentPage > totalPages) {
-                        currentPage = Math.max(1, totalPages);
-                    }
+            function renderPage(page) {
+                currentPage = page;
+                const totalPages = Math.ceil(dbReviews.length / pageSize);
+                if (currentPage > totalPages) {
+                    currentPage = Math.max(1, totalPages);
+                }
 
-                    const startIndex = (currentPage - 1) * pageSize;
-                    const pageReviews = dbReviews.slice(startIndex, startIndex + pageSize);
+                const startIndex = (currentPage - 1) * pageSize;
+                const pageReviews = dbReviews.slice(startIndex, startIndex + pageSize);
 
-                    const reviewsHTML = pageReviews.map((r, idx) => {
-                        const avatarColor = colors[idx % colors.length];
-                        const initials = (r.reviewer || "K").split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase();
-                        const partnerText = role === 'Student' ? 'doanh nghiệp' : 'sinh viên';
+                const reviewsHTML = pageReviews.map((r, idx) => {
+                    const avatarColor = colors[idx % colors.length];
+                    const initials = (r.reviewer || "K").split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                    const partnerText = role === 'Student' ? 'doanh nghiệp' : 'sinh viên';
 
-                        const repliesHTML = (r.replies || []).map(rep => {
-                            const isSelfReply = rep.reviewer === r.reviewer ? false : true;
-                            const replyAvatarInitials = (rep.reviewer || "K").split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase();
-                            return `
+                    const repliesHTML = (r.replies || []).map(rep => {
+                        const isSelfReply = rep.reviewer === r.reviewer ? false : true;
+                        const replyAvatarInitials = (rep.reviewer || "K").split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                        return `
                                 <div class="review-reply-box animate-in" style="margin-top:10px; background:${isSelfReply ? '#f0fdf4' : '#f8fafc'}; border:1px solid ${isSelfReply ? '#bbf7d0' : '#e2e8f0'}; border-radius:8px; padding:10px 12px; font-size:0.85rem;">
                                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
                                         <div style="display:flex; align-items:center; gap:6px;">
@@ -8683,21 +8656,21 @@
                                     <p style="margin:0; color:#334155; font-style:italic;">"${escapeHtml(rep.comment)}"</p>
                                 </div>
                             `;
-                        }).join('');
+                    }).join('');
 
-                        const ownReply = (r.replies || []).find(rep => rep.isOwnReply);
-                        let replyActionHTML = '';
-                        if (ownReply) {
-                            if (ownReply.canEdit) {
-                                replyActionHTML = `<button class="btn-generic-reply-trigger" style="border:none; background:none; padding:4px 8px; font-weight:600; color:#2563eb; font-size:0.8rem; cursor:pointer; display:flex; align-items:center; gap:4px;" data-id="${r.id}"><i data-lucide="edit-3" style="width:14px;height:14px;"></i> Chỉnh sửa phản hồi</button>`;
-                            } else {
-                                replyActionHTML = `<span class="text-muted small d-inline-flex align-items-center gap-1" style="font-size:0.8rem; padding:4px 8px;"><i data-lucide="lock" style="width:12px;height:12px;"></i> Phản hồi đã khóa (Quá 24h)</span>`;
-                            }
+                    const ownReply = (r.replies || []).find(rep => rep.isOwnReply);
+                    let replyActionHTML = '';
+                    if (ownReply) {
+                        if (ownReply.canEdit) {
+                            replyActionHTML = `<button class="btn-generic-reply-trigger" style="border:none; background:none; padding:4px 8px; font-weight:600; color:#2563eb; font-size:0.8rem; cursor:pointer; display:flex; align-items:center; gap:4px;" data-id="${r.id}"><i data-lucide="edit-3" style="width:14px;height:14px;"></i> Chỉnh sửa phản hồi</button>`;
                         } else {
-                            replyActionHTML = `<button class="btn-generic-reply-trigger" style="border:none; background:none; padding:4px 8px; font-weight:600; color:#2563eb; font-size:0.8rem; cursor:pointer; display:flex; align-items:center; gap:4px;" data-id="${r.id}"><i data-lucide="message-square" style="width:14px;height:14px;"></i> Phản hồi</button>`;
+                            replyActionHTML = `<span class="text-muted small d-inline-flex align-items-center gap-1" style="font-size:0.8rem; padding:4px 8px;"><i data-lucide="lock" style="width:12px;height:12px;"></i> Phản hồi đã khóa (Quá 24h)</span>`;
                         }
+                    } else {
+                        replyActionHTML = `<button class="btn-generic-reply-trigger" style="border:none; background:none; padding:4px 8px; font-weight:600; color:#2563eb; font-size:0.8rem; cursor:pointer; display:flex; align-items:center; gap:4px;" data-id="${r.id}"><i data-lucide="message-square" style="width:14px;height:14px;"></i> Phản hồi</button>`;
+                    }
 
-                        return `
+                    return `
                             <div class="review-card ${r.isReported ? 'reported-dimmed' : ''}" style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; background:#fff; margin-bottom:0;" data-id="${r.id}">
                                 <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; flex-wrap:wrap; gap:12px;">
                                     <div style="display:flex; gap:12px; align-items:center;">
@@ -8756,145 +8729,145 @@
                                 </div>
                             </div>
                         `;
-                    }).join('');
+                }).join('');
 
-                    const listContainer = document.getElementById('receivedReviewsListContainer');
-                    if (listContainer) {
-                        listContainer.innerHTML = reviewsHTML;
-                    }
-
-                    const paginationEl = document.getElementById('receivedReviewsPagination');
-                    renderGenericPaginationControls(
-                        paginationEl,
-                        dbReviews.length,
-                        totalPages,
-                        currentPage,
-                        pageSize,
-                        (newSize) => {
-                            pageSize = newSize;
-                            currentPage = 1;
-                            renderPage(1);
-                        },
-                        (newPage) => {
-                            renderPage(newPage);
-                        },
-                        storageKey
-                    );
-
-                    if (window.lucide) lucide.createIcons();
-                    bindEvents();
+                const listContainer = document.getElementById('receivedReviewsListContainer');
+                if (listContainer) {
+                    listContainer.innerHTML = reviewsHTML;
                 }
 
-                function bindEvents() {
-                    panel.querySelectorAll('.btn-generic-reply-trigger').forEach(btn => {
-                        btn.addEventListener('click', () => {
-                            const id = btn.dataset.id;
-                            const reviewObj = dbReviews.find(rev => rev.id == id);
-                            const ownReply = (reviewObj?.replies || []).find(rep => rep.isOwnReply);
-                            const textarea = document.getElementById(`replyText-${id}`);
-                            if (ownReply && textarea) {
-                                textarea.value = ownReply.comment;
-                            } else if (textarea) {
-                                textarea.value = '';
-                            }
-                            document.getElementById(`replyArea-${id}`).style.display = 'block';
-                            document.getElementById(`reportArea-${id}`).style.display = 'none';
-                        });
+                const paginationEl = document.getElementById('receivedReviewsPagination');
+                renderGenericPaginationControls(
+                    paginationEl,
+                    dbReviews.length,
+                    totalPages,
+                    currentPage,
+                    pageSize,
+                    (newSize) => {
+                        pageSize = newSize;
+                        currentPage = 1;
+                        renderPage(1);
+                    },
+                    (newPage) => {
+                        renderPage(newPage);
+                    },
+                    storageKey
+                );
+
+                if (window.lucide) lucide.createIcons();
+                bindEvents();
+            }
+
+            function bindEvents() {
+                panel.querySelectorAll('.btn-generic-reply-trigger').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const id = btn.dataset.id;
+                        const reviewObj = dbReviews.find(rev => rev.id == id);
+                        const ownReply = (reviewObj?.replies || []).find(rep => rep.isOwnReply);
+                        const textarea = document.getElementById(`replyText-${id}`);
+                        if (ownReply && textarea) {
+                            textarea.value = ownReply.comment;
+                        } else if (textarea) {
+                            textarea.value = '';
+                        }
+                        document.getElementById(`replyArea-${id}`).style.display = 'block';
+                        document.getElementById(`reportArea-${id}`).style.display = 'none';
                     });
+                });
 
-                    panel.querySelectorAll('.btn-generic-reply-cancel').forEach(btn => {
-                        btn.addEventListener('click', () => {
-                            const id = btn.dataset.id;
-                            document.getElementById(`replyArea-${id}`).style.display = 'none';
-                        });
+                panel.querySelectorAll('.btn-generic-reply-cancel').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const id = btn.dataset.id;
+                        document.getElementById(`replyArea-${id}`).style.display = 'none';
                     });
+                });
 
-                    panel.querySelectorAll('.btn-generic-report-trigger').forEach(btn => {
-                        btn.addEventListener('click', () => {
-                            const id = btn.dataset.id;
-                            document.getElementById(`reportArea-${id}`).style.display = 'block';
-                            document.getElementById(`replyArea-${id}`).style.display = 'none';
-                        });
+                panel.querySelectorAll('.btn-generic-report-trigger').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const id = btn.dataset.id;
+                        document.getElementById(`reportArea-${id}`).style.display = 'block';
+                        document.getElementById(`replyArea-${id}`).style.display = 'none';
                     });
+                });
 
-                    panel.querySelectorAll('.btn-generic-report-cancel').forEach(btn => {
-                        btn.addEventListener('click', () => {
-                            const id = btn.dataset.id;
-                            document.getElementById(`reportArea-${id}`).style.display = 'none';
-                        });
+                panel.querySelectorAll('.btn-generic-report-cancel').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const id = btn.dataset.id;
+                        document.getElementById(`reportArea-${id}`).style.display = 'none';
                     });
+                });
 
-                    panel.querySelectorAll('.btn-generic-reply-submit').forEach(btn => {
-                        btn.addEventListener('click', () => {
-                            const id = parseInt(btn.dataset.id);
-                            const text = document.getElementById(`replyText-${id}`).value.trim();
-                            if (!text || text.length < 10) {
-                                showToast('Phản hồi phải tối thiểu 10 ký tự.', 'warning');
-                                return;
-                            }
+                panel.querySelectorAll('.btn-generic-reply-submit').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const id = parseInt(btn.dataset.id);
+                        const text = document.getElementById(`replyText-${id}`).value.trim();
+                        if (!text || text.length < 10) {
+                            showToast('Phản hồi phải tối thiểu 10 ký tự.', 'warning');
+                            return;
+                        }
 
-                            const formData = new FormData();
-                            formData.append('parentReviewId', id);
-                            formData.append('comment', text);
+                        const formData = new FormData();
+                        formData.append('parentReviewId', id);
+                        formData.append('comment', text);
 
-                            fetch('/Review/Reply', {
-                                method: 'POST',
-                                body: formData
+                        fetch('/Review/Reply', {
+                            method: 'POST',
+                            body: formData
+                        })
+                            .then(res => res.json())
+                            .then(resData => {
+                                showToast(resData.message || 'Đã gửi phản hồi thành công.', resData.success ? 'success' : 'error');
+                                if (resData.success) {
+                                    loadReceivedReviewsTab(role);
+                                }
                             })
-                                .then(res => res.json())
-                                .then(resData => {
-                                    showToast(resData.message || 'Đã gửi phản hồi thành công.', resData.success ? 'success' : 'error');
-                                    if (resData.success) {
-                                        loadReceivedReviewsTab(role);
-                                    }
-                                })
-                                .catch(err => {
-                                    console.error(err);
-                                    showToast('Có lỗi xảy ra khi phản hồi.', 'error');
-                                });
-                        });
+                            .catch(err => {
+                                console.error(err);
+                                showToast('Có lỗi xảy ra khi phản hồi.', 'error');
+                            });
                     });
+                });
 
-                    panel.querySelectorAll('.btn-generic-report-submit').forEach(btn => {
-                        btn.addEventListener('click', () => {
-                            const id = parseInt(btn.dataset.id);
-                            const reason = panel.querySelector(`input[name="reportReason-${id}"]:checked`)?.value || "Lý do khác";
+                panel.querySelectorAll('.btn-generic-report-submit').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const id = parseInt(btn.dataset.id);
+                        const reason = panel.querySelector(`input[name="reportReason-${id}"]:checked`)?.value || "Lý do khác";
 
-                            const formData = new FormData();
-                            formData.append('id', id);
-                            formData.append('reason', reason);
+                        const formData = new FormData();
+                        formData.append('id', id);
+                        formData.append('reason', reason);
 
-                            fetch('/Review/Report', {
-                                method: 'POST',
-                                body: formData
+                        fetch('/Review/Report', {
+                            method: 'POST',
+                            body: formData
+                        })
+                            .then(res => res.json())
+                            .then(resData => {
+                                showToast(resData.message || 'Báo cáo thành công.', resData.success ? 'success' : 'error');
+                                if (resData.success) {
+                                    loadReceivedReviewsTab(role);
+                                }
                             })
-                                .then(res => res.json())
-                                .then(resData => {
-                                    showToast(resData.message || 'Báo cáo thành công.', resData.success ? 'success' : 'error');
-                                    if (resData.success) {
-                                        loadReceivedReviewsTab(role);
-                                    }
-                                })
-                                .catch(err => {
-                                    console.error(err);
-                                    showToast('Có lỗi xảy ra khi báo cáo.', 'error');
-                                });
-                        });
+                            .catch(err => {
+                                console.error(err);
+                                showToast('Có lỗi xảy ra khi báo cáo.', 'error');
+                            });
                     });
-                }
+                });
+            }
 
-                renderPage(1);
-            })
-            .catch(err => {
-                console.error(err);
-                panel.innerHTML = `<div class="alert alert-danger">Không thể kết nối đến máy chủ.</div>`;
-            });
-    }
+            renderPage(1);
+        })
+        .catch(err => {
+            console.error(err);
+            panel.innerHTML = `<div class="alert alert-danger">Không thể kết nối đến máy chủ.</div>`;
+        });
+}
 
-    window.loadMainChatMessages = loadMainChatMessages;
-    window.openReviewModal = openReviewModal;
-    window.renderBusinessReviewsView = renderBusinessReviewsView;
-    window.formatCurrencyInput = formatCurrencyInput;
-    window.setupCurrencyInput = setupCurrencyInput;
-    window.renderGenericPaginationControls = renderGenericPaginationControls;
-})();
+window.loadMainChatMessages = loadMainChatMessages;
+window.openReviewModal = openReviewModal;
+window.renderBusinessReviewsView = renderBusinessReviewsView;
+window.formatCurrencyInput = formatCurrencyInput;
+window.setupCurrencyInput = setupCurrencyInput;
+window.renderGenericPaginationControls = renderGenericPaginationControls;
+}) ();
