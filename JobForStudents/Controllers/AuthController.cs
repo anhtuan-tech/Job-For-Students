@@ -572,6 +572,11 @@ public class AuthController : Controller
             return Json(new { success = false, message = "Tài khoản này đã bị khóa." });
         }
 
+        if (user.Role == UserRole.Admin)
+        {
+            return Json(new { success = false, message = "Tính năng khôi phục mật khẩu qua OTP chỉ dành cho tài khoản Sinh viên và Doanh nghiệp." });
+        }
+
         var otp = new Random().Next(100000, 999999).ToString();
         var sentAt = DateTime.UtcNow;
 
@@ -672,6 +677,11 @@ public class AuthController : Controller
         if (user == null)
         {
             return Json(new { success = false, message = "Không tìm thấy người dùng." });
+        }
+
+        if (user.Role == UserRole.Admin)
+        {
+            return Json(new { success = false, message = "Tài khoản Quản trị viên không áp dụng tính năng đặt lại mật khẩu qua OTP." });
         }
 
         var newPasswordHash = PasswordHasher.HashPassword(request.NewPassword);

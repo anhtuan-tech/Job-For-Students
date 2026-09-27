@@ -56,6 +56,7 @@ Tài liệu này bao gồm **100% tất cả các quy tắc kiểm tra (Validati
 
 ### 1.3. Quên mật khẩu & Đổi mật khẩu
 - **Gửi OTP Quên mật khẩu**:
+  - **Phân quyền**: Chỉ áp dụng cho tài khoản **Sinh viên (`Student`)** và **Doanh nghiệp (`Business`)**. Tài khoản **Admin** không sử dụng quy trình OTP này (thông báo: *"Tính năng khôi phục mật khẩu qua OTP chỉ dành cho tài khoản Sinh viên và Doanh nghiệp."*).
   - Rate limit: 60s cooldown chống spam email.
   - Kiểm tra email có tồn tại và tài khoản không bị Banned.
   - Gửi mã OTP 6 số qua email, mã tự hủy sau 5 phút.
@@ -64,6 +65,7 @@ Tài liệu này bao gồm **100% tất cả các quy tắc kiểm tra (Validati
   - Mật khẩu mới tối thiểu 6 ký tự, đúng regex độ phức tạp.
   - Khớp với mật khẩu xác nhận.
   - **Mật khẩu mới không được trùng với mật khẩu cũ**: *"Mật khẩu mới không được trùng với mật khẩu cũ."*
+  - Chặn tài khoản Admin không cho đặt lại qua luồng OTP.
 - **Đổi mật khẩu trong hồ sơ**:
   - Xác thực đúng mật khẩu hiện tại trong DB.
   - Mật khẩu mới khác mật khẩu cũ và đáp ứng độ phức tạp.
