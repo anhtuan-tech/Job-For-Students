@@ -2140,8 +2140,11 @@
             <p class="text-muted small">Số tiền nạp tối thiểu là 50.000 đ và phải là bội số của 50.000 đ.</p>
 
             <div class="mb-4">
-            <div class="input-group input-group-lg" style="border: 2px solid #e2e8f0; border-radius: 12px; overflow: hidden; background: #fff;">
-            <input type="text" id="depositAmountInput" class="form-control border-0 px-3 fw-bold text-slate-800" style="font-size: 1.5rem;" placeholder="Nhập số tiền..." value="200.000 đ">
+            <div class="input-group input-group-lg position-relative" style="border: 2px solid #e2e8f0; border-radius: 12px; overflow: hidden; background: #fff;">
+            <input type="text" id="depositAmountInput" class="form-control border-0 px-3 fw-bold text-slate-800" style="font-size: 1.5rem;" placeholder="Nhập số tiền..." value="200.000">
+            <button type="button" id="clearDepositAmountBtn" class="btn border-0 bg-transparent text-slate-400 p-2 d-flex align-items-center" onclick="clearDepositAmount()" title="Xóa số tiền" style="cursor:pointer;">
+            <i data-lucide="x-circle" style="width:20px;height:20px;"></i>
+            </button>
             <span class="input-group-text border-0 bg-transparent fw-bold text-slate-500 pe-3" style="font-size:1.25rem;">đ</span>
             </div>
             <div class="invalid-feedback d-none" id="amountError" style="font-size: 0.85rem; margin-top: 4px;">Số tiền nạp phải là bội số của 50.000 đ.</div>
@@ -2170,7 +2173,7 @@
             <ul class="list-unstyled mb-0" style="line-height: 1.8; color: #475569;">
             <li class="mb-3 d-flex align-items-start gap-2">
             <span class="badge bg-indigo rounded-circle p-1.5 text-white" style="font-size:0.6rem; width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;">1</span>
-            <span class="small">Nhập số tiền mong muốn nạp (bội số của 50k).</span>
+            <span class="small">Nhập số tiền mong muốn nạp (bội số của 50.000đ).</span>
             </li>
             <li class="mb-3 d-flex align-items-start gap-2">
             <span class="badge bg-indigo rounded-circle p-1.5 text-white" style="font-size:0.6rem; width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;">2</span>
@@ -2206,8 +2209,16 @@
             if (window.lucide) lucide.createIcons();
 
             const depositInput = document.getElementById('depositAmountInput');
-            if (depositInput && typeof window.setupCurrencyInput === 'function') {
-                window.setupCurrencyInput(depositInput);
+            if (depositInput) {
+                if (typeof window.setupCurrencyInput === 'function') {
+                    window.setupCurrencyInput(depositInput);
+                }
+                const clearBtn = document.getElementById('clearDepositAmountBtn');
+                depositInput.addEventListener('input', function () {
+                    if (clearBtn) {
+                        clearBtn.style.display = this.value ? 'flex' : 'none';
+                    }
+                });
             }
 
             // Render deposit history with pagination
@@ -2276,11 +2287,24 @@
             renderDepositHistoryPage();
             };
 
+            window.clearDepositAmount = function() {
+            const input = document.getElementById('depositAmountInput');
+            if (input) {
+            input.value = '';
+            input.focus();
+            document.getElementById('amountError')?.classList.add('d-none');
+            const clearBtn = document.getElementById('clearDepositAmountBtn');
+            if (clearBtn) clearBtn.style.display = 'none';
+            }
+            }
+
             window.setDepositAmount = function(amount) {
             const input = document.getElementById('depositAmountInput');
             if (input) {
-            input.value = typeof window.formatCurrencyInput === 'function' ? window.formatCurrencyInput(amount) : amount;
+            input.value = typeof window.formatCurrencyInput === 'function' ? window.formatCurrencyInput(amount) : new Intl.NumberFormat('vi-VN').format(amount);
             document.getElementById('amountError')?.classList.add('d-none');
+            const clearBtn = document.getElementById('clearDepositAmountBtn');
+            if (clearBtn) clearBtn.style.display = 'flex';
             }
             }
 
@@ -2343,7 +2367,7 @@
             const rightPanel = document.getElementById('depositInstructionsCol');
             if (!leftPanel || !rightPanel) return;
 
-            const qrUrl = `https://img.vietqr.io/image/acb-14875441-compact2.png?amount=${data.amount}&addInfo=${data.transferContent}&accountName=HUYNH%20KHANG`;
+            const qrUrl = `https://img.vietqr.io/image/acb-14875441-compact2.png?amount=${data.amount}&addInfo=${encodeURIComponent(data.transferContent)}&accountName=HUYNH%20KHANG`;
 
             leftPanel.innerHTML = `
             <div class="card border-0 shadow-sm p-4 text-center" style="border-radius: 16px;">
@@ -2389,17 +2413,23 @@
 
             rightPanel.innerHTML = `
             <div class="card border-0 shadow-sm p-4 h-100 text-center d-flex flex-column justify-content-center" style="border-radius: 16px; min-height: 400px;">
-            <div class="mb-4">
+            <div class="mb-3">
             <i data-lucide="clock" class="text-indigo-500 animate-spin" style="width:48px;height:48px;animation: pulse 2s infinite;"></i>
             </div>
-            <h4 class="fw-bold text-slate-800 mb-2">Đang chờ thanh toán</h4>
-            <div class="mb-3">
+            <h4 class="fw-bold text-slate-800 mb-1">Đang chờ thanh toán</h4>
+            <div class="mb-2">
             <span class="fs-5 fw-bold text-danger d-flex align-items-center justify-content-center gap-2">
             <i data-lucide="timer" style="width:18px;height:18px;"></i>
             Hiệu lực: <span id="depositCountdown">05:00</span>
             </span>
             </div>
-            <p class="text-muted small px-3 mb-4">Sau khi bạn chuyển khoản thành công, hãy bấm vào nút xác nhận phía dưới để hệ thống đối soát dữ liệu với ngân hàng ACB và cộng tiền vào ví.</p>
+            <div class="mb-3">
+            <span class="badge bg-light text-primary border px-3 py-2" style="border-radius: 999px; font-size: 0.82rem; font-weight: 600;">
+            <span class="spinner-grow spinner-grow-sm text-primary me-1" style="width:8px;height:8px;" role="status"></span>
+            Hệ thống tự động kiểm tra mỗi 4 giây...
+            </span>
+            </div>
+            <p class="text-muted small px-3 mb-4">Sau khi bạn chuyển khoản thành công, hệ thống sẽ tự động đối soát với ACB và cộng tiền vào ví. Bạn cũng có thể bấm xác nhận ngay bên dưới.</p>
 
             <div class="px-4">
             <button id="verifyDepositBtn" class="btn btn-indigo w-100 py-3 fw-bold text-white shadow-sm mb-3" style="border-radius:12px;" onclick="verifyDeposit(${data.transactionId})">
@@ -2414,12 +2444,16 @@
 
             if (window.lucide) lucide.createIcons();
 
-            // Setup 5 minutes countdown (300 seconds)
-            let timeLeft = 300;
+            // Clear previous timers if any
             if (window.depositCountdownInterval) {
             clearInterval(window.depositCountdownInterval);
             }
+            if (window.depositPollInterval) {
+            clearInterval(window.depositPollInterval);
+            }
 
+            // Setup 5 minutes countdown (300 seconds)
+            let timeLeft = 300;
             window.depositCountdownInterval = setInterval(() => {
             timeLeft--;
             const minutes = Math.floor(timeLeft / 60);
@@ -2431,20 +2465,64 @@
             }
 
             if (timeLeft <= 0) {
-            clearInterval(window.depositCountdownInterval);
+            if (window.depositCountdownInterval) clearInterval(window.depositCountdownInterval);
+            if (window.depositPollInterval) clearInterval(window.depositPollInterval);
             expireQRPanel(data.transactionId);
             }
             }, 1000);
+
+            // Auto-polling check every 4 seconds
+            let isPolling = false;
+            window.depositPollInterval = setInterval(async () => {
+            if (isPolling) return;
+            isPolling = true;
+            try {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+            const response = await fetch('/Home/ConfirmDepositTransfer', {
+            method: 'POST',
+            headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'RequestVerificationToken': token } : {})
+            },
+            body: JSON.stringify({ TransactionId: data.transactionId, TransactionCode: data.transactionCode })
+            });
+
+            const res = await response.json();
+            if (res && res.success) {
+            if (window.depositCountdownInterval) clearInterval(window.depositCountdownInterval);
+            if (window.depositPollInterval) clearInterval(window.depositPollInterval);
+            const formattedAmount = new Intl.NumberFormat('vi-VN').format(res.amount);
+            const formattedBalance = new Intl.NumberFormat('vi-VN').format(res.newBalance);
+
+            showToast(`Bạn đã nạp thành công ${formattedAmount} đ. Số dư hiện tại của bạn: ${formattedBalance} đ.`, 'success');
+            window.renderBusinessWalletHistory();
+            }
+            } catch (err) {
+            console.debug('Deposit poll tick: waiting for bank confirmation...', err);
+            } finally {
+            isPolling = false;
+            }
+            }, 4000);
             }
 
             window.cancelDepositFlow = function() {
             if (window.depositCountdownInterval) {
             clearInterval(window.depositCountdownInterval);
             }
+            if (window.depositPollInterval) {
+            clearInterval(window.depositPollInterval);
+            }
             window.renderBusinessWalletDeposit();
             }
 
             async function expireQRPanel(transactionId) {
+            if (window.depositCountdownInterval) {
+            clearInterval(window.depositCountdownInterval);
+            }
+            if (window.depositPollInterval) {
+            clearInterval(window.depositPollInterval);
+            }
+
             const leftPanel = document.getElementById('depositFormCol');
             const rightPanel = document.getElementById('depositInstructionsCol');
             if (!leftPanel || !rightPanel) return;
@@ -2516,6 +2594,9 @@
             if (data.success) {
             if (window.depositCountdownInterval) {
             clearInterval(window.depositCountdownInterval);
+            }
+            if (window.depositPollInterval) {
+            clearInterval(window.depositPollInterval);
             }
             const formattedAmount = new Intl.NumberFormat('vi-VN').format(data.amount);
             const formattedBalance = new Intl.NumberFormat('vi-VN').format(data.newBalance);

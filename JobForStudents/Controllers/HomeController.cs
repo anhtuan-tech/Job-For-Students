@@ -3561,7 +3561,10 @@ public class HomeController : Controller
 
         var transaction = await _context.Transactions
             .Include(t => t.Wallet)
-            .FirstOrDefaultAsync(t => t.Id == request.TransactionId && t.Wallet.UserId == currentUserId.Value);
+            .FirstOrDefaultAsync(t =>
+                ((request.TransactionId.HasValue && t.Id == request.TransactionId.Value) ||
+                 (!string.IsNullOrWhiteSpace(request.TransactionCode) && t.TransactionCode == request.TransactionCode)) &&
+                t.Wallet.UserId == currentUserId.Value);
 
         if (transaction == null)
         {
@@ -3570,7 +3573,7 @@ public class HomeController : Controller
 
         if (transaction.Status == TransactionStatus.Success)
         {
-            return Json(new { success = false, message = "Giao dịch đã được hoàn thành trước đó." });
+            return Json(new { success = true, newBalance = transaction.Wallet.Balance, amount = transaction.Amount, message = "Giao dịch đã được ghi nhận thành công." });
         }
 
         if (transaction.CreatedAt.Add(DepositQrLifetime) <= DateTime.UtcNow)
@@ -3590,9 +3593,10 @@ public class HomeController : Controller
         {
             matchedBankTx = await FindMatchingAcbTransactionAsync(transaction.TransactionCode, transaction.Amount);
         }
-        catch
+        catch (Exception ex)
         {
-            return Json(new { success = false, message = "Khong the kiem tra lich su ACB. Vui long thu lai sau." });
+            Console.WriteLine($"[ACB Check] Error verifying transaction {transaction.TransactionCode}: {ex.Message}");
+            return Json(new { success = false, message = "Không thể kiểm tra lịch sử. Vui lòng thử lại sau." });
         }
 
         if (matchedBankTx == null)
@@ -3612,7 +3616,7 @@ public class HomeController : Controller
 
         if (usedBankTransaction)
         {
-            return Json(new { success = false, message = "Giao dich ngan hang nay da duoc ghi nhan truoc do." });
+            return Json(new { success = false, message = "Giao dịch ngân hàng này đã được ghi nhận trước đó." });
         }
 
         transaction.Status = TransactionStatus.Success;
@@ -3783,14 +3787,10 @@ public class HomeController : Controller
         var acbHistoryUrl = _configuration["Banking:AcbHistoryUrl"];
         if (string.IsNullOrWhiteSpace(acbHistoryUrl))
         {
-            acbHistoryUrl = "http://api.dopamind.net/api/ACB/history?token=KHANGDZ";
+            throw new InvalidOperationException("Missing Banking:AcbHistoryUrl configuration.");
         }
 
-        using var requestMessage = new HttpRequestMessage(HttpMethod.Get, acbHistoryUrl);
-        requestMessage.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
-        requestMessage.Headers.Add("Accept", "application/json");
-
-        using var response = await AcbHttpClient.SendAsync(requestMessage);
+        using var response = await AcbHttpClient.GetAsync(acbHistoryUrl);
         response.EnsureSuccessStatusCode();
 
         await using var stream = await response.Content.ReadAsStreamAsync();
@@ -3866,21 +3866,22 @@ public class HomeController : Controller
 
     private static string? GetFirstString(JsonElement item, params string[] names)
     {
-        foreach (var property in item.EnumerateObject())
+        foreach (var name in names)
         {
-            if (!names.Any(n => string.Equals(n, property.Name, StringComparison.OrdinalIgnoreCase)))
+            foreach (var property in item.EnumerateObject())
             {
-                continue;
-            }
-
-            if (property.Value.ValueKind == JsonValueKind.String)
-            {
-                return property.Value.GetString();
-            }
-
-            if (property.Value.ValueKind == JsonValueKind.Number)
-            {
-                return property.Value.ToString();
+                if (string.Equals(name, property.Name, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (property.Value.ValueKind == JsonValueKind.String)
+                    {
+                        var val = property.Value.GetString();
+                        if (!string.IsNullOrWhiteSpace(val)) return val;
+                    }
+                    else if (property.Value.ValueKind == JsonValueKind.Number)
+                    {
+                        return property.Value.ToString();
+                    }
+                }
             }
         }
 
@@ -3889,16 +3890,17 @@ public class HomeController : Controller
 
     private static decimal? GetFirstAmount(JsonElement item, params string[] names)
     {
-        foreach (var property in item.EnumerateObject())
+        foreach (var name in names)
         {
-            if (!names.Any(n => string.Equals(n, property.Name, StringComparison.OrdinalIgnoreCase)))
+            foreach (var property in item.EnumerateObject())
             {
-                continue;
-            }
-
-            if (TryReadAmount(property.Value, out var amount))
-            {
-                return amount;
+                if (string.Equals(name, property.Name, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (TryReadAmount(property.Value, out var amount))
+                    {
+                        return amount;
+                    }
+                }
             }
         }
 
@@ -3930,12 +3932,29 @@ public class HomeController : Controller
 
     private static bool ContainsTransferCode(string description, string transferCode)
     {
-        return NormalizeBankText(description).Contains(NormalizeBankText(transferCode), StringComparison.OrdinalIgnoreCase);
+        var normDesc = NormalizeBankText(description);
+        var normCode = NormalizeBankText(transferCode);
+        if (normDesc.Contains(normCode, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        // Also check suffix without "J4S" prefix if transferCode starts with J4S
+        if (normCode.StartsWith("J4S", StringComparison.OrdinalIgnoreCase))
+        {
+            var suffix = normCode[3..];
+            if (suffix.Length >= 3 && normDesc.Contains(suffix, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static string NormalizeBankText(string value)
     {
-        return Regex.Replace(value ?? string.Empty, @"[\s\-_.:]+", "").ToUpperInvariant();
+        return Regex.Replace(value ?? string.Empty, @"[^a-zA-Z0-9]", "").ToUpperInvariant();
     }
 
     private static bool LooksLikeDebit(JsonElement item, string? description)
@@ -3953,7 +3972,7 @@ public class HomeController : Controller
         if (!string.IsNullOrWhiteSpace(description))
         {
             var upperDesc = description.ToUpperInvariant();
-            if (upperDesc.Contains("(VND) -") || upperDesc.Contains("(VND)-"))
+            if (Regex.IsMatch(upperDesc, @"\(VND\)\s*-\s*[0-9]") || upperDesc.Contains("(VND) -") || upperDesc.Contains("(VND)-"))
             {
                 return true;
             }
@@ -4369,7 +4388,8 @@ public class DepositQrRequest
 
 public class ConfirmDepositRequest
 {
-    public int TransactionId { get; set; }
+    public int? TransactionId { get; set; }
+    public string? TransactionCode { get; set; }
 }
 
 public class PurchasePackageRequest

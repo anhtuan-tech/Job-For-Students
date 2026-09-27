@@ -314,7 +314,7 @@ builder.Services.AddRateLimiter(options =>
     });
     options.AddFixedWindowLimiter("payment", limiterOptions =>
     {
-        limiterOptions.PermitLimit = 20;
+        limiterOptions.PermitLimit = 60;
         limiterOptions.Window = TimeSpan.FromMinutes(1);
         limiterOptions.QueueLimit = 0;
         limiterOptions.AutoReplenishment = true;

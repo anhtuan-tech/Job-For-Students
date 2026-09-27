@@ -7732,17 +7732,45 @@ function formatVND(amount) {
 function formatCurrencyInput(value) {
     let clean = value.toString().replace(/\D/g, '');
     if (!clean) return '';
-    return new Intl.NumberFormat('vi-VN').format(clean) + ' đ';
+    return new Intl.NumberFormat('vi-VN').format(clean);
 }
 
 function setupCurrencyInput(inputElement) {
     if (!inputElement) return;
     inputElement.type = 'text';
+    inputElement.inputMode = 'numeric';
     if (inputElement.value) {
         inputElement.value = formatCurrencyInput(inputElement.value);
     }
+
+    // Auto-select text on click/focus so pressing Backspace or typing immediately clears/replaces
+    inputElement.addEventListener('focus', function () {
+        setTimeout(() => this.select(), 50);
+    });
+
     inputElement.addEventListener('input', function () {
-        this.value = formatCurrencyInput(this.value);
+        const raw = this.value;
+        const clean = raw.replace(/\D/g, '');
+        if (!clean) {
+            this.value = '';
+            return;
+        }
+
+        const cursor = this.selectionStart || 0;
+        const digitsBefore = (raw.slice(0, cursor).match(/\d/g) || []).length;
+        const formatted = new Intl.NumberFormat('vi-VN').format(clean);
+        this.value = formatted;
+
+        let newCursor = 0, count = 0;
+        for (let i = 0; i < formatted.length; i++) {
+            if (/\d/.test(formatted[i])) count++;
+            if (count >= digitsBefore) {
+                newCursor = i + 1;
+                break;
+            }
+        }
+        if (digitsBefore === 0) newCursor = 0;
+        this.setSelectionRange(newCursor, newCursor);
     });
 }
 
