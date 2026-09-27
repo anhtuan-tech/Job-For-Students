@@ -3794,24 +3794,38 @@ public class HomeController : Controller
 
         foreach (var item in EnumerateObjects(doc.RootElement))
         {
-            var description = GetFirstString(item, "description", "desc", "content", "remark", "memo", "transactionContent");
+            var description = GetFirstString(item, "message", "description", "desc", "content", "remark", "memo", "transactionContent", "body", "title");
             if (string.IsNullOrWhiteSpace(description) || !ContainsTransferCode(description, transferCode))
             {
                 continue;
             }
 
             var amount = GetFirstAmount(item, "amount", "creditAmount", "credit", "money", "transactionAmount", "value");
+            if (!amount.HasValue || amount.Value <= 0)
+            {
+                // Fallback: extract amount from description (e.g. "+ 100,000" or "+100000")
+                var match = Regex.Match(description, @"\+\s*([0-9,.]+)");
+                if (match.Success)
+                {
+                    var rawClean = Regex.Replace(match.Groups[1].Value, @"[^0-9]", "");
+                    if (decimal.TryParse(rawClean, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedAmt))
+                    {
+                        amount = parsedAmt;
+                    }
+                }
+            }
+
             if (!amount.HasValue || amount.Value != expectedAmount)
             {
                 continue;
             }
 
-            if (LooksLikeDebit(item))
+            if (LooksLikeDebit(item, description))
             {
                 continue;
             }
 
-            var reference = GetFirstString(item, "transactionID", "transactionId", "transactionNumber", "refNo", "reference", "trace", "traceNo", "id")
+            var reference = GetFirstString(item, "id", "transactionID", "transactionId", "transactionNumber", "refNo", "reference", "trace", "traceNo")
                 ?? $"ACB:{NormalizeBankText(description)}:{amount.Value.ToString(CultureInfo.InvariantCulture)}";
 
             return new AcbBankTransaction(reference);
@@ -3917,19 +3931,31 @@ public class HomeController : Controller
 
     private static string NormalizeBankText(string value)
     {
-        return Regex.Replace(value ?? string.Empty, @"\s+", "").ToUpperInvariant();
+        return Regex.Replace(value ?? string.Empty, @"[\s\-_.:]+", "").ToUpperInvariant();
     }
 
-    private static bool LooksLikeDebit(JsonElement item)
+    private static bool LooksLikeDebit(JsonElement item, string? description)
     {
         var type = GetFirstString(item, "type", "transactionType", "dcSign", "cd", "sign");
-        if (string.IsNullOrWhiteSpace(type))
+        if (!string.IsNullOrWhiteSpace(type))
         {
-            return false;
+            var normalized = type.Trim().ToLowerInvariant();
+            if (normalized.Contains("debit") || normalized.Contains("withdraw") || normalized == "out" || normalized == "d" || normalized == "-")
+            {
+                return true;
+            }
         }
 
-        var normalized = type.Trim().ToLowerInvariant();
-        return normalized.Contains("debit") || normalized.Contains("withdraw") || normalized == "out" || normalized == "d" || normalized == "-";
+        if (!string.IsNullOrWhiteSpace(description))
+        {
+            var upperDesc = description.ToUpperInvariant();
+            if (upperDesc.Contains("(VND) -") || upperDesc.Contains("(VND)-"))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     [HttpPost]
