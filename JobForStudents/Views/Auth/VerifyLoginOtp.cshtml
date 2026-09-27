@@ -1,0 +1,316 @@
+@model JobForStudents.Models.VerifyLoginOtpViewModel
+@{
+    ViewData["Title"] = "Xác thực đăng nhập (2FA)";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+
+    // Mask email helper (e.g. tu***@fpt.edu.vn)
+    string maskedEmail = Model.Email;
+    var atIdx = Model.Email.IndexOf('@');
+    if (atIdx > 2)
+    {
+        maskedEmail = Model.Email.Substring(0, 2) + new string('*', atIdx - 2) + Model.Email.Substring(atIdx);
+    }
+}
+
+<div class="auth-page-container">
+    <!-- Left Showcase Side -->
+    <div class="auth-showcase-panel">
+        <div class="auth-bg-shapes">
+            <div class="auth-shape auth-shape-1"></div>
+            <div class="auth-shape auth-shape-2"></div>
+            <div class="auth-shape auth-shape-3"></div>
+        </div>
+
+        <!-- Branding Logo -->
+        <a href="/" class="auth-brand" style="color: #ffffff;">
+            <div class="auth-logo-icon" style="padding: 0; overflow: hidden; background: none; border: none; box-shadow: none; border-radius: 8px; width: 36px; height: 36px;">
+                <img src="/images/logo exe.jpg" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;" alt="Logo" />
+            </div>
+            <span class="auth-logo-text" style="color: #ffffff;">J4S</span>
+        </a>
+
+        <!-- Showcase Message -->
+        <div class="auth-showcase-content" style="max-width: 500px;">
+            <h1 style="font-size: 2.25rem; font-weight: 900; line-height: 1.3; margin-bottom: 20px; color: #ffffff; text-shadow: 0 4px 15px rgba(0, 0, 0, 0.55);">Bảo Mật Tài Khoản 2 Lớp (2FA)</h1>
+            <p style="font-size: 1.05rem; opacity: 0.98; line-height: 1.65; margin-bottom: 30px; color: #ffffff; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); font-weight: 600;">
+                Hệ thống bảo vệ đa tầng giúp ngăn chặn truy cập trái phép, bảo vệ thông tin cá nhân và số dư ví của bạn an toàn tuyệt đối trên J4S.
+            </p>
+            
+            <div style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 30px;">
+                <div style="background: rgba(15, 23, 42, 0.45); border: 1.5px solid rgba(255, 255, 255, 0.15); border-radius: 14px; padding: 16px 20px; display: flex; align-items: center; gap: 14px; backdrop-filter: blur(12px); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);">
+                    <div style="font-size: 1.5rem; background: rgba(255, 255, 255, 0.2); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 10px rgba(255,255,255,0.2); flex-shrink: 0;">🛡️</div>
+                    <div>
+                        <div style="font-weight: 800; color: #ffffff; font-size: 0.98rem; text-shadow: 0 1px 4px rgba(0,0,0,0.3);">Xác minh thời gian thực</div>
+                        <div style="font-size: 0.82rem; color: rgba(255, 255, 255, 0.9); margin-top: 2px; line-height: 1.45; font-weight: 500;">Mã OTP được gửi bảo mật qua email chính chủ và tự hủy sau 5 phút</div>
+                    </div>
+                </div>
+                <div style="background: rgba(15, 23, 42, 0.45); border: 1.5px solid rgba(255, 255, 255, 0.15); border-radius: 14px; padding: 16px 20px; display: flex; align-items: center; gap: 14px; backdrop-filter: blur(12px); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);">
+                    <div style="font-size: 1.5rem; background: rgba(255, 255, 255, 0.2); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 10px rgba(255,255,255,0.2); flex-shrink: 0;">🔐</div>
+                    <div>
+                        <div style="font-weight: 800; color: #ffffff; font-size: 0.98rem; text-shadow: 0 1px 4px rgba(0,0,0,0.3);">Chống đánh cắp tài khoản</div>
+                        <div style="font-size: 0.82rem; color: rgba(255, 255, 255, 0.9); margin-top: 2px; line-height: 1.45; font-weight: 500;">Kể cả khi bị lộ mật khẩu, không ai có thể đăng nhập nếu không có OTP</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Note -->
+        <div style="font-size: 0.85rem; opacity: 0.75; font-weight: 500; position: relative; z-index: 2;">
+            &copy; 2026 J4S Platform. Kết nối tương lai.
+        </div>
+    </div>
+
+    <!-- Right Form Side -->
+    <div class="auth-form-panel">
+        <div class="auth-form-wrapper">
+            
+            <!-- Branding for Mobile -->
+            <div class="d-flex d-md-none justify-content-center mb-4">
+                <a href="/" class="auth-brand">
+                    <div class="auth-logo-icon" style="padding: 0; overflow: hidden; background: none; border: none; box-shadow: none; border-radius: 8px; width: 36px; height: 36px;">
+                        <img src="/images/logo exe.jpg" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;" alt="Logo" />
+                    </div>
+                    <span class="auth-logo-text">J4S</span>
+                </a>
+            </div>
+
+            <!-- Shield Icon Badge -->
+            <div class="text-center mb-3">
+                <div style="width: 64px; height: 64px; background: #eff6ff; border: 2px solid #bfdbfe; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: #2563eb; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.12);">
+                    <i data-lucide="shield-check" style="width: 32px; height: 32px;"></i>
+                </div>
+                <h2 style="font-size: 1.75rem; font-weight: 800; color: #0f172a; margin-bottom: 8px;">Xác thực mã OTP</h2>
+                <p style="color: #64748b; font-size: 0.92rem; margin: 0; line-height: 1.5;">
+                    Mã xác thực 6 chữ số đã được gửi đến email: <br />
+                    <strong style="color: #0f172a; font-size: 0.98rem;">@maskedEmail</strong>
+                </p>
+            </div>
+
+            <form asp-action="VerifyLoginOtp" method="post" id="otpForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="Email" id="userEmailHidden" />
+                <input type="hidden" asp-for="ReturnUrl" />
+                <input type="hidden" asp-for="RememberMe" />
+                
+                <div asp-validation-summary="ModelOnly" id="otpValidationSummary" class="alert alert-danger small py-2 rounded-3 border-0 mb-3 animate-in d-none"></div>
+
+                <!-- 6 Pin Input Boxes -->
+                <div class="mb-4">
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 10px; text-align: center;">
+                        Nhập 6 chữ số mã OTP
+                    </label>
+                    <div style="display: flex; gap: 8px; justify-content: center;">
+                        @for (int i = 0; i < 6; i++)
+                        {
+                            <input type="text" 
+                                   class="otp-digit-input" 
+                                   maxlength="1" 
+                                   inputmode="numeric" 
+                                   pattern="[0-9]" 
+                                   data-index="@i" 
+                                   autocomplete="off"
+                                   style="width: 48px; height: 56px; text-align: center; font-size: 1.5rem; font-weight: 800; color: #1e293b; background: #f8fafc; border: 2px solid #cbd5e1; border-radius: 12px; outline: none; transition: all 0.2s;" />
+                        }
+                    </div>
+                    <!-- Hidden real Otp input mapped to model -->
+                    <input type="hidden" asp-for="Otp" id="realOtpInput" />
+                    <span asp-validation-for="Otp" class="text-danger small mt-2 d-block text-center"></span>
+                </div>
+
+                <!-- Resend OTP and Timer -->
+                <div class="text-center mb-4">
+                    <span id="countdownText" style="font-size: 0.88rem; color: #64748b;">
+                        Gửi lại mã sau: <strong id="timerCountdown" style="color: #2563eb;">60s</strong>
+                    </span>
+                    <button type="button" 
+                            id="btnResendOtp" 
+                            onclick="handleResendOtp()" 
+                            style="display: none; background: none; border: none; color: #2563eb; font-size: 0.9rem; font-weight: 700; cursor: pointer; text-decoration: underline;">
+                        <i data-lucide="rotate-cw" style="width: 14px; height: 14px; vertical-align: middle; margin-right: 4px;"></i> Gửi lại mã OTP
+                    </button>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn-auth-submit" id="btnSubmitOtp">
+                    Xác nhận &amp; Đăng nhập
+                </button>
+
+                <div class="text-center mt-4" style="font-size: 0.9rem; color: #64748b;">
+                    Không phải bạn? <a asp-action="Login" style="color: #64748b; font-weight: 600; text-decoration: none;">Đăng nhập tài khoản khác</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .otp-digit-input:focus {
+        border-color: #2563eb !important;
+        background: #ffffff !important;
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15) !important;
+        transform: translateY(-2px);
+    }
+    .otp-digit-input.filled {
+        border-color: #3b82f6;
+        background: #ffffff;
+    }
+</style>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const email = "@Model.Email";
+        let countdown = 60;
+        let timerInterval = null;
+
+        function startCountdown(duration = 60) {
+            countdown = duration;
+            document.getElementById('countdownText').style.display = 'inline';
+            document.getElementById('btnResendOtp').style.display = 'none';
+            document.getElementById('timerCountdown').textContent = countdown + 's';
+
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                countdown--;
+                if (countdown <= 0) {
+                    clearInterval(timerInterval);
+                    document.getElementById('countdownText').style.display = 'none';
+                    document.getElementById('btnResendOtp').style.display = 'inline';
+                } else {
+                    document.getElementById('timerCountdown').textContent = countdown + 's';
+                }
+            }, 1000);
+        }
+
+        async function handleResendOtp() {
+            const btn = document.getElementById('btnResendOtp');
+            btn.disabled = true;
+            btn.textContent = "Đang gửi lại mã...";
+
+            try {
+                const response = await fetch('/Auth/ResendLoginOtp', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email: email })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    if (window.showToast) window.showToast(data.message, 'success');
+                    startCountdown(60);
+                    // Clear OTP boxes
+                    inputs.forEach(input => {
+                        input.value = '';
+                        input.classList.remove('filled');
+                    });
+                    document.getElementById('realOtpInput').value = '';
+                    inputs[0].focus();
+                } else {
+                    if (window.showToast) window.showToast(data.message || 'Gửi lại OTP thất bại.', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                if (window.showToast) window.showToast('Lỗi kết nối khi gửi lại OTP.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="rotate-cw" style="width: 14px; height: 14px; vertical-align: middle; margin-right: 4px;"></i> Gửi lại mã OTP';
+                if (window.lucide) lucide.createIcons();
+            }
+        }
+
+        // OTP inputs handling
+        const inputs = document.querySelectorAll('.otp-digit-input');
+        const realOtpInput = document.getElementById('realOtpInput');
+        const form = document.getElementById('otpForm');
+
+        function updateRealOtp() {
+            let val = "";
+            inputs.forEach(inp => val += inp.value);
+            realOtpInput.value = val;
+            return val;
+        }
+
+        inputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                const val = e.target.value.replace(/\D/g, '');
+                input.value = val ? val[val.length - 1] : '';
+                
+                if (input.value) {
+                    input.classList.add('filled');
+                    if (index < inputs.length - 1) {
+                        inputs[index + 1].focus();
+                    }
+                } else {
+                    input.classList.remove('filled');
+                }
+
+                const otp = updateRealOtp();
+                if (otp.length === 6) {
+                    // Auto submit when 6 digits entered
+                    form.submit();
+                }
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace') {
+                    if (!input.value && index > 0) {
+                        inputs[index - 1].focus();
+                        inputs[index - 1].value = '';
+                        inputs[index - 1].classList.remove('filled');
+                    } else {
+                        input.value = '';
+                        input.classList.remove('filled');
+                    }
+                    updateRealOtp();
+                } else if (e.key === 'ArrowLeft' && index > 0) {
+                    inputs[index - 1].focus();
+                } else if (e.key === 'ArrowRight' && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                }
+            });
+
+            input.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const pasteData = (e.clipboardData || window.clipboardData).getData('text').trim().replace(/\D/g, '');
+                if (pasteData) {
+                    for (let i = 0; i < inputs.length; i++) {
+                        if (i < pasteData.length) {
+                            inputs[i].value = pasteData[i];
+                            inputs[i].classList.add('filled');
+                        }
+                    }
+                    const nextIndex = Math.min(pasteData.length, inputs.length - 1);
+                    inputs[nextIndex].focus();
+                    const otp = updateRealOtp();
+                    if (otp.length === 6) {
+                        form.submit();
+                    }
+                }
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (inputs.length > 0) {
+                inputs[0].focus();
+            }
+            startCountdown(60);
+
+            // Check validation errors to toast
+            var summary = document.getElementById('otpValidationSummary');
+            if (summary && summary.textContent.trim().length > 0) {
+                var errorMsg = "";
+                var ul = summary.querySelector('ul');
+                if (ul && ul.children.length > 0) {
+                    errorMsg = ul.children[0].textContent;
+                } else {
+                    errorMsg = summary.textContent.trim();
+                }
+                if (window.showToast && errorMsg) {
+                    setTimeout(() => window.showToast(errorMsg, 'error'), 100);
+                }
+            }
+        });
+    </script>
+}

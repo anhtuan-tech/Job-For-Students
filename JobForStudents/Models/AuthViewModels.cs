@@ -87,3 +87,37 @@ public class VerifyOtpRequest
     [StringLength(6, MinimumLength = 6, ErrorMessage = "Mã OTP phải có đúng 6 chữ số.")]
     public string Otp { get; set; } = string.Empty;
 }
+
+public class VerifyLoginOtpViewModel
+{
+    [Required(ErrorMessage = "Email là bắt buộc.")]
+    [EmailAddress(ErrorMessage = "Địa chỉ email không hợp lệ.")]
+    public string Email { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Vui lòng nhập mã xác thực OTP.")]
+    [StringLength(6, MinimumLength = 6, ErrorMessage = "Mã OTP phải có đúng 6 chữ số.")]
+    [RegularExpression(@"^\d{6}$", ErrorMessage = "Mã OTP chỉ bao gồm 6 chữ số.")]
+    public string Otp { get; set; } = string.Empty;
+
+    public bool RememberMe { get; set; }
+
+    public string? ReturnUrl { get; set; }
+}
+
+public class ResendLoginOtpRequest
+{
+    [Required(ErrorMessage = "Email là bắt buộc.")]
+    [EmailAddress(ErrorMessage = "Địa chỉ email không hợp lệ.")]
+    public string Email { get; set; } = string.Empty;
+}
+
+public class LoginOtpSession
+{
+    public int UserId { get; set; }
+    public string Email { get; set; } = string.Empty;
+    public string Otp { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+    public bool RememberMe { get; set; }
+    public string? ReturnUrl { get; set; }
+}
+

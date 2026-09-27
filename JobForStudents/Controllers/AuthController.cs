@@ -123,6 +123,165 @@ public class AuthController : Controller
 
         var userName = user.Role == UserRole.Student 
             ? user.StudentProfile?.FullName ?? user.Email 
+            : user.Role == UserRole.Business 
+                ? user.BusinessProfile?.CompanyName ?? user.Email 
+                : "Quản trị viên";
+
+        // Admin does NOT require OTP verification — Sign in directly
+        if (user.Role == UserRole.Admin)
+        {
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Role, user.Role.ToString()),
+                new Claim(ClaimTypes.Name, userName)
+            };
+
+            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+            var authProperties = new AuthenticationProperties
+            {
+                IsPersistent = model.RememberMe,
+                ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7)
+            };
+
+            await HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                new ClaimsPrincipal(claimsIdentity),
+                authProperties);
+
+            TempData["SuccessMessage"] = "Đăng nhập thành công! Chào mừng Quản trị viên, " + userName;
+
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
+            return RedirectToAction("Index", "Home");
+        }
+
+        // Student and Business accounts require 2FA OTP verification
+        var otp = Random.Shared.Next(100000, 1000000).ToString();
+        var sessionData = new LoginOtpSession
+        {
+            UserId = user.Id,
+            Email = user.Email,
+            Otp = otp,
+            RememberMe = model.RememberMe,
+            ReturnUrl = returnUrl,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        var loginSessionKey = $"Login_OTP_{user.Email.ToLower().Trim()}";
+        _cache.Set(loginSessionKey, sessionData, TimeSpan.FromMinutes(5));
+
+        // Set cooldown (60s)
+        _cache.Set($"Login_OTP_Cooldown_{user.Email.ToLower().Trim()}", true, TimeSpan.FromSeconds(60));
+
+        // Send OTP Email
+        var subject = "[J4S] Mã xác thực đăng nhập tài khoản";
+        var body = $@"
+            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;'>
+                <div style='text-align: center; margin-bottom: 20px;'>
+                    <h2 style='color: #2563eb; margin: 0; font-size: 22px; font-weight: 800;'>J4S Platform</h2>
+                    <p style='color: #64748b; font-size: 14px; margin-top: 4px;'>Bảo mật đăng nhập 2 lớp (2FA)</p>
+                </div>
+                <p style='color: #1e293b; font-size: 15px;'>Xin chào <strong>{userName}</strong>,</p>
+                <p style='color: #475569; font-size: 14px; line-height: 1.6;'>
+                    Bạn vừa thực hiện yêu cầu đăng nhập vào tài khoản J4S. Vui lòng sử dụng mã xác thực OTP gồm 6 chữ số dưới đây để hoàn tất đăng nhập:
+                </p>
+                <div style='background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 10px; padding: 18px; text-align: center; margin: 24px 0;'>
+                    <div style='font-size: 32px; font-weight: 800; letter-spacing: 8px; color: #0284c7;'>{otp}</div>
+                    <p style='color: #64748b; font-size: 13px; margin: 6px 0 0;'>Mã có hiệu lực trong vòng <strong>5 phút</strong></p>
+                </div>
+                <p style='color: #ef4444; font-size: 13px; font-weight: 600;'>
+                    ⚠️ Cảnh báo: Tuyệt đối không cung cấp mã OTP này cho bất kỳ ai để tránh mất tài khoản.
+                </p>
+                <hr style='border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;' />
+                <p style='font-size: 12px; color: #94a3b8; text-align: center; margin: 0;'>Đây là email tự động từ hệ thống J4S Platform. Vui lòng không trả lời thư này.</p>
+            </div>";
+
+        await _emailService.SendEmailAsync(user.Email, subject, body);
+
+        TempData["SuccessMessage"] = "Mã xác thực OTP đã được gửi đến email của bạn. Vui lòng nhập mã để hoàn tất đăng nhập.";
+        return RedirectToAction("VerifyLoginOtp", new { email = user.Email, returnUrl = returnUrl });
+    }
+
+    [HttpGet]
+    public IActionResult VerifyLoginOtp(string email, string? returnUrl = null)
+    {
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            return RedirectToAction("Index", "Home");
+        }
+
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            return RedirectToAction("Login");
+        }
+
+        var loginSessionKey = $"Login_OTP_{email.ToLower().Trim()}";
+        if (!_cache.TryGetValue(loginSessionKey, out LoginOtpSession? session) || session == null)
+        {
+            TempData["ErrorMessage"] = "Phiên xác thực đã hết hạn hoặc không tồn tại. Vui lòng đăng nhập lại.";
+            return RedirectToAction("Login");
+        }
+
+        var model = new VerifyLoginOtpViewModel
+        {
+            Email = session.Email,
+            ReturnUrl = session.ReturnUrl ?? returnUrl,
+            RememberMe = session.RememberMe
+        };
+
+        return View(model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [EnableRateLimiting("auth")]
+    public async Task<IActionResult> VerifyLoginOtp(VerifyLoginOtpViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        var loginSessionKey = $"Login_OTP_{model.Email.ToLower().Trim()}";
+        if (!_cache.TryGetValue(loginSessionKey, out LoginOtpSession? session) || session == null)
+        {
+            ModelState.AddModelError(string.Empty, "Phiên xác thực OTP đã hết hạn. Vui lòng đăng nhập lại.");
+            return View(model);
+        }
+
+        // Check expiration (5 mins)
+        if ((DateTime.UtcNow - session.CreatedAt).TotalMinutes > 5)
+        {
+            _cache.Remove(loginSessionKey);
+            ModelState.AddModelError(string.Empty, "Mã OTP đã hết hạn (quá 5 phút). Vui lòng gửi lại mã OTP mới hoặc đăng nhập lại.");
+            return View(model);
+        }
+
+        if (session.Otp != model.Otp.Trim())
+        {
+            ModelState.AddModelError("Otp", "Mã OTP không chính xác. Vui lòng kiểm tra lại.");
+            return View(model);
+        }
+
+        // OTP is valid — proceed to sign in
+        var user = await _context.Users
+            .Include(u => u.StudentProfile)
+            .Include(u => u.BusinessProfile)
+            .FirstOrDefaultAsync(u => u.Id == session.UserId && !u.IsDeleted);
+
+        if (user == null || user.Status == UserStatus.Banned)
+        {
+            ModelState.AddModelError(string.Empty, "Tài khoản của bạn không khả dụng hoặc đã bị khóa.");
+            return View(model);
+        }
+
+        var userName = user.Role == UserRole.Student 
+            ? user.StudentProfile?.FullName ?? user.Email 
             : user.BusinessProfile?.CompanyName ?? user.Email;
 
         var claims = new List<Claim>
@@ -137,8 +296,8 @@ public class AuthController : Controller
 
         var authProperties = new AuthenticationProperties
         {
-            IsPersistent = model.RememberMe,
-            ExpiresUtc = System.DateTimeOffset.UtcNow.AddDays(7)
+            IsPersistent = session.RememberMe,
+            ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7)
         };
 
         await HttpContext.SignInAsync(
@@ -146,14 +305,91 @@ public class AuthController : Controller
             new ClaimsPrincipal(claimsIdentity),
             authProperties);
 
+        // Clear session and cooldown cache
+        _cache.Remove(loginSessionKey);
+        _cache.Remove($"Login_OTP_Cooldown_{model.Email.ToLower().Trim()}");
+
         TempData["SuccessMessage"] = "Đăng nhập thành công! Chào mừng trở lại, " + userName;
 
-        if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+        var targetUrl = model.ReturnUrl ?? session.ReturnUrl;
+        if (!string.IsNullOrEmpty(targetUrl) && Url.IsLocalUrl(targetUrl))
         {
-            return Redirect(returnUrl);
+            return Redirect(targetUrl);
         }
         return RedirectToAction("Index", "Home");
     }
+
+    [HttpPost]
+    [EnableRateLimiting("auth")]
+    public async Task<IActionResult> ResendLoginOtp([FromBody] ResendLoginOtpRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return Json(new { success = false, message = "Email không hợp lệ." });
+        }
+
+        var email = request.Email.ToLower().Trim();
+        var cooldownKey = $"Login_OTP_Cooldown_{email}";
+        if (_cache.TryGetValue(cooldownKey, out _))
+        {
+            return Json(new { success = false, message = "Bạn vừa yêu cầu mã. Vui lòng chờ 60 giây trước khi yêu cầu gửi lại OTP." });
+        }
+
+        var loginSessionKey = $"Login_OTP_{email}";
+        if (!_cache.TryGetValue(loginSessionKey, out LoginOtpSession? session) || session == null)
+        {
+            return Json(new { success = false, message = "Phiên đăng nhập đã hết hạn. Vui lòng quay lại trang đăng nhập." });
+        }
+
+        var user = await _context.Users
+            .Include(u => u.StudentProfile)
+            .Include(u => u.BusinessProfile)
+            .FirstOrDefaultAsync(u => u.Id == session.UserId && !u.IsDeleted);
+
+        if (user == null || user.Status == UserStatus.Banned)
+        {
+            return Json(new { success = false, message = "Tài khoản không hợp lệ hoặc đã bị khóa." });
+        }
+
+        var newOtp = Random.Shared.Next(100000, 1000000).ToString();
+        session.Otp = newOtp;
+        session.CreatedAt = DateTime.UtcNow;
+        _cache.Set(loginSessionKey, session, TimeSpan.FromMinutes(5));
+
+        // Set 60s cooldown
+        _cache.Set(cooldownKey, true, TimeSpan.FromSeconds(60));
+
+        var userName = user.Role == UserRole.Student 
+            ? user.StudentProfile?.FullName ?? user.Email 
+            : user.BusinessProfile?.CompanyName ?? user.Email;
+
+        var subject = "[J4S] Mã xác thực đăng nhập tài khoản (Gửi lại)";
+        var body = $@"
+            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;'>
+                <div style='text-align: center; margin-bottom: 20px;'>
+                    <h2 style='color: #2563eb; margin: 0; font-size: 22px; font-weight: 800;'>J4S Platform</h2>
+                    <p style='color: #64748b; font-size: 14px; margin-top: 4px;'>Bảo mật đăng nhập 2 lớp (2FA)</p>
+                </div>
+                <p style='color: #1e293b; font-size: 15px;'>Xin chào <strong>{userName}</strong>,</p>
+                <p style='color: #475569; font-size: 14px; line-height: 1.6;'>
+                    Bạn vừa yêu cầu gửi lại mã xác thực OTP đăng nhập vào tài khoản J4S của mình:
+                </p>
+                <div style='background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 10px; padding: 18px; text-align: center; margin: 24px 0;'>
+                    <div style='font-size: 32px; font-weight: 800; letter-spacing: 8px; color: #0284c7;'>{newOtp}</div>
+                    <p style='color: #64748b; font-size: 13px; margin: 6px 0 0;'>Mã có hiệu lực trong vòng <strong>5 phút</strong></p>
+                </div>
+                <p style='color: #ef4444; font-size: 13px; font-weight: 600;'>
+                    ⚠️ Cảnh báo: Tuyệt đối không cung cấp mã OTP này cho bất kỳ ai để tránh mất tài khoản.
+                </p>
+                <hr style='border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;' />
+                <p style='font-size: 12px; color: #94a3b8; text-align: center; margin: 0;'>Đây là email tự động từ hệ thống J4S Platform. Vui lòng không trả lời thư này.</p>
+            </div>";
+
+        await _emailService.SendEmailAsync(user.Email, subject, body);
+
+        return Json(new { success = true, message = "Mã OTP mới đã được gửi tới email của bạn." });
+    }
+
 
     [HttpGet]
     public IActionResult Register()
