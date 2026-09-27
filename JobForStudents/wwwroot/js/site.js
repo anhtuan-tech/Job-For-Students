@@ -2213,7 +2213,7 @@
                         <div class="d-grid gap-3" style="color:#475569;">
                             <div class="d-flex align-items-center gap-2">
                                 <i data-lucide="mail" style="width:18px;height:18px;color:#2563eb;flex-shrink:0;"></i>
-                                <div><strong>Email:</strong> <a href="https://mail.google.com/mail/?view=cm&fs=1&to=j4s.job4stu@gmail.com" target="_blank" style="color:inherit;text-decoration:none;">j4s.job4stu@gmail.com</a></div>
+                                <div><strong>Email:</strong> <a href="mailto:j4s.job4stu@gmail.com" style="color:inherit;text-decoration:none;">j4s.job4stu@gmail.com</a></div>
                             </div>
                             <div class="d-flex align-items-center gap-2">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
@@ -5553,7 +5553,7 @@
                         <div class="d-grid gap-2 text-slate-700">
                             <div class="d-flex align-items-center gap-2 mb-1">
                                 <i data-lucide="mail" style="width:18px;height:18px;color:var(--primary);flex-shrink:0;"></i>
-                                <div><strong>Email:</strong> <a href="https://mail.google.com/mail/?view=cm&fs=1&to=j4s.job4stu@gmail.com" target="_blank" style="color:inherit;text-decoration:none;">j4s.job4stu@gmail.com</a></div>
+                                <div><strong>Email:</strong> <a href="mailto:j4s.job4stu@gmail.com" style="color:inherit;text-decoration:none;">j4s.job4stu@gmail.com</a></div>
                             </div>
                             <div class="d-flex align-items-center gap-2">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
