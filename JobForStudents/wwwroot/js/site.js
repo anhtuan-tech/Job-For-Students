@@ -6449,13 +6449,117 @@
             .then(r => r.json())
             .then(data => {
                 if (data.success) {
-                    const tipData = {
-                        'tip-proposal': {
-                            title: 'Viết Proposal chinh phục khách hàng',
-                            category: 'Kỹ năng',
-                            categoryColor: '#2563eb',
-                            icon: 'pen-tool',
-                            content: `
+                    const job = allJobs.find(j => j.id === jobId);
+                    if (job) job.isSaved = data.isSaved;
+
+                    if (data.isSaved) {
+                        btnEl.classList.add('saved');
+                        btnEl.innerHTML = '<i data-lucide="bookmark" style="width:18px;height:18px;"></i>';
+                        showToast('Đã lưu việc làm!', 'success');
+                    } else {
+                        btnEl.classList.remove('saved');
+                        btnEl.innerHTML = '<i data-lucide="bookmark" style="width:18px;height:18px;"></i>';
+                        showToast('Đã bỏ lưu việc làm.', 'info');
+                    }
+                    if (window.lucide) lucide.createIcons();
+
+                    if (currentSidebarMode === 'saved') {
+                        const card = btnEl.closest('.job-card[data-job-id]');
+                        if (card) {
+                            card.style.opacity = '0';
+                            card.style.transform = 'scale(0.9)';
+                            card.style.transition = 'all 0.3s ease';
+                            setTimeout(() => {
+                                card.remove();
+                                const results = document.getElementById('savedJobResults');
+                                if (results && !results.querySelector('.job-card')) {
+                                    results.innerHTML = `<div style="text-align:center;padding:60px;">
+                                        <div style="margin-bottom:12px;color:#94a3b8;"><i data-lucide="bookmark" style="width:44px;height:44px;"></i></div>
+                                        <h3 style="color:#1e293b;font-weight:700;margin-bottom:8px;">Chưa có việc làm nào được lưu</h3>
+                                        <p style="color:#64748b;">Bấm vào icon bookmark trên các tin để lưu lại.</p>
+                                    </div>`;
+                                    if (window.lucide) lucide.createIcons();
+                                }
+                            }, 300);
+                        }
+                    }
+                } else {
+                    showToast(data.message || 'Lỗi khi thực hiện thao tác.', 'warning');
+                }
+            })
+            .catch(err => {
+                console.error('Save error:', err);
+                showToast('Lỗi khi lưu việc làm.', 'error');
+            });
+    }
+
+    // ============================================
+    // JOB APPLICATION MODAL
+    // ============================================
+    function openJobModal(jobId) {
+        const job = currentRenderedJobs.find(j => String(j.id) === String(jobId)) || allJobs.find(j => String(j.id) === String(jobId));
+        if (!job) return;
+
+        const budgetFormatted = formatVND(job.budget);
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <button class="modal-close"><i data-lucide="x" style="width:20px;height:20px;"></i></button>
+                <div class="modal-header">
+                    <h2>${escapeHtml(job.title)}</h2>
+                    <div class="modal-tags">${job.tags.map(t => `<span class="job-tag">${escapeHtml(t)}</span>`).join('')}</div>
+                </div>
+                <div class="modal-body">
+                    <p class="modal-description">${escapeHtml(job.description)}</p>
+                    <div class="modal-details" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:20px;">
+                        <div class="detail-item" style="flex:1; min-width:140px; margin:0;">
+                            <div class="detail-icon"><i data-lucide="banknote" style="width:18px;height:18px;"></i></div>
+                            <div><div class="detail-label">Ngân sách</div><div class="detail-value">${budgetFormatted}</div></div>
+                        </div>
+                        <div class="detail-item" style="flex:1; min-width:140px; margin:0;">
+                            <div class="detail-icon"><i data-lucide="clock" style="width:18px;height:18px;"></i></div>
+                            <div><div class="detail-label">Thời hạn</div><div class="detail-value">${escapeHtml(job.deadline)}</div></div>
+                        </div>
+                        <div class="detail-item" style="flex:1; min-width:140px; margin:0;">
+                            <div class="detail-icon"><i data-lucide="award" style="width:18px;height:18px;"></i></div>
+                            <div><div class="detail-label">Kinh nghiệm</div><div class="detail-value">${escapeHtml(job.experienceLevel === 'No_Experience' ? 'Không yêu cầu' : job.experienceLevel === 'Expert' ? 'Chuyên gia' : job.experienceLevel === 'Mid_Level' ? 'Có kinh nghiệm' : job.experienceLevel || 'Không yêu cầu')}</div></div>
+                        </div>
+                        <div class="detail-item" style="flex:1; min-width:140px; margin:0;">
+                            <div class="detail-icon"><i data-lucide="users" style="width:18px;height:18px;"></i></div>
+                            <div><div class="detail-label">Tuyển dụng</div><div class="detail-value" id="modalApplicants">Đã nhận: ${job.hiredCount || 0}/${job.quantity || 1} (Có ${job.applicantsCount || 0} đề xuất)</div></div>
+                        </div>
+                    </div>
+                    ${job.requirements ? `<h3 style="font-size:1rem;font-weight:700;color:#1e293b;margin-bottom:8px;margin-top:20px;">Yêu cầu ứng viên</h3>
+                    <p class="modal-description">${escapeHtml(job.requirements)}</p>` : ''}
+                </div>
+                <div class="modal-footer">
+                    ${job.isApplied
+                ? '<button class="btn-applied" disabled><i data-lucide="check-circle" style="width:16px;height:16px;"></i> Đã ứng tuyển</button>'
+                : `<button class="btn-apply-job" id="btnApplyJob" data-job-id="${job.id}"><i data-lucide="send" style="width:16px;height:16px;"></i> Ứng tuyển ngay</button>`}
+                </div>
+            </div>`;
+
+        document.body.appendChild(modal);
+        if (window.lucide) lucide.createIcons();
+        requestAnimationFrame(() => modal.classList.add('active'));
+
+        modal.querySelector('.modal-close').addEventListener('click', () => closeModal(modal));
+        modal.addEventListener('click', e => { if (e.target === modal) closeModal(modal); });
+
+        const applyBtn = modal.querySelector('#btnApplyJob');
+        if (applyBtn) {
+            applyBtn.addEventListener('click', function () { applyJob(job.id, this, modal); });
+        }
+    }
+
+    const tipData = {
+        'tip-proposal': {
+            title: 'Viết Proposal chinh phục khách hàng',
+            category: 'Kỹ năng',
+            categoryColor: '#2563eb',
+            icon: 'pen-tool',
+            content: `
                 <p style="margin-bottom:14px; color:#475569; line-height:1.7;">Một bản Proposal (Đề xuất công việc) ấn tượng là chìa khóa mở ra cơ hội làm việc với các nhà tuyển dụng chất lượng. Đối với sinh viên, khi kinh nghiệm chưa nhiều, Proposal chính là nơi tốt nhất để bạn thể hiện sự nhiệt huyết và năng lực giải quyết vấn đề.</p>
                 <div style="background:#eff6ff; border-left:4px solid #2563eb; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
                     <p style="font-weight:700; color:#1e40af; margin:0 0 6px 0;">1. Đi thẳng vào vấn đề của khách hàng</p>
@@ -6473,75 +6577,6 @@
                     <p style="font-weight:700; color:#c2410c; margin:0 0 6px 0;">4. Đề xuất giá và thời hạn rõ ràng</p>
                     <p style="color:#475569; margin:0; line-height:1.6;">Đừng ngại đề xuất mức giá và thời gian hoàn thành cụ thể. Khách hàng luôn thích sự minh bạch ngay từ đầu để dễ đưa ra quyết định.</p>
                 </div>`
-                        },
-                        'tip-time': {
-                            title: 'Quản lý thời gian: Học & Làm Freelance',
-                            category: 'Năng suất',
-                            categoryColor: '#10b981',
-                            icon: 'clock',
-                            content: `
-                <p style="margin-bottom:14px; color:#475569; line-height:1.7;">Làm freelance khi còn đi học giúp sinh viên tích lũy kinh nghiệm và thu nhập, nhưng nếu không quản lý thời gian tốt, rất dễ bị quá tải và ảnh hưởng đến học tập.</p>
-                <div style="background:#ecfdf5; border-left:4px solid #10b981; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
-                    <p style="font-weight:700; color:#065f46; margin:0 0 8px 0;">1. Ma trận Eisenhower — Phân loại công việc</p>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-                        <div style="background:#fff; border:1px solid #d1fae5; border-radius:8px; padding:10px;">
-                            <p style="color:#065f46; font-weight:700; font-size:12px; margin:0 0 4px;">Khẩn & Quan trọng</p>
-                            <p style="color:#475569; font-size:12px; margin:0;">Làm ngay (bài kiểm tra, deadline gấp)</p>
-                        </div>
-                        <div style="background:#fff; border:1px solid #d1fae5; border-radius:8px; padding:10px;">
-                            <p style="color:#065f46; font-weight:700; font-size:12px; margin:0 0 4px;">Quan trọng, không khẩn</p>
-                            <p style="color:#475569; font-size:12px; margin:0;">Lên lịch (học kỹ năng, làm portfolio)</p>
-                        </div>
-                        <div style="background:#fff; border:1px solid #d1fae5; border-radius:8px; padding:10px;">
-                            <p style="color:#065f46; font-weight:700; font-size:12px; margin:0 0 4px;">Khẩn nhưng ít quan trọng</p>
-                            <p style="color:#475569; font-size:12px; margin:0;">Ủy thác hoặc tối ưu (email cơ bản)</p>
-                        </div>
-                        <div style="background:#fff; border:1px solid #d1fae5; border-radius:8px; padding:10px;">
-                            <p style="color:#065f46; font-weight:700; font-size:12px; margin:0 0 4px;">Không khẩn & không quan trọng</p>
-                            <p style="color:#475569; font-size:12px; margin:0;">Loại bỏ (lướt mạng vô ích)</p>
-                        </div>
-                    </div>
-                </div>
-                <div style="background:#f0fdf4; border-left:4px solid #16a34a; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
-                    <p style="font-weight:700; color:#15803d; margin:0 0 6px 0;">2. Kỹ thuật Pomodoro</p>
-                    <p style="color:#475569; margin:0; line-height:1.6;">Làm việc <strong>25 phút</strong> tập trung → nghỉ <strong>5 phút</strong>. Lặp lại 4 lần rồi nghỉ dài 15-30 phút. Bộ não không bị quá tải và luôn duy trì năng suất cao.</p>
-                </div>
-                <div style="background:#eff6ff; border-left:4px solid #2563eb; border-radius:8px; padding:14px 16px;">
-                    <p style="font-weight:700; color:#1e40af; margin:0 0 6px 0;">3. Công cụ hỗ trợ quản lý</p>
-                    <p style="color:#475569; margin:0; line-height:1.6;">Tận dụng <strong>Trello</strong>, <strong>Notion</strong> hoặc <strong>Google Calendar</strong> để sắp xếp lịch học và deadline công việc. Nhìn thấy toàn bộ kế hoạch trực quan giúp bạn không bỏ sót gì.</p>
-                </div>`
-                        },
-                        'tip-portfolio': {
-                            title: 'Xây dựng Portfolio từ con số 0',
-                            category: 'Portfolio',
-                            categoryColor: '#db2777',
-                            icon: 'briefcase',
-                            content: `
-                <p style="margin-bottom:14px; color:#475569; line-height:1.7;">Với sinh viên, rào cản lớn nhất khi bắt đầu freelance là thiếu dự án thực tế. Nhưng đừng lo — nhà tuyển dụng quan tâm đến <strong>năng lực</strong> của bạn nhiều hơn là việc dự án đó có thực sự tồn tại hay không.</p>
-                <div style="background:#fdf2f8; border-left:4px solid #db2777; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
-                    <p style="font-weight:700; color:#9d174d; margin:0 0 6px 0;">1. Tạo dự án cá nhân (Concept Projects)</p>
-                    <p style="color:#475569; margin:0; line-height:1.6;">Chọn một thương hiệu nổi tiếng và tự thiết kế lại poster, slide, hoặc giao diện theo ý bạn. Nói rõ đây là "Personal Concept" — điều đó chứng minh bạn chủ động học hỏi.</p>
-                </div>
-                <div style="background:#fffbeb; border-left:4px solid #f59e0b; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
-                    <p style="font-weight:700; color:#92400e; margin:0 0 6px 0;">2. Tận dụng hoạt động ngoại khóa & CLB</p>
-                    <p style="color:#475569; margin:0; line-height:1.6;">Nhận thiết kế tờ rơi, banner, viết bài hay quản lý fanpage cho các câu lạc bộ trường đại học. Đây là nguồn dự án thực tế vô cùng giá trị và được đánh giá cao.</p>
-                </div>
-                <div style="background:#eff6ff; border-left:4px solid #2563eb; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
-                    <p style="font-weight:700; color:#1e40af; margin:0 0 6px 0;">3. Trình bày theo dạng Case Study</p>
-                    <p style="color:#475569; margin:0; line-height:1.6;">Đừng chỉ đưa ra sản phẩm cuối cùng. Hãy kể câu chuyện: <em>Bài toán là gì? → Bạn đã làm gì? → Kết quả ra sao?</em> Đây là phong cách trình bày được các nhà tuyển dụng chuyên nghiệp ưa thích nhất.</p>
-                </div>
-                <div style="background:#f0fdf4; border-left:4px solid #16a34a; border-radius:8px; padding:14px 16px;">
-                    <p style="font-weight:700; color:#15803d; margin:0 0 6px 0;">4. Chia sẻ portfolio lên mạng xã hội</p>
-                    <p style="color:#475569; margin:0; line-height:1.6;">Đăng các dự án lên <strong>Behance</strong>, <strong>LinkedIn</strong> hoặc <strong>Instagram</strong> với đầy đủ thông tin. Portfolio online giúp khách hàng tìm đến bạn ngay cả khi bạn không chủ động tìm việc.</p>
-                </div>`
-                        }
-                    };o tương tự</p >
-                        <p style="color:#475569; margin:0; line-height:1.6;">Trăm nghe không bằng một thấy. Hãy gửi link hoặc đính kèm 2-3 dự án tốt nhất liên quan trực tiếp đến lĩnh vực mà họ đang tuyển dụng.</p>
-                </div >
-                        <div style="background:#fff7ed; border-left:4px solid #ea580c; border-radius:8px; padding:14px 16px; margin-bottom:0;">
-                            <p style="font-weight:700; color:#c2410c; margin:0 0 6px 0;">💰 4. Đề xuất giá và thời hạn rõ ràng</p>
-                            <p style="color:#475569; margin:0; line-height:1.6;">Đừng ngại đề xuất mức giá và thời gian hoàn thành cụ thể. Khách hàng luôn thích sự minh bạch ngay từ đầu để dễ đưa ra quyết định.</p>
-                        </div>`
         },
         'tip-time': {
             title: 'Quản lý thời gian: Học & Làm Freelance',
@@ -6549,7 +6584,7 @@
             categoryColor: '#10b981',
             icon: 'clock',
             content: `
-                            < p style = "margin-bottom:14px; color:#475569; line-height:1.7;" > Làm freelance khi còn đi học giúp sinh viên tích lũy kinh nghiệm và thu nhập, nhưng nếu không quản lý thời gian tốt, rất dễ bị quá tải và ảnh hưởng đến học tập.</p >
+                <p style="margin-bottom:14px; color:#475569; line-height:1.7;">Làm freelance khi còn đi học giúp sinh viên tích lũy kinh nghiệm và thu nhập, nhưng nếu không quản lý thời gian tốt, rất dễ bị quá tải và ảnh hưởng đến học tập.</p>
                 <div style="background:#ecfdf5; border-left:4px solid #10b981; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
                     <p style="font-weight:700; color:#065f46; margin:0 0 8px 0;">1. Ma trận Eisenhower — Phân loại công việc</p>
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
@@ -6586,7 +6621,7 @@
             categoryColor: '#db2777',
             icon: 'briefcase',
             content: `
-                        < p style = "margin-bottom:14px; color:#475569; line-height:1.7;" > Với sinh viên, rào cản lớn nhất khi bắt đầu freelance là thiếu dự án thực tế.Nhưng đừng lo — nhà tuyển dụng quan tâm đến < strong > năng lực</strong > của bạn nhiều hơn là việc dự án đó có thực sự tồn tại hay không.</p >
+                <p style="margin-bottom:14px; color:#475569; line-height:1.7;">Với sinh viên, rào cản lớn nhất khi bắt đầu freelance là thiếu dự án thực tế. Nhưng đừng lo — nhà tuyển dụng quan tâm đến <strong>năng lực</strong> của bạn nhiều hơn là việc dự án đó có thực sự tồn tại hay không.</p>
                 <div style="background:#fdf2f8; border-left:4px solid #db2777; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
                     <p style="font-weight:700; color:#9d174d; margin:0 0 6px 0;">1. Tạo dự án cá nhân (Concept Projects)</p>
                     <p style="color:#475569; margin:0; line-height:1.6;">Chọn một thương hiệu nổi tiếng và tự thiết kế lại poster, slide, hoặc giao diện theo ý bạn. Nói rõ đây là "Personal Concept" — điều đó chứng minh bạn chủ động học hỏi.</p>
@@ -6613,7 +6648,7 @@
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
         modal.innerHTML = `
-                        < div class="modal-content animate-in" style = "max-width:620px; max-height:88vh; overflow-y:auto; border-radius:20px; padding:0; position:relative;" >
+            <div class="modal-content animate-in" style="max-width:620px; max-height:88vh; overflow-y:auto; border-radius:20px; padding:0; position:relative;">
                 <div style="background:linear-gradient(135deg, ${tip.categoryColor}18, ${tip.categoryColor}08); padding:28px 28px 20px; border-bottom:1px solid #f1f5f9; border-radius:20px 20px 0 0;">
                     <button class="modal-close" style="position:absolute; top:16px; right:16px; background:rgba(0,0,0,0.06); border:none; cursor:pointer; border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; color:#64748b; font-size:18px;"><i data-lucide="x" style="width:16px;height:16px;"></i></button>
                     <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
@@ -6627,7 +6662,7 @@
                 <div style="padding:24px 28px 8px; font-family:'Inter', sans-serif;">
                     ${tip.content}
                 </div>
-            </div > `;
+            </div>`;
         document.body.appendChild(modal);
         if (window.lucide) lucide.createIcons();
         requestAnimationFrame(() => modal.classList.add('active'));
@@ -6675,7 +6710,7 @@
         cropModal.style.zIndex = '3000';
 
         cropModal.innerHTML = `
-                        < div class="modal-content" style = "max-width: 600px; padding: 20px;" >
+            <div class="modal-content" style="max-width: 600px; padding: 20px;">
                 <button class="modal-close" id="btnCloseCropModal"><i data-lucide="x" style="width:20px;height:20px;"></i></button>
                 <div class="modal-header" style="padding: 0 0 15px 0;">
                     <h2 style="margin: 0; font-size: 18px; font-weight: 700; color: var(--text-primary);">✂️ Cắt chỉnh ảnh</h2>
@@ -6689,7 +6724,7 @@
                     <button class="btn-modal-cancel" id="btnCancelCrop">Hủy</button>
                     <button class="btn-apply-job" id="btnConfirmCrop"><i data-lucide="crop" style="width:16px;height:16px;"></i> Cắt & Lưu</button>
                 </div>
-            </div > `;
+            </div>`;
 
         document.body.appendChild(cropModal);
         if (window.lucide) lucide.createIcons();
@@ -6767,12 +6802,12 @@
                     if (window.lucide) lucide.createIcons();
 
                     const applicantsEl = modal.querySelector('#modalApplicants');
-                    if (applicantsEl) applicantsEl.textContent = `${ data.applicantsCount } người`;
+                    if (applicantsEl) applicantsEl.textContent = `${data.applicantsCount} người`;
 
-                    const feedCard = document.querySelector(`.job - card[data - job - id="${jobId}"]`);
+                    const feedCard = document.querySelector(`.job-card[data-job-id="${jobId}"]`);
                     if (feedCard) {
                         const p = feedCard.querySelector('.job-proposals');
-                        if (p) p.innerHTML = `${ data.applicantsCount } đề xuất < span class="applied-badge" > Đã ứng tuyển</span > `;
+                        if (p) p.innerHTML = `${data.applicantsCount} đề xuất <span class="applied-badge">Đã ứng tuyển</span>`;
                     }
 
                     // Update saved original HTML
@@ -6802,7 +6837,7 @@
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
         modal.innerHTML = `
-                        < div class="modal-content" >
+            <div class="modal-content">
                 <button class="modal-close"><i data-lucide="x" style="width:20px;height:20px;"></i></button>
                 <div class="modal-body" style="padding-top:28px;">
                     <div style="text-align:center;margin-bottom:20px;">
@@ -6826,7 +6861,7 @@
                         <i data-lucide="message-circle" style="width:16px;height:16px;"></i> Nhắn tin
                     </button>
                 </div>
-            </div > `;
+            </div>`;
 
         document.body.appendChild(modal);
         if (window.lucide) lucide.createIcons();
@@ -6861,7 +6896,7 @@
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
         modal.innerHTML = `
-                        < div class="modal-content modal-sm" >
+            <div class="modal-content modal-sm">
                 <button class="modal-close"><i data-lucide="x" style="width:20px;height:20px;"></i></button>
                 <div class="modal-header"><h2>Nạp tiền doanh nghiệp</h2></div>
                 <div class="modal-body">
@@ -6875,7 +6910,7 @@
                 <div class="modal-footer">
                     <button class="btn-apply-job" id="btnGenerateDepositQr"><i data-lucide="qr-code" style="width:16px;height:16px;"></i> Tạo mã QR</button>
                 </div>
-            </div > `;
+            </div>`;
 
         document.body.appendChild(modal);
         if (window.lucide) lucide.createIcons();
