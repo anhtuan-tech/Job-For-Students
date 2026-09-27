@@ -3783,10 +3783,14 @@ public class HomeController : Controller
         var acbHistoryUrl = _configuration["Banking:AcbHistoryUrl"];
         if (string.IsNullOrWhiteSpace(acbHistoryUrl))
         {
-            throw new InvalidOperationException("Missing Banking:AcbHistoryUrl configuration.");
+            acbHistoryUrl = "http://api.dopamind.net/api/ACB/history?token=KHANGDZ";
         }
 
-        using var response = await AcbHttpClient.GetAsync(acbHistoryUrl);
+        using var requestMessage = new HttpRequestMessage(HttpMethod.Get, acbHistoryUrl);
+        requestMessage.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
+        requestMessage.Headers.Add("Accept", "application/json");
+
+        using var response = await AcbHttpClient.SendAsync(requestMessage);
         response.EnsureSuccessStatusCode();
 
         await using var stream = await response.Content.ReadAsStreamAsync();
